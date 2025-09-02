@@ -1,5 +1,8 @@
 # ForgeFlow
 
+[![Build Status](https://github.com/Kingson4Wu/ForgeFlow/workflows/CI/badge.svg)](https://github.com/Kingson4Wu/ForgeFlow/actions)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Automatically drives AI CLI to continuously complete programming tasks within a `tmux` session.
 
 ## Features
@@ -19,7 +22,7 @@ To clone and set up the project, follow these steps:
 
 1. Clone the repository locally:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Kingson4Wu/ForgeFlow
    cd ForgeFlow
    ```
 
