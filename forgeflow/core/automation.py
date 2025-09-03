@@ -6,13 +6,13 @@ import sys
 import time
 from dataclasses import dataclass
 
+from .rule_loader import get_rules
 from .rules import (
     is_input_prompt,
     is_input_prompt_with_text,
     is_task_processing,
     next_command,
 )
-from .rule_loader import get_rules
 from .tmux_ctl import TmuxConfig, TmuxCtl
 
 
