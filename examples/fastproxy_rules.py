@@ -49,7 +49,7 @@ otherwise, return "All tasks have been completed."
 
 
 # Build custom rules
-def build_fastproxy_rules() -> list[Rule]:
+def build_rules() -> list[Rule]:
     """Build a list of custom rules for my project."""
     return [
         Rule(check=is_processing, command=task_prompt()),

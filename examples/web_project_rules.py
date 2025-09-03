@@ -23,7 +23,7 @@ Web Development Task:
 """
 
 
-def build_web_dev_rules() -> list[Rule]:
+def build_rules() -> list[Rule]:
     """Build rules specific to web development projects."""
     return [
         # Stop when project is complete
@@ -39,5 +39,5 @@ def build_web_dev_rules() -> list[Rule]:
     ]
 
 
-# Add alias for the rule loader
-build_web_project_rules = build_web_dev_rules
+# Add alias for backward compatibility
+build_web_project_rules = build_rules

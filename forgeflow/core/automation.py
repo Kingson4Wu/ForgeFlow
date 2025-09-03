@@ -1,18 +1,13 @@
 from __future__ import annotations
 
 import logging
-import re
 import sys
 import time
 from dataclasses import dataclass
 
+from .cli_adapters.factory import get_cli_adapter
 from .rule_loader import get_rules
-from .rules import (
-    is_input_prompt,
-    is_input_prompt_with_text,
-    is_task_processing,
-    next_command,
-)
+from .rules import next_command
 from .tmux_ctl import TmuxConfig, TmuxCtl
 
 
@@ -26,6 +21,7 @@ class Config:
     log_file: str = "forgeflow.log"
     log_to_console: bool = True
     project: str | None = None
+    cli_type: str = "gemini"  # Default to gemini
 
 
 def setup_logger(path: str, to_console: bool = True) -> logging.Logger:
@@ -45,25 +41,18 @@ def setup_logger(path: str, to_console: bool = True) -> logging.Logger:
     return logger
 
 
-PROMPT_AI_CLI_EXIST = re.compile(r"^YOLO mode \(ctrl \+ y to toggle\)(.*)?$")
-
-
-def is_ai_cli_exist(output: str) -> bool:
-    for line in output.splitlines():
-        if PROMPT_AI_CLI_EXIST.match(line.strip()):
-            return True
-    return False
-
-
 def run_automation(cfg: Config) -> int:
     log = setup_logger(cfg.log_file, cfg.log_to_console)
     tmux = TmuxCtl(TmuxConfig(session=cfg.session, workdir=cfg.workdir))
+
+    # Get the appropriate CLI adapter
+    cli_adapter = get_cli_adapter(cfg.cli_type)
 
     # 1) Ensure session exists and start AI CLI
     tmux.create_session()
     time.sleep(1.0)
     output = tmux.capture_output()
-    if not is_ai_cli_exist(output):
+    if not cli_adapter.is_ai_cli_exist(output):
         log.info(f"Ensuring AI CLI running: {cfg.ai_cmd}")
         tmux.send_text_then_enter(cfg.ai_cmd)
         time.sleep(5.0)
@@ -80,7 +69,7 @@ def run_automation(cfg: Config) -> int:
             if output != last_output:
                 last_output = output
 
-            if is_input_prompt(output) and not is_task_processing(output):
+            if cli_adapter.is_input_prompt(output) and not is_task_processing(output, cli_adapter):
                 last_input_prompt_time = time.time()
                 cmd = next_command(output, rules)
                 if cmd is None:
@@ -90,7 +79,9 @@ def run_automation(cfg: Config) -> int:
                 tmux.send_text_then_enter(cmd)
                 time.sleep(2.0)
 
-            elif is_input_prompt_with_text(output) and not is_task_processing(output):
+            elif cli_adapter.is_input_prompt_with_text(output) and not is_task_processing(
+                output, cli_adapter
+            ):
                 log.info("Input line already has text → sending Enter")
                 tmux.send_enter()
                 time.sleep(2.0)
@@ -109,7 +100,7 @@ def run_automation(cfg: Config) -> int:
                         tmux.send_backspace(backspace_num)
                         time.sleep(0.5)
                         output = tmux.capture_output()
-                        if is_input_prompt(output):
+                        if cli_adapter.is_input_prompt(output):
                             break
                         backspace_num = min(backspace_num + 10, 200)
 
@@ -128,3 +119,8 @@ def run_automation(cfg: Config) -> int:
 
     log.info("Automation finished.")
     return 0
+
+
+def is_task_processing(output: str, cli_adapter) -> bool:
+    """Check if a task is currently being processed using the provided CLI adapter."""
+    return cli_adapter.is_task_processing(output)

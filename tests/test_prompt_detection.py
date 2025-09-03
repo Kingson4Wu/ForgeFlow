@@ -1,14 +1,17 @@
-from forgeflow.core.rules import is_input_prompt, is_input_prompt_with_text
+from forgeflow.core.cli_adapters.factory import get_cli_adapter
+
+# Get the default gemini adapter for testing
+cli_adapter = get_cli_adapter("gemini")
 
 
 def test_is_input_prompt_false_on_empty():
-    assert not is_input_prompt("")
+    assert not cli_adapter.is_input_prompt("")
 
 
 def test_is_input_prompt_with_text_false_on_empty():
-    assert not is_input_prompt_with_text("")
+    assert not cli_adapter.is_input_prompt_with_text("")
 
 
 def test_is_input_prompt_true_sample():
     sample = "> Type your message or @tools/test"  # Loose matching
-    assert is_input_prompt(sample)
+    assert cli_adapter.is_input_prompt(sample)

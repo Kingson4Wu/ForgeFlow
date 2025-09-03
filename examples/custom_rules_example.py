@@ -44,7 +44,7 @@ Custom verification steps:
 
 
 # Build custom rules
-def build_custom_rules() -> list[Rule]:
+def build_rules() -> list[Rule]:
     """Build a list of custom rules."""
     return [
         # Stop rule - when this condition is met, automation stops

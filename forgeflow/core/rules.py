@@ -1,34 +1,7 @@
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from typing import Callable
-
-# ---------- Input Prompt Detection ----------
-PROMPT_RE = re.compile(r">.*Type your message or @[\w/]+(?:\.\w+)?")
-# Match input lines enclosed in vertical bars (as loose as possible)
-PROMPT_WITH_TEXT_RE = re.compile(r"\u2502 > .*? \u2502")
-PROMPT_TASK_PROCESSING = re.compile(r"^\(esc to cancel.*\)$")
-
-
-def is_input_prompt(output: str) -> bool:
-    if not output:
-        return False
-    return bool(PROMPT_RE.search(output))
-
-
-def is_input_prompt_with_text(output: str) -> bool:
-    if not output:
-        return False
-    return bool(PROMPT_WITH_TEXT_RE.search(output))
-
-
-def is_task_processing(output: str) -> bool:
-    for line in output.splitlines():
-        if PROMPT_TASK_PROCESSING.match(line.strip()):
-            return True
-    return False
-
 
 # ---------- Task and Verification Prompts ----------
 ALL_TASKS_DONE_TEXT = "All tasks have been completed."

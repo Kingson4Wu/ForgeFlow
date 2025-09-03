@@ -48,7 +48,7 @@ My Project Verification Steps:
 
 
 # Build custom rules
-def build_myproject_rules() -> list[Rule]:
+def build_rules() -> list[Rule]:
     """Build a list of custom rules for my project."""
     return [
         # Stop rule - when this condition is met, automation stops
