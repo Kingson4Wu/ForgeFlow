@@ -11,7 +11,9 @@ Automatically drives AI CLI to continuously complete programming tasks within a 
   commands.
 - **Configurable Rule System**: Rules are evaluated in order, with priority matching taking effect, and custom rules are
   supported.
-- **Reliable Input Detection**: Regular expressions detect "input prompts" and "existing text in input box".
+- **Multi-CLI Support**: Supports different AI CLI tools through an adapter pattern (currently supports Gemini as the default, with a placeholder for Claude Code).
+- **Reliable Input Detection**: Regular expressions detect "input prompts" and "existing text in input box" specific to
+  each CLI tool.
 - **Timeout Recovery Strategy**: Long periods without input prompt → send `ESC` → backspace clear → `continue`.
 - **Logging and Debugging**: Dual channel file + console logging with timestamps.
 - **CI and Testing**: `ruff` + `black` compliance, `pytest` unit tests covering core logic.
@@ -27,6 +29,10 @@ To clone and set up the project, follow these steps:
    git clone https://github.com/Kingson4Wu/ForgeFlow
    cd ForgeFlow
    ```
+
+### Quick Start for Mac Users
+
+For Mac users, see our [Quick Start Guide for Mac Users](docs/quick_start_mac.md) which provides detailed step-by-step instructions for setting up and using ForgeFlow on macOS.
 
 ### Installation
 
@@ -70,6 +76,8 @@ forgeflow \
   --timeout 2000 \
   --log-file forgeflow.log
 ```
+
+Note: By default, ForgeFlow uses the Gemini CLI adapter. To use a different adapter, specify the `--cli-type` parameter.
 
 To use custom rules for a specific project, add the `--project` parameter:
 
@@ -128,10 +136,9 @@ To specify a different AI CLI tool:
 
 ```bash
 python -m forgeflow.cli \
-  --session claude_session \
+  --session qwen_session \
   --workdir "/absolute/path/to/your/project" \
-  --ai-cmd "claude" \
-  --cli-type claude_code \
+  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
   --poll 10 \
   --timeout 2000 \
   --log-file forgeflow.log
@@ -200,13 +207,6 @@ def build_rules() -> list[Rule]:
     pass
 ```
 
-For backward compatibility, the loader will also look for project-specific function names in this order:
-1. `build_{project_name}_rules` (e.g., `build_web_project_rules`)
-2. `build_{project_name}` (e.g., `build_web_project`)
-3. `build_custom_rules`
-4. `{project_name}_rules` (e.g., `web_project_rules`)
-5. `rules`
-
 See [myproject_rules.py](examples/myproject_rules.py) for a complete template.
 
 #### Examples
@@ -235,14 +235,21 @@ The system will automatically search for your rule file in the following order:
 3. `{project_name}_rules.py` in the `examples/` directory
 4. `{project_name}.py` in the `examples/` directory
 
-It will then look for a rule-building function with one of these names (in order):
+It will then look for a rule-building function. The recommended function name is `build_rules`, which provides consistency across all projects.
 
-- `build_{project_name}_rules`
-- `build_{project_name}`
-- `build_custom_rules`
-- `build_rules`
-- `{project_name}_rules`
-- `rules`
+### CLI Adapter Pattern
+
+ForgeFlow uses an adapter pattern to support different AI CLI tools. Each CLI tool has its own adapter that implements the `CLIAdapter` interface, which defines methods for detecting input prompts, task processing states, and CLI existence.
+
+Currently supported adapters:
+- **Gemini**: The default and currently only fully implemented adapter for Google's Qwen/Gemini CLI
+- **Claude Code**: Placeholder adapter for Anthropic's Claude Code CLI (contains TODOs for implementation)
+
+To add support for a new CLI tool:
+1. Create a new adapter class that extends `CLIAdapter` 
+2. Implement all abstract methods according to your CLI's behavior
+3. Register your adapter in the factory function in `forgeflow/core/cli_adapters/factory.py`
+4. Use the `--cli-type` parameter to select your adapter
 
 ### Exiting
 
