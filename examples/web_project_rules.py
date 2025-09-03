@@ -37,3 +37,7 @@ def build_web_dev_rules() -> list[Rule]:
         # Default task prompt
         Rule(check=lambda out: True, command=web_dev_task_prompt()),
     ]
+
+
+# Add alias for the rule loader
+build_web_project_rules = build_web_dev_rules

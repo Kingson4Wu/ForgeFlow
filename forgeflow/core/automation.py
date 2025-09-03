@@ -7,12 +7,12 @@ import time
 from dataclasses import dataclass
 
 from .rules import (
-    build_default_rules,
     is_input_prompt,
     is_input_prompt_with_text,
     is_task_processing,
     next_command,
 )
+from .rule_loader import get_rules
 from .tmux_ctl import TmuxConfig, TmuxCtl
 
 
@@ -25,6 +25,7 @@ class Config:
     input_prompt_timeout: int = 2000  # seconds
     log_file: str = "forgeflow.log"
     log_to_console: bool = True
+    project: str | None = None
 
 
 def setup_logger(path: str, to_console: bool = True) -> logging.Logger:
@@ -67,7 +68,7 @@ def run_automation(cfg: Config) -> int:
         tmux.send_text_then_enter(cfg.ai_cmd)
         time.sleep(5.0)
 
-    rules = build_default_rules()
+    rules = get_rules(cfg)
     last_output = ""
     last_input_prompt_time = time.time()
 

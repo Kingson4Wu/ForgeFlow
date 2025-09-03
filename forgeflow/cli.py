@@ -15,6 +15,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--timeout", type=int, default=2000, help="input prompt timeout in seconds")
     p.add_argument("--log-file", default="forgeflow.log", help="log file path")
     p.add_argument("--no-console", action="store_true", help="disable console logging")
+    p.add_argument("--project", help="project name to load custom rules")
     return p
 
 
@@ -30,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
         input_prompt_timeout=args.timeout,
         log_file=args.log_file,
         log_to_console=not args.no_console,
+        project=args.project,
     )
 
     return run_automation(cfg)
