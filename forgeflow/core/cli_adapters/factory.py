@@ -3,6 +3,7 @@ from __future__ import annotations
 from .base import CLIAdapter
 from .claude_code import ClaudeCodeCLIAdapter
 from .gemini import GeminiCLIAdapter
+from .codex import CodexCLIAdapter
 
 
 def get_cli_adapter(cli_type: str = "gemini") -> CLIAdapter:
@@ -20,6 +21,8 @@ def get_cli_adapter(cli_type: str = "gemini") -> CLIAdapter:
     """
     if cli_type == "gemini":
         return GeminiCLIAdapter()
+    elif cli_type == "codex":
+        return CodexCLIAdapter()
     elif cli_type == "claude_code":
         return ClaudeCodeCLIAdapter()
     else:
