@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from .base import CLIAdapter
 from .claude_code import ClaudeCodeCLIAdapter
-from .gemini import GeminiCLIAdapter
 from .codex import CodexCLIAdapter
+from .gemini import GeminiCLIAdapter
 
 
 def get_cli_adapter(cli_type: str = "gemini") -> CLIAdapter:

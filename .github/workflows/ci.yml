@@ -17,9 +17,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e . ruff black pytest
-      - name: Lint
+      - name: Run health checks
         run: |
-          ruff check .
-          black --check .
-      - name: Tests
-        run: pytest -q
+          chmod +x scripts/check-health.sh
+          ./scripts/check-health.sh

@@ -10,7 +10,11 @@ authors = [{ name = "ForgeFlow Maintainers" }]
 requires-python = ">=3.9"
 dependencies = []
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["forgeflow*"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "ruff>=0.12", "black>=23.0"]

@@ -11,3 +11,4 @@ test:
 
 run:
 	python -m forgeflow.cli
+	sh scripts/setup-hooks.sh

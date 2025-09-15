@@ -13,7 +13,9 @@ class CodexCLIAdapter(CLIAdapter):
     # Match input lines enclosed in vertical bars (as loose as possible)
     PROMPT_WITH_TEXT_RE = re.compile(r"\u2502 > .*? \u2502")
     PROMPT_TASK_PROCESSING = re.compile(r"• Esc to interrupt\)")
-    PROMPT_AI_CLI_EXIST = re.compile(r"^\s*⏎ send\s+⌃J newline\s+⌃T transcript\s+⌃C quit", re.MULTILINE)
+    PROMPT_AI_CLI_EXIST = re.compile(
+        r"^\s*⏎ send\s+⌃J newline\s+⌃T transcript\s+⌃C quit", re.MULTILINE
+    )
 
     def is_input_prompt(self, output: str) -> bool:
         if not output:

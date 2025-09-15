@@ -1,7 +1,8 @@
+from pathlib import Path
+
 import pytest
 
 from forgeflow.core.automation import Config, run_automation
-from pathlib import Path
 
 
 @pytest.mark.skip(reason="just for debug, ignore it ")
