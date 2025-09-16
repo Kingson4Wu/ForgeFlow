@@ -22,12 +22,14 @@ class Config:
     log_to_console: bool = True
     project: str | None = None
     cli_type: str = "gemini"  # Default to gemini
+    log_level: str = "INFO"
 
 
-def setup_logger(path: str, to_console: bool = True) -> logging.Logger:
+def setup_logger(path: str, to_console: bool = True, level: str = "INFO") -> logging.Logger:
     logger = logging.getLogger("forgeflow")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(getattr(logging, level.upper(), logging.INFO))
     logger.handlers.clear()
+    logger.propagate = False
 
     fh = logging.FileHandler(path, encoding="utf-8")
     fh.setFormatter(logging.Formatter("[%(asctime)s] %(message)s"))
@@ -42,7 +44,7 @@ def setup_logger(path: str, to_console: bool = True) -> logging.Logger:
 
 
 def run_automation(cfg: Config) -> int:
-    log = setup_logger(cfg.log_file, cfg.log_to_console)
+    log = setup_logger(cfg.log_file, cfg.log_to_console, cfg.log_level)
     tmux = TmuxCtl(TmuxConfig(session=cfg.session, workdir=cfg.workdir))
 
     # Get the appropriate CLI adapter
@@ -87,28 +89,11 @@ def run_automation(cfg: Config) -> int:
                 time.sleep(2.0)
 
             else:
-                # Timeout recovery
+                # Timeout recovery or wait
                 if time.time() - last_input_prompt_time > cfg.input_prompt_timeout:
-                    log.info(
-                        "Input prompt timeout exceeded, trying ESC/backspace recovery → continue"
-                    )
-                    tmux.send_escape()
-                    time.sleep(0.5)
-
-                    backspace_num = 10
-                    while True:
-                        tmux.send_backspace(backspace_num)
-                        time.sleep(0.5)
-                        output = tmux.capture_output()
-                        if cli_adapter.is_input_prompt(output):
-                            break
-                        backspace_num = min(backspace_num + 10, 200)
-
-                    tmux.send_text_then_enter("continue")
-                    last_input_prompt_time = time.time()
+                    last_input_prompt_time = _recover_from_timeout(tmux, cli_adapter, log)
                 else:
                     log.info("Not in input prompt, waiting...")
-
                 time.sleep(cfg.poll_interval)
 
     except KeyboardInterrupt:
@@ -124,3 +109,26 @@ def run_automation(cfg: Config) -> int:
 def is_task_processing(output: str, cli_adapter) -> bool:
     """Check if a task is currently being processed using the provided CLI adapter."""
     return cli_adapter.is_task_processing(output)
+
+
+def _recover_from_timeout(tmux: TmuxCtl, cli_adapter, log: logging.Logger) -> float:
+    """Attempt to recover when input prompt seems stuck.
+
+    Strategy: ESC → progressive backspace until prompt appears → send "continue".
+    Returns the new timestamp for last_input_prompt_time.
+    """
+    log.info("Input prompt timeout exceeded, trying ESC/backspace recovery → continue")
+    tmux.send_escape()
+    time.sleep(0.5)
+
+    backspace_num = 10
+    for _ in range(20):  # cap iterations to avoid infinite loop
+        tmux.send_backspace(backspace_num)
+        time.sleep(0.5)
+        output = tmux.capture_output()
+        if cli_adapter.is_input_prompt(output):
+            break
+        backspace_num = min(backspace_num + 10, 200)
+
+    tmux.send_text_then_enter("continue")
+    return time.time()

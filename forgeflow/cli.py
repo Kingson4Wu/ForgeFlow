@@ -17,6 +17,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-console", action="store_true", help="disable console logging")
     p.add_argument("--project", help="project name to load custom rules")
     p.add_argument("--cli-type", default="gemini", help="AI CLI type (gemini, claude_code, etc.)")
+    p.add_argument(
+        "--log-level",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="logging level",
+    )
     return p
 
 
@@ -34,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
         log_to_console=not args.no_console,
         project=args.project,
         cli_type=args.cli_type,
+        log_level=args.log_level,
     )
 
     return run_automation(cfg)

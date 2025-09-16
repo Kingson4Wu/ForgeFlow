@@ -19,11 +19,17 @@ def get_cli_adapter(cli_type: str = "gemini") -> CLIAdapter:
     Raises:
         ValueError: If the cli_type is not supported
     """
-    if cli_type == "gemini":
+    key = (cli_type or "").strip().lower()
+    if key == "gemini":
         return GeminiCLIAdapter()
-    elif cli_type == "codex":
+    elif key == "codex":
         return CodexCLIAdapter()
-    elif cli_type == "claude_code":
+    elif key == "claude_code":
         return ClaudeCodeCLIAdapter()
     else:
-        raise ValueError(f"Unsupported CLI type: {cli_type}")
+        supported = ["gemini", "codex", "claude_code"]
+        raise ValueError(f"Unsupported CLI type: {cli_type}. Supported: {', '.join(supported)}")
+
+
+def list_supported_cli_types() -> list[str]:
+    return ["gemini", "codex", "claude_code"]

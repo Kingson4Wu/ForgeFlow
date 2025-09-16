@@ -4,6 +4,7 @@ import importlib.util
 import logging
 import os
 import sys
+from pathlib import Path
 from typing import Callable
 
 from .rules import Rule, build_default_rules
@@ -32,26 +33,26 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
     possible_files = [f"{project_name}_rules.py", f"{project_name}.py"]
 
     # Possible directories to look in
-    possible_dirs = [
-        workdir,  # Current working directory
-    ]
+    possible_dirs = [workdir]
 
-    # Add examples directory
+    # Add repo examples directory robustly (works in source checkout)
     try:
-        import forgeflow
+        import forgeflow as _forgeflow
 
-        forgeflow_dir = os.path.dirname(forgeflow.__file__)
-        examples_dir = os.path.join(forgeflow_dir, "..", "examples")
-        possible_dirs.append(examples_dir)
-    except ImportError:
+        pkg_dir = Path(_forgeflow.__file__).resolve().parent
+        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
+        examples_dir = (repo_root / "examples").resolve()
+        possible_dirs.append(str(examples_dir))
+    except Exception:
+        # Best effort; if not available (e.g., installed package without examples), skip
         pass
 
     # Try to find the rule file
     rule_file_path = None
     for directory in possible_dirs:
         for filename in possible_files:
-            path = os.path.join(directory, filename)
-            if os.path.exists(path):
+            path = os.path.abspath(os.path.join(directory, filename))
+            if os.path.isfile(path):
                 rule_file_path = path
                 break
         if rule_file_path:
