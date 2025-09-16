@@ -59,6 +59,10 @@ class TmuxCtl:
                 ["tmux", "send-keys", "-t", self.cfg.session, "C-h"], check=False
             )  # Backspace
 
-    def capture_output(self) -> str:
-        res = self._run(["tmux", "capture-pane", "-t", self.cfg.session, "-p"])  # -p to print
+    def capture_output(self, include_ansi: bool = False) -> str:
+        # -p to print to stdout; -e to include escape sequences (ANSI)
+        cmd = ["tmux", "capture-pane", "-t", self.cfg.session, "-p"]
+        if include_ansi:
+            cmd.insert(2, "-e")
+        res = self._run(cmd)
         return res.stdout

@@ -25,3 +25,11 @@ class CLIAdapter(ABC):
     def is_ai_cli_exist(self, output: str) -> bool:
         """Check if the AI CLI is running."""
         pass
+
+    def wants_ansi(self) -> bool:
+        """Whether this adapter prefers capturing ANSI escape sequences from tmux.
+
+        If True, the automation will capture pane output with ANSI codes preserved
+        (tmux `capture-pane -e`). Default False.
+        """
+        return False

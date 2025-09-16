@@ -53,7 +53,7 @@ def run_automation(cfg: Config) -> int:
     # 1) Ensure session exists and start AI CLI
     tmux.create_session()
     time.sleep(1.0)
-    output = tmux.capture_output()
+    output = tmux.capture_output(include_ansi=cli_adapter.wants_ansi())
     if not cli_adapter.is_ai_cli_exist(output):
         log.info(f"Ensuring AI CLI running: {cfg.ai_cmd}")
         tmux.send_text_then_enter(cfg.ai_cmd)
@@ -67,7 +67,7 @@ def run_automation(cfg: Config) -> int:
 
     try:
         while True:
-            output = tmux.capture_output()
+            output = tmux.capture_output(include_ansi=cli_adapter.wants_ansi())
             if output != last_output:
                 last_output = output
 
@@ -125,7 +125,7 @@ def _recover_from_timeout(tmux: TmuxCtl, cli_adapter, log: logging.Logger) -> fl
     for _ in range(20):  # cap iterations to avoid infinite loop
         tmux.send_backspace(backspace_num)
         time.sleep(0.5)
-        output = tmux.capture_output()
+        output = tmux.capture_output(include_ansi=cli_adapter.wants_ansi())
         if cli_adapter.is_input_prompt(output):
             break
         backspace_num = min(backspace_num + 10, 200)
