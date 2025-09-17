@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Callable
 
 from .rules import Rule, build_default_rules
+from .task_rules import TASK_RULES_MAP
 
 
 def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
@@ -109,22 +110,63 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
         return None
 
 
+def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
+    """
+    Get predefined rules for a specific task type.
+
+    Args:
+        task_name: Name of the task type (e.g., 'fix_tests', 'improve_coverage')
+        workdir: Working directory where the project is running
+
+    Returns:
+        List of Rule objects if found, None otherwise
+    """
+    logger = logging.getLogger("forgeflow")
+    
+    if task_name not in TASK_RULES_MAP:
+        logger.warning(f"Task rules not found for task: {task_name}")
+        return None
+    
+    try:
+        # Load task-specific configuration
+        from .task_rules import load_task_config
+        config = load_task_config(task_name, workdir)
+        
+        build_func = TASK_RULES_MAP[task_name]
+        rules = build_func(config)
+        logger.info(f"Successfully loaded {len(rules)} task rules for {task_name}")
+        return rules
+    except Exception as e:
+        logger.error(f"Error loading task rules for {task_name}: {e}")
+        return None
+
+
 def get_rules(config) -> list[Rule]:
     """
     Get rules based on the configuration.
 
+    If a task type is specified, use task-specific rules.
     If a project name is specified, try to load custom rules.
     Otherwise, use the default rules.
 
     Args:
-        config: Configuration object containing project name and other settings
+        config: Configuration object containing project name, task type and other settings
 
     Returns:
         List of Rule objects
     """
     logger = logging.getLogger("forgeflow")
 
-    # If no project specified, use default rules
+    # If task specified, try to load task rules first
+    if config.task:
+        task_rules = get_task_rules(config.task, config.workdir)
+        if task_rules:
+            logger.info(f"Using task rules for: {config.task}")
+            return task_rules
+        else:
+            logger.warning(f"Failed to load task rules for '{config.task}'")
+
+    # If no project specified and no valid task rules, use default rules
     if not config.project:
         logger.info("Using default rules")
         return build_default_rules()

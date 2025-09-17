@@ -92,6 +92,19 @@ forgeflow \
   --log-file forgeflow.log
 ```
 
+To use predefined rules for a specific task type, add the `--task` parameter:
+
+```bash
+forgeflow \
+  --session qwen_session \
+  --workdir "/absolute/path/to/your/project" \
+  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
+  --task fix_tests \
+  --poll 10 \
+  --timeout 2000 \
+  --log-file forgeflow.log
+```
+
 To specify a different AI CLI tool, use the `--cli-type` parameter (default is "gemini"):
 
 ```bash
@@ -236,6 +249,10 @@ The system will automatically search for your rule file in the following order:
 4. `{project_name}.py` in the `examples/` directory
 
 It will then look for a rule-building function. The recommended function name is `build_rules`, which provides consistency across all projects.
+
+### Task Mode
+
+ForgeFlow also supports task mode, which allows you to define reusable rules for specific types of tasks. See [Task Mode Documentation](docs/task_mode.md) for more details.
 
 ### CLI Adapter Pattern
 

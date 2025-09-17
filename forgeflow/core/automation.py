@@ -21,6 +21,7 @@ class Config:
     log_file: str = "forgeflow.log"
     log_to_console: bool = True
     project: str | None = None
+    task: str | None = None
     cli_type: str = "gemini"  # Default to gemini
     log_level: str = "INFO"
 

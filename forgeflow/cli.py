@@ -16,6 +16,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--log-file", default="forgeflow.log", help="log file path")
     p.add_argument("--no-console", action="store_true", help="disable console logging")
     p.add_argument("--project", help="project name to load custom rules")
+    p.add_argument("--task", help="task type to load predefined task rules")
     p.add_argument("--cli-type", default="gemini", help="AI CLI type (gemini, claude_code, etc.)")
     p.add_argument(
         "--log-level",
@@ -39,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
         log_file=args.log_file,
         log_to_console=not args.no_console,
         project=args.project,
+        task=args.task,
         cli_type=args.cli_type,
         log_level=args.log_level,
     )
