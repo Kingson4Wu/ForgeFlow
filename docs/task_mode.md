@@ -28,6 +28,63 @@ This task type focuses on improving the test coverage of the project.
 ### 3. `task_planner` - Task Planner
 This task type follows a TODO file to complete tasks in order, marking them as completed as it goes.
 
+## Creating Custom Task Types
+
+ForgeFlow now supports creating custom task types that can be reused across projects. To create a custom task type:
+
+1. Create a Python file named `{task_name}_task.py` or `{task_name}.py`
+2. Implement a `build_rules(config)` function that returns a list of Rule objects
+3. Place the file in your project directory or in the `examples/` directory
+
+### Example Custom Task
+
+Here's an example of a custom task for code review:
+
+```python
+from forgeflow.core.rules import Rule
+
+def check_review_completed(output: str) -> bool:
+    """Check if a code review has been completed."""
+    return "code review completed" in output.lower() or "review finished" in output.lower()
+
+def code_review_prompt() -> str:
+    """Task prompt for code review task."""
+    return """
+Code Review Task:
+1. Review the code changes for the current task
+2. Check for:
+   - Code style and formatting issues
+   - Potential bugs or edge cases
+   - Performance improvements
+   - Security vulnerabilities
+3. Provide constructive feedback
+4. Approve the changes when all issues are addressed
+5. When review is complete, respond with "Code review completed"
+"""
+
+def build_rules(config: dict) -> list[Rule]:
+    """Build rules for code review task."""
+    return [
+        # Stop when review is completed
+        Rule(check=check_review_completed, command=None),
+        # Default task prompt
+        Rule(check=lambda out: True, command=code_review_prompt()),
+    ]
+```
+
+Save this as `code_review_task.py` in your project directory, and then use it with:
+
+```bash
+forgeflow \
+  --session qwen_session \
+  --workdir "/absolute/path/to/your/project" \
+  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
+  --task code_review \
+  --poll 10 \
+  --timeout 2000 \
+  --log-file forgeflow.log
+```
+
 ## Task Configuration
 
 You can create configuration files for tasks to customize their behavior. Configuration files should be placed in the project's working directory with the filename format `{task_name}_config.json`.

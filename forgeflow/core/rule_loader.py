@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Callable
 
 from .rules import Rule, build_default_rules
-from .task_rules import TASK_RULES_MAP
+from .task_rules import get_task_rules_builder, load_custom_task_rules
 
 
 def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
@@ -114,6 +114,8 @@ def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
     """
     Get predefined rules for a specific task type.
 
+    This function first looks for custom task rules, then falls back to built-in rules.
+
     Args:
         task_name: Name of the task type (e.g., 'fix_tests', 'improve_coverage')
         workdir: Working directory where the project is running
@@ -122,24 +124,38 @@ def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
         List of Rule objects if found, None otherwise
     """
     logger = logging.getLogger("forgeflow")
-
-    if task_name not in TASK_RULES_MAP:
-        logger.warning(f"Task rules not found for task: {task_name}")
-        return None
-
-    try:
-        # Load task-specific configuration
-        from .task_rules import load_task_config
-
-        config = load_task_config(task_name, workdir)
-
-        build_func = TASK_RULES_MAP[task_name]
-        rules = build_func(config)
-        logger.info(f"Successfully loaded {len(rules)} task rules for {task_name}")
-        return rules
-    except Exception as e:
-        logger.error(f"Error loading task rules for {task_name}: {e}")
-        return None
+    
+    # First, try to load custom task rules
+    custom_rules_builder = load_custom_task_rules(task_name, workdir)
+    if custom_rules_builder:
+        try:
+            # Load task-specific configuration
+            from .task_rules import load_task_config
+            config = load_task_config(task_name, workdir)
+            
+            rules = custom_rules_builder(config)
+            logger.info(f"Successfully loaded {len(rules)} custom task rules for {task_name}")
+            return rules
+        except Exception as e:
+            logger.error(f"Error building custom task rules for {task_name}: {e}")
+    
+    # If no custom rules, try built-in rules
+    rules_builder = get_task_rules_builder(task_name)
+    if rules_builder:
+        try:
+            # Load task-specific configuration
+            from .task_rules import load_task_config
+            config = load_task_config(task_name, workdir)
+            
+            rules = rules_builder(config)
+            logger.info(f"Successfully loaded {len(rules)} built-in task rules for {task_name}")
+            return rules
+        except Exception as e:
+            logger.error(f"Error building built-in task rules for {task_name}: {e}")
+            return None
+    
+    logger.warning(f"Task rules not found for task: {task_name}")
+    return None
 
 
 def get_rules(config) -> list[Rule]:
