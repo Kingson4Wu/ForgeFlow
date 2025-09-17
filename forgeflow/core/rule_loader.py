@@ -122,16 +122,17 @@ def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
         List of Rule objects if found, None otherwise
     """
     logger = logging.getLogger("forgeflow")
-    
+
     if task_name not in TASK_RULES_MAP:
         logger.warning(f"Task rules not found for task: {task_name}")
         return None
-    
+
     try:
         # Load task-specific configuration
         from .task_rules import load_task_config
+
         config = load_task_config(task_name, workdir)
-        
+
         build_func = TASK_RULES_MAP[task_name]
         rules = build_func(config)
         logger.info(f"Successfully loaded {len(rules)} task rules for {task_name}")
