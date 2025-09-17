@@ -5,10 +5,91 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Callable
+from typing import Callable, TypeVar
 
 from .rules import Rule, build_default_rules
 from .task_rules import get_task_rules_builder, load_custom_task_rules
+
+logger = logging.getLogger("forgeflow")
+
+T = TypeVar("T")
+
+
+def _find_rule_file(file_names: list[str], directories: list[str]) -> str | None:
+    """Find a rule file in the given directories.
+
+    Args:
+        file_names: List of possible file names to look for
+        directories: List of directories to search in
+
+    Returns:
+        Path to the found file, or None if not found
+    """
+    for directory in directories:
+        for filename in file_names:
+            path = os.path.abspath(os.path.join(directory, filename))
+            if os.path.isfile(path):
+                return path
+    return None
+
+
+def _get_examples_dir() -> str | None:
+    """Get the examples directory path robustly.
+
+    Returns:
+        Path to examples directory, or None if not found
+    """
+    try:
+        import forgeflow as _forgeflow
+
+        pkg_dir = Path(_forgeflow.__file__).resolve().parent
+        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
+        examples_dir = (repo_root / "examples").resolve()
+        return str(examples_dir)
+    except Exception:
+        # Best effort; if not available (e.g., installed package without examples), skip
+        return None
+
+
+def _load_module_from_file(file_path: str, module_name: str) -> object | None:
+    """Load a Python module from a file path.
+
+    Args:
+        file_path: Path to the Python file
+        module_name: Name to give the module
+
+    Returns:
+        Loaded module, or None if failed
+    """
+    try:
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        if spec is None or spec.loader is None:
+            logger.error(f"Failed to load spec for {file_path}")
+            return None
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+        return module
+    except Exception as e:
+        logger.error(f"Error loading module from {file_path}: {e}")
+        return None
+
+
+def _find_build_function(module: object, possible_names: list[str]) -> Callable | None:
+    """Find a build function in a module.
+
+    Args:
+        module: Module to search in
+        possible_names: List of possible function names to look for
+
+    Returns:
+        Found function, or None if not found
+    """
+    for func_name in possible_names:
+        if hasattr(module, func_name):
+            return getattr(module, func_name)
+    return None
 
 
 def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
@@ -28,36 +109,19 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
     Returns:
         List of Rule objects if found, None otherwise
     """
-    logger = logging.getLogger("forgeflow")
-
     # Possible file names to look for
     possible_files = [f"{project_name}_rules.py", f"{project_name}.py"]
 
     # Possible directories to look in
     possible_dirs = [workdir]
 
-    # Add repo examples directory robustly (works in source checkout)
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        examples_dir = (repo_root / "examples").resolve()
-        possible_dirs.append(str(examples_dir))
-    except Exception:
-        # Best effort; if not available (e.g., installed package without examples), skip
-        pass
+    # Add repo examples directory if available
+    examples_dir = _get_examples_dir()
+    if examples_dir:
+        possible_dirs.append(examples_dir)
 
     # Try to find the rule file
-    rule_file_path = None
-    for directory in possible_dirs:
-        for filename in possible_files:
-            path = os.path.abspath(os.path.join(directory, filename))
-            if os.path.isfile(path):
-                rule_file_path = path
-                break
-        if rule_file_path:
-            break
+    rule_file_path = _find_rule_file(possible_files, possible_dirs)
 
     # Check if the file exists
     if not rule_file_path:
@@ -66,47 +130,35 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
 
     logger.info(f"Loading custom rules from: {rule_file_path}")
 
+    # Load the module dynamically
+    module = _load_module_from_file(rule_file_path, f"{project_name}_rules")
+    if module is None:
+        return None
+
+    # Look for a function that builds rules
+    # Try function names in order of preference
+    # Prioritize build_rules as the standard function name
+    possible_names = [
+        "build_rules",  # Standard function name for all projects
+        f"build_{project_name}_rules",  # e.g., build_web_project_rules
+        f"build_{project_name}",  # e.g., build_web_project
+        "build_custom_rules",
+        f"{project_name}_rules",  # e.g., web_project_rules
+        "rules",
+    ]
+
+    build_func = _find_build_function(module, possible_names)
+    if build_func is None:
+        logger.error(f"No build function found in {rule_file_path}")
+        return None
+
+    # Call the build function to get the rules
     try:
-        # Load the module dynamically
-        spec = importlib.util.spec_from_file_location(f"{project_name}_rules", rule_file_path)
-        if spec is None or spec.loader is None:
-            logger.error(f"Failed to load spec for {rule_file_path}")
-            return None
-
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[f"{project_name}_rules"] = module
-        spec.loader.exec_module(module)
-
-        # Look for a function that builds rules
-        build_func: Callable[[], list[Rule]] | None = None
-
-        # Try function names in order of preference
-        # Prioritize build_rules as the standard function name
-        possible_names = [
-            "build_rules",  # Standard function name for all projects
-            f"build_{project_name}_rules",  # e.g., build_web_project_rules
-            f"build_{project_name}",  # e.g., build_web_project
-            "build_custom_rules",
-            f"{project_name}_rules",  # e.g., web_project_rules
-            "rules",
-        ]
-
-        for func_name in possible_names:
-            if hasattr(module, func_name):
-                build_func = getattr(module, func_name)
-                break
-
-        if build_func is None:
-            logger.error(f"No build function found in {rule_file_path}")
-            return None
-
-        # Call the build function to get the rules
         rules = build_func()
         logger.info(f"Successfully loaded {len(rules)} custom rules")
         return rules
-
     except Exception as e:
-        logger.error(f"Error loading custom rules from {rule_file_path}: {e}")
+        logger.error(f"Error calling build function in {rule_file_path}: {e}")
         return None
 
 
@@ -123,8 +175,6 @@ def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
     Returns:
         List of Rule objects if found, None otherwise
     """
-    logger = logging.getLogger("forgeflow")
-
     # First, try to load custom task rules
     custom_rules_builder = load_custom_task_rules(task_name, workdir)
     if custom_rules_builder:
@@ -174,8 +224,6 @@ def get_rules(config) -> list[Rule]:
     Returns:
         List of Rule objects
     """
-    logger = logging.getLogger("forgeflow")
-
     # If task specified, try to load task rules first
     if config.task:
         task_rules = get_task_rules(config.task, config.workdir)

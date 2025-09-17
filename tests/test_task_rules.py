@@ -5,6 +5,10 @@ from unittest.mock import patch
 
 from forgeflow.core.rules import Rule
 from forgeflow.core.task_rules import (
+    _find_build_function,
+    _find_rule_file,
+    _get_examples_dir,
+    _load_module_from_file,
     build_fix_tests_rules,
     build_improve_coverage_rules,
     build_task_planner_rules,
@@ -15,6 +19,7 @@ from forgeflow.core.task_rules import (
     check_task_completed,
     check_test_failures,
     get_task_rules_builder,
+    load_task_config,
 )
 
 
@@ -166,3 +171,76 @@ def test_task_rules_with_config():
             # Check that the target coverage is used in the rules
             # We can't easily test the lambda functions directly, but we can verify the structure
             assert len(rules) == 3
+
+
+def test_find_rule_file():
+    """Test the _find_rule_file helper function."""
+    # Test with existing file
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_file = os.path.join(tmpdir, "test_file.py")
+        with open(test_file, "w") as f:
+            f.write("# test file")
+
+        result = _find_rule_file(["test_file.py"], [tmpdir])
+        assert result == test_file
+
+    # Test with non-existing file
+    result = _find_rule_file(["non_existent.py"], ["/tmp"])
+    assert result is None
+
+
+def test_get_examples_dir():
+    """Test the _get_examples_dir helper function."""
+    # Test that it returns a path (we can't easily test the exact path)
+    result = _get_examples_dir()
+    # Should be either a string or None
+    assert isinstance(result, (str, type(None)))
+
+
+def test_load_module_from_file():
+    """Test the _load_module_from_file helper function."""
+    # Test with non-existent file
+    result = _load_module_from_file("/non/existent/file.py", "test_module")
+    assert result is None
+
+
+def test_find_build_function():
+    """Test the _find_build_function helper function."""
+
+    # Create a mock module with a function
+    class MockModule:
+        def __init__(self):
+            self.test_func = lambda: "test"
+
+    mock_module = MockModule()
+
+    # Test finding existing function
+    result = _find_build_function(mock_module, ["test_func"])
+    assert result is not None
+    assert result() == "test"
+
+    # Test not finding function
+    result = _find_build_function(mock_module, ["non_existent_func"])
+    assert result is None
+
+
+def test_load_task_config():
+    """Test the load_task_config function."""
+    # Test with non-existent config file
+    config = load_task_config("test_task", "/non/existent/dir")
+    assert config == {}
+
+    # Test with existing config file
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = os.path.join(tmpdir, "test_task_config.json")
+        config_data = {"test_key": "test_value"}
+
+        with open(config_file, "w") as f:
+            json.dump(config_data, f)
+
+        # Patch os.path.exists to return True for our config file
+        with patch("os.path.exists") as mock_exists:
+            mock_exists.side_effect = lambda path: path == config_file or os.path.exists(path)
+
+            config = load_task_config("test_task", tmpdir)
+            assert config == config_data
