@@ -25,7 +25,7 @@ Code Review Task:
 
 def build_rules(config: dict) -> list[Rule]:
     """Build rules for code review task.
-    
+
     This is the standard function name that ForgeFlow looks for.
     """
     return [

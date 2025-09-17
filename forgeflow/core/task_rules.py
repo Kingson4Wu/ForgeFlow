@@ -1,13 +1,13 @@
 import importlib.util
+import json
 import logging
 import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional
 
 from .rules import Rule
-
 
 logger = logging.getLogger("forgeflow")
 
@@ -263,7 +263,9 @@ def build_task_planner_rules(config: dict[str, Any]) -> list[Rule]:
 
 
 # ---------- Dynamic Task Rule Loading ----------
-def load_custom_task_rules(task_name: str, workdir: str) -> Optional[Callable[[dict[str, Any]], list[Rule]]]:
+def load_custom_task_rules(
+    task_name: str, workdir: str
+) -> Optional[Callable[[dict[str, Any]], list[Rule]]]:
     """Load custom task rules from a Python file.
 
     The function will look for a file in this order:
