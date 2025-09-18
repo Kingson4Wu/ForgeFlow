@@ -80,10 +80,9 @@ def run_automation(cfg: Config) -> int:
                     break
                 # Handle both string commands and callable commands
                 if callable(cmd):
-                    cmd_str = str(cmd)
-                    log.info(f"Sending command: {cmd_str[:120]}...")
                     # Execute the callable to get the actual command string
                     cmd = cmd()
+                    log.info(f"Sending command: {cmd[:120]}...")
                 else:
                     log.info(f"Sending command: {cmd[:120]}...")
                 tmux.send_text_then_enter(cmd)
