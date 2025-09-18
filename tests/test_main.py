@@ -17,15 +17,28 @@ def test_main():
     #     log_to_console=True,
     #     project="fastproxy",
     # )
+    # cfg = Config(
+    #     session="fastproxy_session",
+    #     workdir=str(Path.home() / "programming/go-src/fast_proxy"),
+    #     ai_cmd="codex --yolo",
+    #     poll_interval=10,
+    #     input_prompt_timeout=2000,
+    #     log_file="forge_flow.log",
+    #     log_to_console=True,
+    #     project="fastproxy",
+    #     cli_type="codex",
+    # )
+
     cfg = Config(
-        session="fastproxy_session",
-        workdir=str(Path.home() / "programming/go-src/fast_proxy"),
-        ai_cmd="codex --yolo",
+        session="qwen_session",
+        workdir=str(Path.home() / "programming/rust-src/mesh-talk"),
+        ai_cmd="qwen --proxy http://localhost:7890 --yolo",
         poll_interval=10,
         input_prompt_timeout=2000,
         log_file="forge_flow.log",
         log_to_console=True,
-        project="fastproxy",
-        cli_type="codex",
+        project="mesh-talk",
+        cli_type="gemini",
+        task="task_planner",
     )
     run_automation(cfg)

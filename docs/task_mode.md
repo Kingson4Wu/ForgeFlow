@@ -34,7 +34,7 @@ ForgeFlow now supports creating custom task types that can be reused across proj
 
 1. Create a Python file named `{task_name}_task.py` or `{task_name}.py`
 2. Implement a `build_rules(config)` function that returns a list of Rule objects
-3. Place the file in your project directory or in the `examples/` directory
+3. Place the file in your project directory, in the `user_custom_rules/` directory, or in the `default_rules/` directory for built-in default rules
 
 ### Example Custom Task
 
@@ -72,7 +72,7 @@ def build_rules(config: dict) -> list[Rule]:
     ]
 ```
 
-Save this as `code_review_task.py` in your project directory, and then use it with:
+Save this as `code_review_task.py` in your project directory, in the `user_custom_rules/` directory, or in the `default_rules/` directory, and then use it with:
 
 ```bash
 forgeflow \

@@ -78,7 +78,14 @@ def run_automation(cfg: Config) -> int:
                 if cmd is None:
                     log.info("No more commands to execute. Stopping.")
                     break
-                log.info(f"Sending command: {cmd[:120]}...")
+                # Handle both string commands and callable commands
+                if callable(cmd):
+                    cmd_str = str(cmd)
+                    log.info(f"Sending command: {cmd_str[:120]}...")
+                    # Execute the callable to get the actual command string
+                    cmd = cmd()
+                else:
+                    log.info(f"Sending command: {cmd[:120]}...")
                 tmux.send_text_then_enter(cmd)
                 time.sleep(2.0)
 

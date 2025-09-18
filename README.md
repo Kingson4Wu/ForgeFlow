@@ -228,25 +228,33 @@ We provide several examples to help you get started:
 
 1. [custom_rules_example.py](examples/custom_rules_example.py) - General custom rules example (
    function: `build_rules`)
-2. [web_project_rules.py](examples/web_project_rules.py) - Web project specific rules example (
+2. [myproject_rules.py](examples/myproject_rules.py) - Template for creating your own project rules (
    function: `build_rules`)
-3. [myproject_rules.py](examples/myproject_rules.py) - Template for creating your own project rules (
-   function: `build_rules`)
+
+For default rules and task-specific rules, please check the [default_rules/](default_rules/) directory:
+
+1. [fastproxy_rules.py](default_rules/fastproxy_rules.py) - Fastproxy project specific rules
+2. [web_project_rules.py](default_rules/web_project_rules.py) - Web project specific rules
+3. [code_review_task.py](default_rules/code_review_task.py) - Code review task rules
 
 #### Using Custom Rules
 
 Use the `--project` parameter to automatically load your custom rules:
 
 1. Create a rule file named `{project_name}_rules.py` (e.g., `myproject_rules.py`) or `{project_name}.py`
-2. Place it in your project directory or in the `examples/` directory
+2. Place it in your project directory or in the `user_custom_rules/` directory
 3. Run ForgeFlow with `--project myproject` parameter
 
 The system will automatically search for your rule file in the following order:
 
 1. `{project_name}_rules.py` in the current working directory
 2. `{project_name}.py` in the current working directory
-3. `{project_name}_rules.py` in the `examples/` directory
-4. `{project_name}.py` in the `examples/` directory
+3. `{project_name}_rules.py` in the `user_custom_rules/` directory
+4. `{project_name}.py` in the `user_custom_rules/` directory
+5. `{project_name}_rules.py` in the `default_rules/` directory (built-in default rules)
+6. `{project_name}.py` in the `default_rules/` directory (built-in default rules)
+7. `{project_name}_rules.py` in the `examples/` directory (for backward compatibility)
+8. `{project_name}.py` in the `examples/` directory (for backward compatibility)
 
 It will then look for a rule-building function. The recommended function name is `build_rules`, which provides consistency across all projects.
 
@@ -272,7 +280,7 @@ ForgeFlow comes with several built-in task types:
 - `improve_coverage`: Improve test coverage to a target percentage
 - `task_planner`: Follow a TODO list to complete tasks in order
 
-Additionally, you can create custom task types by implementing a Python module with a `build_rules` function. See [Task Mode Documentation](docs/task_mode.md) for more details on creating custom tasks.
+Additionally, you can create custom task types by implementing a Python module with a `build_rules` function. Default task configurations can be found in the [default_rules/](default_rules/) directory. See [Task Mode Documentation](docs/task_mode.md) for more details on creating custom tasks.
 
 ### CLI Adapter Pattern
 

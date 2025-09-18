@@ -5,10 +5,7 @@
   "task_pattern": "^\\s*[-*]\\s+\\[(.)\\]\\s+(.+)$",
   "next_task_prompt": "Please proceed with the next task in the TODO list.",
   "task_completion_indicators": [
-    "task completed",
-    "task finished",
-    "done with task",
-    "finished task"
+    "task completed"
   ],
   "commit_message_template": "Complete task: {task_title}"
 }

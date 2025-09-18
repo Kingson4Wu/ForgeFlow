@@ -9,18 +9,42 @@ from forgeflow.core.task_rules import (
     _find_rule_file,
     _get_examples_dir,
     _load_module_from_file,
-    build_fix_tests_rules,
-    build_improve_coverage_rules,
-    build_task_planner_rules,
-    check_all_tasks_done,
-    check_all_tests_passed,
-    check_coverage_below_threshold,
-    check_coverage_target_reached,
-    check_task_completed,
-    check_test_failures,
     get_task_rules_builder,
     load_task_config,
 )
+
+# Import the functions from the new separate files
+from forgeflow.tasks.fix_tests_task import (
+    check_all_tests_passed,
+    check_test_failures,
+)
+from forgeflow.tasks.improve_coverage_task import (
+    check_coverage_below_threshold,
+    check_coverage_target_reached,
+)
+from forgeflow.tasks.task_planner_task import (
+    check_all_tasks_done,
+    check_task_completed,
+)
+
+
+# We need to define the builder functions for testing
+def build_fix_tests_rules(config):
+    from forgeflow.tasks.fix_tests_task import build_rules
+
+    return build_rules(config)
+
+
+def build_improve_coverage_rules(config):
+    from forgeflow.tasks.improve_coverage_task import build_rules
+
+    return build_rules(config)
+
+
+def build_task_planner_rules(config):
+    from forgeflow.tasks.task_planner_task import build_rules
+
+    return build_rules(config)
 
 
 def test_check_test_failures():
@@ -78,6 +102,12 @@ def test_check_task_completed():
     assert check_task_completed("work done", config)
     assert not check_task_completed("task completed", config)  # Not in custom indicators
 
+    # Test that instruction text doesn't trigger false positive
+    assert not check_task_completed(
+        'If you\'ve completed the current task, respond with "Task completed"', config
+    )
+    assert not check_task_completed("Please say 'task completed' when done", config)
+
 
 def test_check_all_tasks_done():
     # Test that all tasks done is detected
@@ -86,6 +116,10 @@ def test_check_all_tasks_done():
     # Test that it's not triggered by partial matches
     assert not check_all_tasks_done("All tasks")
     assert not check_all_tasks_done("completed")
+
+    # Test that instruction text doesn't trigger false positive
+    assert not check_all_tasks_done('return the message: "All tasks have been completed."')
+    assert not check_all_tasks_done('respond with "All tasks have been completed."')
 
 
 def test_build_fix_tests_rules():

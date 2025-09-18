@@ -51,6 +51,42 @@ def _get_examples_dir() -> str | None:
         return None
 
 
+def _get_default_rules_dir() -> str | None:
+    """Get the default rules directory path robustly.
+
+    Returns:
+        Path to default rules directory, or None if not found
+    """
+    try:
+        import forgeflow as _forgeflow
+
+        pkg_dir = Path(_forgeflow.__file__).resolve().parent
+        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
+        default_rules_dir = (repo_root / "default_rules").resolve()
+        return str(default_rules_dir)
+    except Exception:
+        # Best effort; if not available, skip
+        return None
+
+
+def _get_user_custom_rules_dir() -> str | None:
+    """Get the user custom rules directory path robustly.
+
+    Returns:
+        Path to user custom rules directory, or None if not found
+    """
+    try:
+        import forgeflow as _forgeflow
+
+        pkg_dir = Path(_forgeflow.__file__).resolve().parent
+        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
+        user_custom_rules_dir = (repo_root / "user_custom_rules").resolve()
+        return str(user_custom_rules_dir)
+    except Exception:
+        # Best effort; if not available, skip
+        return None
+
+
 def _load_module_from_file(file_path: str, module_name: str) -> object | None:
     """Load a Python module from a file path.
 
@@ -99,8 +135,12 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
     The function will look for a file in this order:
     1. `{project_name}_rules.py` in the current working directory
     2. `{project_name}.py` in the current working directory
-    3. `{project_name}_rules.py` in the forgeflow/examples directory
-    4. `{project_name}.py` in the forgeflow/examples directory
+    3. `{project_name}_rules.py` in the user_custom_rules directory
+    4. `{project_name}.py` in the user_custom_rules directory
+    5. `{project_name}_rules.py` in the default_rules directory (for built-in default rules)
+    6. `{project_name}.py` in the default_rules directory (for built-in default rules)
+    7. `{project_name}_rules.py` in the forgeflow/examples directory (for backward compatibility)
+    8. `{project_name}.py` in the forgeflow/examples directory (for backward compatibility)
 
     Args:
         project_name: Name of the project (used to find the rule file)
@@ -115,7 +155,17 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
     # Possible directories to look in
     possible_dirs = [workdir]
 
-    # Add repo examples directory if available
+    # Add user custom rules directory if available
+    user_custom_rules_dir = _get_user_custom_rules_dir()
+    if user_custom_rules_dir:
+        possible_dirs.append(user_custom_rules_dir)
+
+    # Add default rules directory if available
+    default_rules_dir = _get_default_rules_dir()
+    if default_rules_dir:
+        possible_dirs.append(default_rules_dir)
+
+    # Add repo examples directory if available (for backward compatibility)
     examples_dir = _get_examples_dir()
     if examples_dir:
         possible_dirs.append(examples_dir)
