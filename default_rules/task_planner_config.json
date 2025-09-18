@@ -3,9 +3,9 @@
   "completed_marker": "✓",
   "pending_marker": "☐",
   "task_pattern": "^\\s*[-*]\\s+\\[(.)\\]\\s+(.+)$",
-  "next_task_prompt": "Please proceed with the next task in the TODO list.",
+  "next_task_prompt": "Please proceed with the next task in the TODO list, ensuring it meets your project’s completion standards and best practices (for example, tests are written and pass, and code follows style and review guidelines).",
   "task_completion_indicators": [
-    "task completed"
+    "[TASK_COMPLETED]"
   ],
   "commit_message_template": "Complete task: {task_title}"
 }
