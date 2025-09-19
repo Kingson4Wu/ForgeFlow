@@ -198,5 +198,6 @@ def next_command(output: str, rules: list[Rule]) -> str | None:
                 return rule.command
         except Exception:
             # Ignore exceptions in individual rules and continue evaluation
+            # This is a deliberate design choice to ensure robust rule evaluation
             continue
     return "continue"

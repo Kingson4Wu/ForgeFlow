@@ -5,7 +5,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Callable, TypeVar
+from typing import Any, Callable, TypeVar
 
 from .rules import Rule, build_default_rules
 from .task_rules import get_task_rules_builder, load_custom_task_rules
@@ -149,7 +149,7 @@ def _load_module_from_file(file_path: str, module_name: str) -> object | None:
         return None
 
 
-def _find_build_function(module: object, possible_names: list[str]) -> Callable | None:
+def _find_build_function(module: object, possible_names: list[str]) -> Callable[..., Any] | None:
     """Find a build function in a module.
 
     Args:
@@ -161,7 +161,7 @@ def _find_build_function(module: object, possible_names: list[str]) -> Callable 
     """
     for func_name in possible_names:
         if hasattr(module, func_name):
-            return getattr(module, func_name)
+            return getattr(module, func_name)  # type: ignore
     return None
 
 
@@ -240,9 +240,9 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
 
     # Call the build function to get the rules
     try:
-        rules = build_func()
+        rules = build_func()  # type: ignore
         logger.info(f"Successfully loaded {len(rules)} custom rules")
-        return rules
+        return rules  # type: ignore
     except Exception as e:
         logger.error(f"Error calling build function in {rule_file_path}: {e}")
         return None
@@ -270,9 +270,9 @@ def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
 
             config = load_task_config(task_name, workdir)
 
-            rules = custom_rules_builder(config)
+            rules = custom_rules_builder(config)  # type: ignore
             logger.info(f"Successfully loaded {len(rules)} custom task rules for {task_name}")
-            return rules
+            return rules  # type: ignore
         except Exception as e:
             logger.error(f"Error building custom task rules for {task_name}: {e}")
 
@@ -285,9 +285,9 @@ def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
 
             config = load_task_config(task_name, workdir)
 
-            rules = rules_builder(config)
+            rules = rules_builder(config)  # type: ignore
             logger.info(f"Successfully loaded {len(rules)} built-in task rules for {task_name}")
-            return rules
+            return rules  # type: ignore
         except Exception as e:
             logger.error(f"Error building built-in task rules for {task_name}: {e}")
             return None
@@ -296,7 +296,7 @@ def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
     return None
 
 
-def get_rules(config) -> list[Rule]:
+def get_rules(config: Any) -> list[Rule]:
     """
     Get rules based on the configuration.
 

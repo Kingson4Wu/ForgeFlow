@@ -38,6 +38,7 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
             user_custom_rules_dir = (repo_root / "user_custom_rules" / "tasks").resolve()
             config_file = os.path.join(user_custom_rules_dir, f"{task_name}_config.json")
         except Exception:
+            # Best effort; if not available, continue with next option
             pass
 
     # If not found in user custom rules tasks directory, try default rules directory
@@ -49,6 +50,7 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
             default_rules_dir = (pkg_dir / "tasks" / "configs").resolve()
             config_file = os.path.join(default_rules_dir, f"{task_name}_config.json")
         except Exception:
+            # Best effort; if not available, continue with next option
             pass
 
     # If not found in default rules directory, try examples tasks directory (for backward compatibility)
@@ -61,20 +63,33 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
             examples_dir = (repo_root / "examples" / "tasks").resolve()
             config_file = os.path.join(examples_dir, f"{task_name}_config.json")
         except Exception:
+            # Best effort; if not available, continue with next option
             pass
 
     if not os.path.exists(config_file):
-        return {}
+        return {}  # type: ignore
 
     try:
         with open(config_file) as f:
             return json.load(f)
     except Exception:
         # If there's an error reading the config file, return empty dict
-        return {}
+        return {}  # type: ignore
 
 
 # ---------- Task Rules ----------
+def _is_instruction_text_in_task_output(output_lower: str) -> bool:
+    """Check if the output contains instruction text that should be ignored for task completion."""
+    return (
+        'respond with "task completed"' in output_lower
+        or "respond with 'task completed'" in output_lower
+        or 'say "task completed"' in output_lower
+        or "say 'task completed'" in output_lower
+        or "when you've completed the current task" in output_lower
+        or "please say 'task completed' when done" in output_lower
+    )
+
+
 def check_task_completed(output: str, config: dict[str, Any]) -> bool:
     """Check if a task has been completed based on the output and config."""
     # Get task completion indicators from config, with defaults
@@ -92,16 +107,25 @@ def check_task_completed(output: str, config: dict[str, Any]) -> bool:
 
     # Prevent false positives by checking that this isn't just part of our own prompt
     # If we're seeing our own instruction text, it's not a real completion
-    is_instruction_text = (
-        'respond with "task completed"' in output_lower
-        or "respond with 'task completed'" in output_lower
-        or 'say "task completed"' in output_lower
-        or "say 'task completed'" in output_lower
-        or "when you've completed the current task" in output_lower
-        or "please say 'task completed' when done" in output_lower
-    )
+    is_instruction_text = _is_instruction_text_in_task_output(output_lower)
 
     return has_completion_indicator and not is_instruction_text
+
+
+def _is_instruction_text_in_output(output_lower: str) -> bool:
+    """Check if the output contains instruction text that should be ignored."""
+    return (
+        'return the message: "all tasks have been completed"' in output_lower
+        or "return the message: 'all tasks have been completed'" in output_lower
+        or 'respond with "all tasks have been completed"' in output_lower
+        or "respond with 'all tasks have been completed'" in output_lower
+        or "all tasks have been completed." in output_lower
+        and (
+            "respond with" in output_lower
+            or "return the message" in output_lower
+            or "please say" in output_lower
+        )
+    )
 
 
 def check_all_tasks_done(output: str) -> bool:
@@ -114,18 +138,7 @@ def check_all_tasks_done(output: str) -> bool:
 
     # Prevent false positives by checking that this isn't just part of our own prompt
     # If we're seeing our own instruction text, it's not a real completion
-    is_instruction_text = (
-        'return the message: "all tasks have been completed"' in output_lower
-        or "return the message: 'all tasks have been completed'" in output_lower
-        or 'respond with "all tasks have been completed"' in output_lower
-        or "respond with 'all tasks have been completed'" in output_lower
-        or "all tasks have been completed." in output_lower
-        and (
-            "respond with" in output_lower
-            or "return the message" in output_lower
-            or "please say" in output_lower
-        )
-    )
+    is_instruction_text = _is_instruction_text_in_output(output_lower)
 
     return has_target_text and not is_instruction_text
 
@@ -151,7 +164,7 @@ Task Planning Task:
    * Make sure the implementation meets requirements.
 
 4. Verify against completion standards.
-   * Only when the task fully meets your project’s own completion standards and best practices, you may proceed (for example, ensure tests are written and pass, and code follows style and review guidelines).
+   * Only when the task fully meets your project's own completion standards and best practices, you may proceed (for example, ensure tests are written and pass, and code follows style and review guidelines).
    * If it does not fully follow the guidelines, continue refining the task.
 
 5. Mark and commit the task properly.
@@ -160,7 +173,7 @@ Task Planning Task:
      * Mark the task as completed in the TODO file.
 
 6. Move to the next task.
-   * Repeat steps 1–5 until all tasks are done.
+   * Repeat steps 1-5 until all tasks are done.
 
 Use the following indicators to determine if a task is complete:
 If you've completed the current task, respond with "[TASK_COMPLETED]" and wait for further instructions.

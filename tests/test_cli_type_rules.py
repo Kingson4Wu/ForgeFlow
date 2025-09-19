@@ -1,7 +1,7 @@
 from forgeflow.core.rules import build_default_rules
 
 
-def test_build_default_rules_gemini():
+def test_build_default_rules_gemini() -> None:
     """Test building default rules for Gemini CLI."""
     rules = build_default_rules("gemini")
     assert len(rules) > 0
@@ -11,7 +11,7 @@ def test_build_default_rules_gemini():
     assert rules[-1].command is not None and "All test cases are fully covered" in rules[-1].command
 
 
-def test_build_default_rules_codex():
+def test_build_default_rules_codex() -> None:
     """Test building default rules for Codex CLI."""
     rules = build_default_rules("codex")
     assert len(rules) > 0
@@ -21,7 +21,7 @@ def test_build_default_rules_codex():
     assert rules[-1].command is not None and "All test cases are fully covered" in rules[-1].command
 
 
-def test_build_default_rules_claude_code():
+def test_build_default_rules_claude_code() -> None:
     """Test building default rules for Claude Code CLI."""
     rules = build_default_rules("claude_code")
     assert len(rules) > 0
@@ -31,7 +31,7 @@ def test_build_default_rules_claude_code():
     assert rules[-1].command is not None and "All test cases are fully covered" in rules[-1].command
 
 
-def test_build_default_rules_default():
+def test_build_default_rules_default() -> None:
     """Test building default rules with default CLI type."""
     rules = build_default_rules()  # Should default to "gemini"
     assert len(rules) > 0
@@ -41,7 +41,7 @@ def test_build_default_rules_default():
     assert rules[-1].command is not None and "All test cases are fully covered" in rules[-1].command
 
 
-def test_cli_specific_rules():
+def test_cli_specific_rules() -> None:
     """Test that CLI-specific rules are included."""
     gemini_rules = build_default_rules("gemini")
     codex_rules = build_default_rules("codex")

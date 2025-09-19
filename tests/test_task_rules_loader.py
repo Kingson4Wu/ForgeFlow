@@ -13,7 +13,7 @@ from forgeflow.core.task_rules import (
 )
 
 
-def test_find_rule_file():
+def test_find_rule_file() -> None:
     """Test _find_rule_file function."""
     # Create temporary files for testing
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -42,27 +42,27 @@ def test_find_rule_file():
         assert result is None
 
 
-def test_get_examples_dir():
+def test_get_examples_dir() -> None:
     """Test _get_examples_dir function."""
     # This test will pass if the function returns a string or None
     result = _get_examples_dir()
     assert result is None or isinstance(result, str)
 
 
-def test_get_user_custom_rules_dir():
+def test_get_user_custom_rules_dir() -> None:
     """Test _get_user_custom_rules_dir function."""
     # This test will pass if the function returns a string or None
     result = _get_user_custom_rules_dir()
     assert result is None or isinstance(result, str)
 
 
-def test_load_module_from_file_not_found():
+def test_load_module_from_file_not_found() -> None:
     """Test _load_module_from_file with non-existent file."""
     result = _load_module_from_file("/non/existent/file.py", "test_module")
     assert result is None
 
 
-def test_load_module_from_file_invalid_syntax():
+def test_load_module_from_file_invalid_syntax() -> None:
     """Test _load_module_from_file with invalid Python file."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
         f.write("invalid python syntax +++")
@@ -75,17 +75,17 @@ def test_load_module_from_file_invalid_syntax():
         os.unlink(temp_path)
 
 
-def test_find_build_function():
+def test_find_build_function() -> None:
     """Test _find_build_function function."""
 
     class MockModule:
-        def build_rules(self):
+        def build_rules(self) -> list:
             return []
 
-        def build_test_task_rules(self):
+        def build_test_task_rules(self) -> list:
             return []
 
-        def build_test_task(self):
+        def build_test_task(self) -> list:
             return []
 
     mock_module = MockModule()
@@ -103,24 +103,24 @@ def test_find_build_function():
     assert result is None
 
 
-def test_load_task_config_not_found():
+def test_load_task_config_not_found() -> None:
     """Test load_task_config when no config file is found."""
     result = load_task_config("nonexistent_task", "/tmp")
     assert result == {}
 
 
 # Mock functions for testing load_custom_task_rules
-def mock_get_user_custom_rules_dir():
+def mock_get_user_custom_rules_dir() -> None:
     return None
 
 
-def mock_get_examples_dir():
+def mock_get_examples_dir() -> None:
     return None
 
 
 @patch("forgeflow.core.task_rules._get_user_custom_rules_dir", mock_get_user_custom_rules_dir)
 @patch("forgeflow.core.task_rules._get_examples_dir", mock_get_examples_dir)
-def test_load_custom_task_rules_not_found():
+def test_load_custom_task_rules_not_found() -> None:
     """Test load_custom_task_rules when no rule file is found."""
     result = load_custom_task_rules("nonexistent_task", "/tmp")
     assert result is None

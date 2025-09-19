@@ -1,0 +1,28 @@
+# Bandit configuration file
+# This file configures Bandit to ignore certain security checks that are
+# either false positives or are acceptable risks in our specific use case.
+
+# Skip B110 (try_except_pass) - We intentionally use pass in exception handlers
+# when we want to continue execution without taking action
+# Skip B112 (try_except_continue) - We intentionally use continue in exception
+# handlers to continue rule evaluation
+# Skip B404 (blacklist_imports) - We import subprocess but use it safely with
+# hardcoded command lists
+# Skip B603 (subprocess_without_shell_equals_true) - We intentionally avoid shell=True
+# for security, using hardcoded command lists instead
+# Skip B607 (start_process_with_partial_path) - We use hardcoded command names that
+# are expected to be on PATH, which is acceptable in our use case
+
+# List of test IDs to skip
+skips: ['B110', 'B112', 'B404', 'B603', 'B607']
+
+# Exclude specific files or directories from scanning
+exclude_dirs: ['.git', '__pycache__', '.venv', 'venv']
+
+# Set the severity level for which Bandit will exit with a non-zero exit code
+# (LOW, MEDIUM, HIGH)
+severity: LOW
+
+# Set the confidence level for which Bandit will exit with a non-zero exit code
+# (LOW, MEDIUM, HIGH)
+confidence: MEDIUM

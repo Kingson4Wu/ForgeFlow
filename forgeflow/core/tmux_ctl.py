@@ -18,11 +18,13 @@ class TmuxCtl:
 
     @staticmethod
     def _run(cmd: list[str], check: bool = False) -> subprocess.CompletedProcess:
+        # nosec B603
         return subprocess.run(cmd, capture_output=True, text=True, check=check)
 
     @staticmethod
     def _ensure_tmux_available() -> None:
         try:
+            # nosec B603
             subprocess.run(["tmux", "-V"], capture_output=True, text=True, check=True)
         except Exception as e:
             raise RuntimeError(
@@ -35,6 +37,7 @@ class TmuxCtl:
 
     def create_session(self) -> None:
         if not self.session_exists():
+            # nosec B603
             subprocess.run(
                 ["tmux", "new-session", "-d", "-s", self.cfg.session, "-c", self.cfg.workdir],
                 check=False,
@@ -43,18 +46,23 @@ class TmuxCtl:
 
     def send_text_then_enter(self, text: str) -> None:
         # Send text and enter separately to avoid race conditions
+        # nosec B603
         subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, text], check=False)
         time.sleep(0.1)
+        # nosec B603
         subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, "C-m"], check=False)  # Enter
 
     def send_enter(self) -> None:
+        # nosec B603
         subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, "C-m"], check=False)  # Enter
 
     def send_escape(self) -> None:
+        # nosec B603
         subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, "Escape"], check=False)  # ESC
 
     def send_backspace(self, count: int = 10) -> None:
         for _ in range(count):
+            # nosec B603
             subprocess.run(
                 ["tmux", "send-keys", "-t", self.cfg.session, "C-h"], check=False
             )  # Backspace
@@ -65,4 +73,4 @@ class TmuxCtl:
         if include_ansi:
             cmd.insert(2, "-e")
         res = self._run(cmd)
-        return res.stdout
+        return str(res.stdout)

@@ -6,16 +6,16 @@ from forgeflow.core.tmux_ctl import TmuxConfig, TmuxCtl
 
 
 @pytest.fixture
-def tmux_config():
+def tmux_config() -> TmuxConfig:
     return TmuxConfig(session="test_session", workdir="/tmp")
 
 
 @pytest.fixture
-def tmux_ctl(tmux_config):
+def tmux_ctl(tmux_config) -> TmuxCtl:
     return TmuxCtl(tmux_config)
 
 
-def test_tmux_config():
+def test_tmux_config() -> None:
     """Test TmuxConfig dataclass."""
     config = TmuxConfig(session="test_session", workdir="/tmp")
     assert config.session == "test_session"
@@ -23,7 +23,7 @@ def test_tmux_config():
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
-def test_ensure_tmux_available_success(mock_run, tmux_ctl):
+def test_ensure_tmux_available_success(mock_run, tmux_ctl) -> None:
     """Test _ensure_tmux_available when tmux is available."""
     mock_run.return_value = MagicMock(returncode=0)
     # This should not raise an exception
@@ -31,7 +31,7 @@ def test_ensure_tmux_available_success(mock_run, tmux_ctl):
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
-def test_ensure_tmux_available_failure(mock_run, tmux_ctl):
+def test_ensure_tmux_available_failure(mock_run, tmux_ctl) -> None:
     """Test _ensure_tmux_available when tmux is not available."""
     mock_run.side_effect = Exception("tmux not found")
 
@@ -42,14 +42,14 @@ def test_ensure_tmux_available_failure(mock_run, tmux_ctl):
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
-def test_session_exists_true(mock_run, tmux_ctl):
+def test_session_exists_true(mock_run, tmux_ctl) -> None:
     """Test session_exists when session exists."""
     mock_run.return_value = MagicMock(returncode=0)
     assert tmux_ctl.session_exists() is True
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
-def test_session_exists_false(mock_run, tmux_ctl):
+def test_session_exists_false(mock_run, tmux_ctl) -> None:
     """Test session_exists when session does not exist."""
     mock_run.return_value = MagicMock(returncode=1)
     assert tmux_ctl.session_exists() is False
@@ -57,7 +57,7 @@ def test_session_exists_false(mock_run, tmux_ctl):
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
 @patch.object(TmuxCtl, "session_exists")
-def test_create_session_new(mock_session_exists, mock_run, tmux_ctl):
+def test_create_session_new(mock_session_exists, mock_run, tmux_ctl) -> None:
     """Test create_session when session does not exist."""
     mock_session_exists.return_value = False
     tmux_ctl.create_session()
@@ -67,7 +67,7 @@ def test_create_session_new(mock_session_exists, mock_run, tmux_ctl):
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
 @patch.object(TmuxCtl, "session_exists")
-def test_create_session_exists(mock_session_exists, mock_run, tmux_ctl):
+def test_create_session_exists(mock_session_exists, mock_run, tmux_ctl) -> None:
     """Test create_session when session already exists."""
     mock_session_exists.return_value = True
     tmux_ctl.create_session()
@@ -77,7 +77,7 @@ def test_create_session_exists(mock_session_exists, mock_run, tmux_ctl):
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
 @patch("forgeflow.core.tmux_ctl.time.sleep")
-def test_send_text_then_enter(mock_sleep, mock_run, tmux_ctl):
+def test_send_text_then_enter(mock_sleep, mock_run, tmux_ctl) -> None:
     """Test send_text_then_enter method."""
     tmux_ctl.send_text_then_enter("test command")
     # Check that subprocess.run was called twice
@@ -87,7 +87,7 @@ def test_send_text_then_enter(mock_sleep, mock_run, tmux_ctl):
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
-def test_send_enter(mock_run, tmux_ctl):
+def test_send_enter(mock_run, tmux_ctl) -> None:
     """Test send_enter method."""
     tmux_ctl.send_enter()
     mock_run.assert_called_once_with(
@@ -96,7 +96,7 @@ def test_send_enter(mock_run, tmux_ctl):
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
-def test_send_escape(mock_run, tmux_ctl):
+def test_send_escape(mock_run, tmux_ctl) -> None:
     """Test send_escape method."""
     tmux_ctl.send_escape()
     mock_run.assert_called_once_with(
@@ -105,7 +105,7 @@ def test_send_escape(mock_run, tmux_ctl):
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
-def test_send_backspace(mock_run, tmux_ctl):
+def test_send_backspace(mock_run, tmux_ctl) -> None:
     """Test send_backspace method."""
     tmux_ctl.send_backspace(3)
     # Check that subprocess.run was called 3 times
@@ -114,7 +114,7 @@ def test_send_backspace(mock_run, tmux_ctl):
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
-def test_capture_output(mock_run, tmux_ctl):
+def test_capture_output(mock_run, tmux_ctl) -> None:
     """Test capture_output method."""
     mock_run.return_value = MagicMock(stdout="test output")
     result = tmux_ctl.capture_output()
@@ -128,7 +128,7 @@ def test_capture_output(mock_run, tmux_ctl):
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")
-def test_capture_output_with_ansi(mock_run, tmux_ctl):
+def test_capture_output_with_ansi(mock_run, tmux_ctl) -> None:
     """Test capture_output method with ANSI codes."""
     mock_run.return_value = MagicMock(stdout="test output with ansi")
     result = tmux_ctl.capture_output(include_ansi=True)

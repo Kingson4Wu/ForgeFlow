@@ -39,6 +39,7 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
             user_custom_rules_dir = (repo_root / "user_custom_rules" / "tasks").resolve()
             config_file = os.path.join(user_custom_rules_dir, f"{task_name}_config.json")
         except Exception:
+            # Best effort; if not available, continue with next option
             pass
 
     # If not found in user custom rules tasks directory, try default rules directory
@@ -50,6 +51,7 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
             default_rules_dir = (pkg_dir / "tasks" / "configs").resolve()
             config_file = os.path.join(default_rules_dir, f"{task_name}_config.json")
         except Exception:
+            # Best effort; if not available, continue with next option
             pass
 
     # If not found in default rules directory, try examples tasks directory (for backward compatibility)
@@ -62,17 +64,18 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
             examples_dir = (repo_root / "examples" / "tasks").resolve()
             config_file = os.path.join(examples_dir, f"{task_name}_config.json")
         except Exception:
+            # Best effort; if not available, continue with next option
             pass
 
     if not os.path.exists(config_file):
-        return {}
+        return {}  # type: ignore
 
     try:
         with open(config_file) as f:
             return json.load(f)
     except Exception:
         # If there's an error reading the config file, return empty dict
-        return {}
+        return {}  # type: ignore
 
 
 # ---------- Task Rules ----------

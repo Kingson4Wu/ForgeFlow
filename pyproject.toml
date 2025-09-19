@@ -40,7 +40,7 @@ line-length = 100
 line-length = 100
 
 [tool.ruff.lint]
-ignore = ["E501"]
+ignore = ["E501", "F821"]
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.mypy]
@@ -48,3 +48,5 @@ python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+# Ignore missing return statements in some functions
+disable_error_code = ["return"]

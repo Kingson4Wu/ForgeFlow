@@ -9,7 +9,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 
-def test_gemini_rules_file():
+def test_gemini_rules_file() -> None:
     """Test that the gemini rules file can be loaded and has a build_rules function."""
     gemini_rules_path = os.path.join(
         project_root, "forgeflow", "core", "cli_types", "gemini_rules.py"
@@ -25,7 +25,7 @@ def test_gemini_rules_file():
     assert isinstance(rules, list)
 
 
-def test_codex_rules_file():
+def test_codex_rules_file() -> None:
     """Test that the codex rules file can be loaded and has a build_rules function."""
     codex_rules_path = os.path.join(
         project_root, "forgeflow", "core", "cli_types", "codex_rules.py"
@@ -41,7 +41,7 @@ def test_codex_rules_file():
     assert isinstance(rules, list)
 
 
-def test_claude_code_rules_file():
+def test_claude_code_rules_file() -> None:
     """Test that the claude code rules file can be loaded and has a build_rules function."""
     claude_code_rules_path = os.path.join(
         project_root, "forgeflow", "core", "cli_types", "claude_code_rules.py"

@@ -4,7 +4,9 @@ import logging
 import sys
 import time
 from dataclasses import dataclass
+from typing import Callable
 
+from .cli_adapters.base import CLIAdapter
 from .cli_adapters.factory import get_cli_adapter
 from .rule_loader import get_rules
 from .rules import next_command
@@ -67,7 +69,9 @@ def run_automation(cfg: Config) -> int:
     return _run_automation_loop(tmux, cli_adapter, cfg, log)
 
 
-def _initialize_session(tmux: TmuxCtl, cli_adapter, cfg: Config, log: logging.Logger):
+def _initialize_session(
+    tmux: TmuxCtl, cli_adapter: CLIAdapter, cfg: Config, log: logging.Logger
+) -> None:
     """Initialize tmux session and ensure AI CLI is running."""
     tmux.create_session()
     time.sleep(SESSION_CREATE_DELAY)
@@ -78,7 +82,9 @@ def _initialize_session(tmux: TmuxCtl, cli_adapter, cfg: Config, log: logging.Lo
         time.sleep(CLI_START_DELAY)
 
 
-def _run_automation_loop(tmux: TmuxCtl, cli_adapter, cfg: Config, log: logging.Logger) -> int:
+def _run_automation_loop(
+    tmux: TmuxCtl, cli_adapter: CLIAdapter, cfg: Config, log: logging.Logger
+) -> int:
     """Run the main automation loop."""
     rules = get_rules(cfg)
     last_output = ""
@@ -125,7 +131,7 @@ def _run_automation_loop(tmux: TmuxCtl, cli_adapter, cfg: Config, log: logging.L
     return 0
 
 
-def _send_command(tmux: TmuxCtl, cmd, log: logging.Logger):
+def _send_command(tmux: TmuxCtl, cmd: str | Callable[[], str], log: logging.Logger) -> None:
     """Send command to tmux session."""
     if callable(cmd):
         # Execute the callable to get the actual command string
@@ -136,18 +142,18 @@ def _send_command(tmux: TmuxCtl, cmd, log: logging.Logger):
     tmux.send_text_then_enter(cmd)
 
 
-def _handle_input_with_text(tmux: TmuxCtl, log: logging.Logger):
+def _handle_input_with_text(tmux: TmuxCtl, log: logging.Logger) -> None:
     """Handle input prompt that already has text."""
     log.info("Input line already has text → sending Enter")
     tmux.send_enter()
 
 
-def is_task_processing(output: str, cli_adapter) -> bool:
+def is_task_processing(output: str, cli_adapter: CLIAdapter) -> bool:
     """Check if a task is currently being processed using the provided CLI adapter."""
     return cli_adapter.is_task_processing(output)
 
 
-def _recover_from_timeout(tmux: TmuxCtl, cli_adapter, log: logging.Logger) -> float:
+def _recover_from_timeout(tmux: TmuxCtl, cli_adapter: CLIAdapter, log: logging.Logger) -> float:
     """Attempt to recover when input prompt seems stuck.
 
     Strategy: ESC → progressive backspace until prompt appears → send "continue".
@@ -159,13 +165,13 @@ def _recover_from_timeout(tmux: TmuxCtl, cli_adapter, log: logging.Logger) -> fl
     return _send_continue_and_return_timestamp(tmux)
 
 
-def _send_escape_and_wait(tmux: TmuxCtl):
+def _send_escape_and_wait(tmux: TmuxCtl) -> None:
     """Send ESC key and wait briefly."""
     tmux.send_escape()
     time.sleep(RECOVERY_STEP_DELAY)
 
 
-def _progressive_backspace_until_prompt(tmux: TmuxCtl, cli_adapter):
+def _progressive_backspace_until_prompt(tmux: TmuxCtl, cli_adapter: CLIAdapter) -> None:
     """Send progressive backspace until input prompt appears."""
     backspace_num = INITIAL_BACKSPACE_COUNT
     for _ in range(MAX_RECOVERY_ATTEMPTS):  # cap iterations to avoid infinite loop

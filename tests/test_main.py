@@ -6,7 +6,7 @@ from forgeflow.core.automation import Config, run_automation
 
 
 @pytest.mark.skip(reason="just for debug, ignore it ")
-def test_main():
+def test_main() -> None:
     # cfg = Config(
     #     session="fastproxy_session",
     #     workdir=str(Path.home() / "programming/go-src/fast_proxy"),

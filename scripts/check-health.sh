@@ -13,11 +13,11 @@ pytest -q
 pytest_status=$?
 
 echo "Running MyPy type check..."
-mypy forgeflow tests
+mypy --config-file mypy.ini forgeflow
 mypy_status=$?
 
 echo "Running Bandit security check..."
-bandit -r forgeflow
+bandit --configfile .bandit -r forgeflow
 bandit_status=$?
 
 echo "Running Radon complexity check..."

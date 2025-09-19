@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+from typing import Any
 from unittest.mock import patch
 
 from forgeflow.core.rules import Rule
@@ -29,25 +30,25 @@ from forgeflow.tasks.task_planner_task import (
 
 
 # We need to define the builder functions for testing
-def build_fix_tests_rules(config):
+def build_fix_tests_rules(config: dict[str, Any]) -> list[Rule]:
     from forgeflow.tasks.fix_tests_task import build_rules
 
     return build_rules(config)
 
 
-def build_improve_coverage_rules(config):
+def build_improve_coverage_rules(config: dict[str, Any]) -> list[Rule]:
     from forgeflow.tasks.improve_coverage_task import build_rules
 
     return build_rules(config)
 
 
-def build_task_planner_rules(config):
+def build_task_planner_rules(config: dict[str, Any]) -> list[Rule]:
     from forgeflow.tasks.task_planner_task import build_rules
 
     return build_rules(config)
 
 
-def test_check_test_failures():
+def test_check_test_failures() -> None:
     # Test cases with test failures
     assert check_test_failures("1 failed test:")
     assert check_test_failures("TEST FAILED")
@@ -62,7 +63,7 @@ def test_check_test_failures():
     assert not check_test_failures("Task completed")
 
 
-def test_check_all_tests_passed():
+def test_check_all_tests_passed() -> None:
     # Test cases where all tests passed
     assert check_all_tests_passed("All tests passed")
     assert check_all_tests_passed("Ran 5 tests, all passed")
@@ -73,7 +74,7 @@ def test_check_all_tests_passed():
     assert not check_all_tests_passed("Running tests...")
 
 
-def test_check_coverage_below_threshold():
+def test_check_coverage_below_threshold() -> None:
     # Test cases with coverage below threshold
     assert check_coverage_below_threshold("coverage: 75%", 80)
 
@@ -82,7 +83,7 @@ def test_check_coverage_below_threshold():
     assert not check_coverage_below_threshold("coverage: 80%", 80)
 
 
-def test_check_coverage_target_reached():
+def test_check_coverage_target_reached() -> None:
     # Test cases with coverage meeting or exceeding target
     assert check_coverage_target_reached("coverage: 85%", 80)
     assert check_coverage_target_reached("coverage: 80%", 80)
@@ -92,9 +93,9 @@ def test_check_coverage_target_reached():
     assert not check_coverage_target_reached("coverage: 75%", 80)
 
 
-def test_check_task_completed():
+def test_check_task_completed() -> None:
     # Test with default indicators
-    config = {}
+    config: dict[str, Any] = {}
     assert check_task_completed("Task completed", config)
 
     # Test with custom indicators
@@ -109,7 +110,7 @@ def test_check_task_completed():
     assert not check_task_completed("Please say 'task completed' when done", config)
 
 
-def test_check_all_tasks_done():
+def test_check_all_tasks_done() -> None:
     # Test that all tasks done is detected
     assert check_all_tasks_done("All tasks have been completed.")
 
@@ -122,7 +123,7 @@ def test_check_all_tasks_done():
     assert not check_all_tasks_done('respond with "All tasks have been completed."')
 
 
-def test_build_fix_tests_rules():
+def test_build_fix_tests_rules() -> None:
     # Test that fix_tests rules are created correctly
     rules = build_fix_tests_rules({})
 
@@ -139,7 +140,7 @@ def test_build_fix_tests_rules():
     assert rules[0].command is None
 
 
-def test_build_improve_coverage_rules():
+def test_build_improve_coverage_rules() -> None:
     # Test that improve_coverage rules are created correctly
     config = {"target_coverage": 90}
     rules = build_improve_coverage_rules(config)
@@ -157,9 +158,9 @@ def test_build_improve_coverage_rules():
     assert rules[0].command is None
 
 
-def test_build_task_planner_rules():
+def test_build_task_planner_rules() -> None:
     # Test that task_planner rules are created correctly
-    config = {}
+    config: dict[str, Any] = {}
     rules = build_task_planner_rules(config)
 
     # Should have 3 rules
@@ -178,7 +179,7 @@ def test_build_task_planner_rules():
     assert rules[1].check("Task completed")
 
 
-def test_get_task_rules_builder():
+def test_get_task_rules_builder() -> None:
     # Test that built-in task rules builders are returned
     assert get_task_rules_builder("fix_tests") is not None
     assert get_task_rules_builder("improve_coverage") is not None
@@ -188,11 +189,11 @@ def test_get_task_rules_builder():
     assert get_task_rules_builder("non_existent_task") is None
 
 
-def test_task_rules_with_config():
+def test_task_rules_with_config() -> None:
     # Create a temporary config file
     with tempfile.TemporaryDirectory() as tmpdir:
         config_path = os.path.join(tmpdir, "improve_coverage_config.json")
-        config_data = {"target_coverage": 95}
+        config_data: dict[str, Any] = {"target_coverage": 95}
 
         with open(config_path, "w") as f:
             json.dump(config_data, f)
@@ -207,7 +208,7 @@ def test_task_rules_with_config():
             assert len(rules) == 3
 
 
-def test_find_rule_file():
+def test_find_rule_file() -> None:
     """Test the _find_rule_file helper function."""
     # Test with existing file
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -223,7 +224,7 @@ def test_find_rule_file():
     assert result is None
 
 
-def test_get_examples_dir():
+def test_get_examples_dir() -> None:
     """Test the _get_examples_dir helper function."""
     # Test that it returns a path (we can't easily test the exact path)
     result = _get_examples_dir()
@@ -231,19 +232,19 @@ def test_get_examples_dir():
     assert isinstance(result, (str, type(None)))
 
 
-def test_load_module_from_file():
+def test_load_module_from_file() -> None:
     """Test the _load_module_from_file helper function."""
     # Test with non-existent file
     result = _load_module_from_file("/non/existent/file.py", "test_module")
     assert result is None
 
 
-def test_find_build_function():
+def test_find_build_function() -> None:
     """Test the _find_build_function helper function."""
 
     # Create a mock module with a function
     class MockModule:
-        def __init__(self):
+        def __init__(self) -> None:
             self.test_func = lambda: "test"
 
     mock_module = MockModule()
@@ -251,14 +252,14 @@ def test_find_build_function():
     # Test finding existing function
     result = _find_build_function(mock_module, ["test_func"])
     assert result is not None
-    assert result() == "test"
+    assert result() == "test"  # type: ignore
 
     # Test not finding function
     result = _find_build_function(mock_module, ["non_existent_func"])
     assert result is None
 
 
-def test_load_task_config():
+def test_load_task_config() -> None:
     """Test the load_task_config function."""
     # Test with non-existent config file
     config = load_task_config("test_task", "/non/existent/dir")
