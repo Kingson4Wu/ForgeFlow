@@ -76,6 +76,13 @@ def run_monitor_mode(cfg: Config) -> int:
     tmux = TmuxCtl(TmuxConfig(session=cfg.session, workdir=cfg.workdir or ""))
     cli_adapter = get_cli_adapter(cfg.cli_type)
 
+    # Warn if using default Gemini adapter, as user might want to specify a different CLI type
+    if cfg.cli_type == "gemini":
+        log.info(
+            "Using default Gemini CLI adapter. If monitoring a session with a different AI CLI tool, "
+            "specify the appropriate --cli-type parameter for accurate monitoring."
+        )
+
     log.info("Monitor mode started. Only monitoring task processing status.")
 
     # Track task processing state for notifications
@@ -105,7 +112,9 @@ def run_monitor_mode(cfg: Config) -> int:
                     no_processing_count = 0
                     notification_sent = False
                 # If was_processing is None, this is our first time seeing a task processing
-                # We set was_processing to True but don't send notifications
+                # We set was_processing to True and log that processing has started
+                elif was_processing is None:
+                    log.info("Task processing started")
                 was_processing = True
             else:
                 # Task is not currently processing

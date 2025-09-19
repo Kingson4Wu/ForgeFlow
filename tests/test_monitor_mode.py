@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from forgeflow.core.automation import Config, run_monitor_mode
 
@@ -154,11 +154,110 @@ def test_monitor_mode_reset_after_restart():
     pass  # Implementation would be complex due to state tracking in the function
 
 
-def test_monitor_mode_notification_after_transition():
-    """Test that monitor mode sends notification after task transitions from running to stopped."""
-    # This test is complex to mock correctly, so we'll mark it as a placeholder
-    # The actual functionality is covered by our implementation fix and other tests
-    pass
+def test_monitor_mode_task_processing_started_log():
+    """Test that monitor mode logs 'Task processing started' when task begins processing."""
+    # Setup
+    cfg = Config(
+        session="test_session",
+        workdir="",
+        ai_cmd="",
+        poll_interval=0.1,  # Short poll interval for faster testing
+    )
+
+    # Mock tmux that will transition from not processing to processing
+    tmux = MockTmuxCtl(outputs=["not processing", "processing"])
+
+    # Mock CLI adapter that considers "processing" as processing
+    cli_adapter = MockCLIAdapter(processing_outputs=["processing"])
+
+    # Mock logger to capture log messages
+    mock_logger = Mock()
+
+    # Mock the setup_logger function to return our mock logger
+    with patch("forgeflow.core.automation.setup_logger", return_value=mock_logger):
+        with patch("forgeflow.core.automation.TmuxCtl") as mock_tmux_ctl:
+            with patch("forgeflow.core.automation.get_cli_adapter") as mock_get_cli_adapter:
+                mock_tmux_ctl.return_value = tmux
+                mock_get_cli_adapter.return_value = cli_adapter
+
+                # Mock time.sleep to control the flow and transitions
+                with patch("time.sleep") as mock_sleep:
+                    call_count = 0
+
+                    def sleep_side_effect(*args, **kwargs):
+                        nonlocal call_count
+                        call_count += 1
+
+                        # First iterations - task not processing
+                        if call_count <= 2:
+                            tmux.set_output_sequence(["not processing"])
+                        # Then switch to processing
+                        elif call_count <= 5:
+                            tmux.set_output_sequence(["processing"])
+                        # After enough iterations, raise KeyboardInterrupt
+                        else:
+                            raise KeyboardInterrupt()
+                        return None
+
+                    mock_sleep.side_effect = sleep_side_effect
+
+                    # Run the function
+                    run_monitor_mode(cfg)
+
+                    # Should have logged "Task processing started" when task began processing
+                    mock_logger.info.assert_any_call("Task processing started")
+                    mock_logger.info.assert_any_call("Task processing started")
+
+
+def test_monitor_mode_task_processing_started_first_time():
+    """Test that monitor mode logs 'Task processing started' when task begins processing for the first time."""
+    # Setup
+    cfg = Config(
+        session="test_session",
+        workdir="",
+        ai_cmd="",
+        poll_interval=0.1,  # Short poll interval for faster testing
+    )
+
+    # Mock tmux that will transition from not processing to processing
+    tmux = MockTmuxCtl(outputs=["processing"])
+
+    # Mock CLI adapter that considers "processing" as processing
+    cli_adapter = MockCLIAdapter(processing_outputs=["processing"])
+
+    # Mock logger to capture log messages
+    mock_logger = Mock()
+
+    # Mock the setup_logger function to return our mock logger
+    with patch("forgeflow.core.automation.setup_logger", return_value=mock_logger):
+        with patch("forgeflow.core.automation.TmuxCtl") as mock_tmux_ctl:
+            with patch("forgeflow.core.automation.get_cli_adapter") as mock_get_cli_adapter:
+                mock_tmux_ctl.return_value = tmux
+                mock_get_cli_adapter.return_value = cli_adapter
+
+                # Mock time.sleep to control the flow and transitions
+                with patch("time.sleep") as mock_sleep:
+                    call_count = 0
+
+                    def sleep_side_effect(*args, **kwargs):
+                        nonlocal call_count
+                        call_count += 1
+
+                        # First iterations - task processing (first time)
+                        if call_count <= 3:
+                            tmux.set_output_sequence(["processing"])
+                        # After enough iterations, raise KeyboardInterrupt
+                        else:
+                            raise KeyboardInterrupt()
+                        return None
+
+                    mock_sleep.side_effect = sleep_side_effect
+
+                    # Run the function
+                    run_monitor_mode(cfg)
+
+                    # Should have logged "Task processing started" even for the first time
+                    mock_logger.info.assert_any_call("Task processing started")
 
 
 def test_monitor_mode_no_notification_when_never_running():

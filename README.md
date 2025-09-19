@@ -144,6 +144,17 @@ forgeflow \\
 
 Note: In monitor-only mode, the `--ai-cmd` and `--workdir` parameters are not required since ForgeFlow will not be starting or controlling the AI CLI, only monitoring its status.
 
+By default, ForgeFlow uses the Gemini CLI adapter to monitor task processing status. If you're monitoring a session that's using a different AI CLI tool, you should specify the appropriate `--cli-type` parameter:
+
+```bash
+forgeflow \\
+  --session claude_session \\
+  --monitor-only \\
+  --cli-type claude_code \\
+  --poll 10 \\
+  --log-file forgeflow.log
+```
+
 ### Running the Script Directly (without installation)
 
 If you want to run the script directly without installing the package, you can use the following command:
@@ -160,7 +171,28 @@ python -m forgeflow.cli \\
 
 Note: When using this method, make sure you're running the command in the project's root directory.
 
-### Running in Monitor-Only Mode (Direct Script)\n\nTo run the monitor-only mode directly without installation:\n\n```bash\npython -m forgeflow.cli \\\n  --session qwen_session \\\n  --monitor-only \\\n  --poll 10 \\\n  --log-file forgeflow.log\n```
+### Running in Monitor-Only Mode (Direct Script)
+
+To run the monitor-only mode directly without installation:
+
+```bash
+python -m forgeflow.cli 
+  --session qwen_session 
+  --monitor-only 
+  --poll 10 
+  --log-file forgeflow.log
+```
+
+Note: When using monitor-only mode, if you're monitoring a session that's using a different AI CLI tool than the default Gemini, you should specify the appropriate `--cli-type` parameter:
+
+```bash
+python -m forgeflow.cli 
+  --session claude_session 
+  --monitor-only 
+  --cli-type claude_code 
+  --poll 10 
+  --log-file forgeflow.log
+```
 
 ### Exiting
 
