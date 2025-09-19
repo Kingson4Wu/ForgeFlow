@@ -7,7 +7,13 @@ def build_rules() -> list[Rule]:
     """Build rules specific to Gemini CLI."""
     return [
         Rule(
-            check=lambda out: "✕ [API Error: 400 <400> InternalError.Algo.InvalidParameter" in out,
+            check=lambda out: bool(
+                re.search(
+                    r"✕ \[API Error: 400 <400> InternalError\.Algo\.InvalidParameter:.*",
+                    out,
+                    re.DOTALL,
+                )
+            ),
             command="/clear",
         ),
         Rule(
