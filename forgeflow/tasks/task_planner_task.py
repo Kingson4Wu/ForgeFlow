@@ -8,6 +8,14 @@ from forgeflow.core.rules import Rule
 
 logger = logging.getLogger("forgeflow")
 
+# ---------- Constants ----------
+TASK_COMPLETED_INDICATOR = "[TASK_COMPLETED]"
+ALL_TASKS_COMPLETED_INDICATOR = "[ALL_TASKS_COMPLETED]"
+RESPOND_WITH_TASK_COMPLETED = f'respond with "{TASK_COMPLETED_INDICATOR}"'
+RESPOND_WITH_TASK_COMPLETED_SINGLE_QUOTE = f"respond with '{TASK_COMPLETED_INDICATOR}'"
+RESPOND_WITH_ALL_TASKS_COMPLETED = f'respond with "{ALL_TASKS_COMPLETED_INDICATOR}"'
+RESPOND_WITH_ALL_TASKS_COMPLETED_SINGLE_QUOTE = f"respond with '{ALL_TASKS_COMPLETED_INDICATOR}'"
+
 
 # ---------- Task Configuration ----------
 def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
@@ -81,12 +89,8 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
 def _is_instruction_text_in_task_output(output_lower: str) -> bool:
     """Check if the output contains instruction text that should be ignored for task completion."""
     return (
-        'respond with "task completed"' in output_lower
-        or "respond with 'task completed'" in output_lower
-        or 'say "task completed"' in output_lower
-        or "say 'task completed'" in output_lower
-        or "when you've completed the current task" in output_lower
-        or "please say 'task completed' when done" in output_lower
+        RESPOND_WITH_TASK_COMPLETED.lower() in output_lower
+        or RESPOND_WITH_TASK_COMPLETED_SINGLE_QUOTE.lower() in output_lower
     )
 
 
@@ -95,7 +99,7 @@ def check_task_completed(output: str, config: dict[str, Any]) -> bool:
     # Get task completion indicators from config, with defaults
     completion_indicators = config.get(
         "task_completion_indicators",
-        ["task completed"],
+        [TASK_COMPLETED_INDICATOR],
     )
 
     output_lower = output.lower()
@@ -115,26 +119,18 @@ def check_task_completed(output: str, config: dict[str, Any]) -> bool:
 def _is_instruction_text_in_output(output_lower: str) -> bool:
     """Check if the output contains instruction text that should be ignored."""
     return (
-        'return the message: "all tasks have been completed"' in output_lower
-        or "return the message: 'all tasks have been completed'" in output_lower
-        or 'respond with "all tasks have been completed"' in output_lower
-        or "respond with 'all tasks have been completed'" in output_lower
-        or "all tasks have been completed." in output_lower
-        and (
-            "respond with" in output_lower
-            or "return the message" in output_lower
-            or "please say" in output_lower
-        )
+        RESPOND_WITH_ALL_TASKS_COMPLETED.lower() in output_lower
+        or RESPOND_WITH_ALL_TASKS_COMPLETED_SINGLE_QUOTE.lower() in output_lower
     )
 
 
 def check_all_tasks_done(output: str) -> bool:
     """Check if all tasks are done."""
-    target_text = "all tasks have been completed"
+    target_text = ALL_TASKS_COMPLETED_INDICATOR
     output_lower = output.lower()
 
-    # Check if the target text is present
-    has_target_text = target_text in output_lower
+    # Check if the target text is present (case-insensitive)
+    has_target_text = target_text.lower() in output_lower
 
     # Prevent false positives by checking that this isn't just part of our own prompt
     # If we're seeing our own instruction text, it's not a real completion
@@ -176,8 +172,8 @@ Task Planning Task:
    * Repeat steps 1-5 until all tasks are done.
 
 Use the following indicators to determine if a task is complete:
-If you've completed the current task, respond with "[TASK_COMPLETED]" and wait for further instructions.
-If you've completed ALL tasks in the TODO file, respond with "[ALL_TASKS_COMPLETED]".
+If you've completed the current task, {RESPOND_WITH_TASK_COMPLETED} and wait for further instructions.
+If you've completed ALL tasks in the TODO file, {RESPOND_WITH_ALL_TASKS_COMPLETED}.
 """
 
 

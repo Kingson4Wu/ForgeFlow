@@ -96,31 +96,32 @@ def test_check_coverage_target_reached() -> None:
 def test_check_task_completed() -> None:
     # Test with default indicators
     config: dict[str, Any] = {}
-    assert check_task_completed("Task completed", config)
+    assert check_task_completed("[TASK_COMPLETED]", config)
 
     # Test with custom indicators
     config = {"task_completion_indicators": ["work done", "finished"]}
     assert check_task_completed("work done", config)
-    assert not check_task_completed("task completed", config)  # Not in custom indicators
+    assert not check_task_completed("[TASK_COMPLETED]", config)  # Not in custom indicators
 
     # Test that instruction text doesn't trigger false positive
     assert not check_task_completed(
-        'If you\'ve completed the current task, respond with "Task completed"', config
+        'If you\'ve completed the current task, respond with "[TASK_COMPLETED]"', config
     )
-    assert not check_task_completed("Please say 'task completed' when done", config)
+    assert not check_task_completed("Please say '[TASK_COMPLETED]' when done", config)
 
 
 def test_check_all_tasks_done() -> None:
     # Test that all tasks done is detected
-    assert check_all_tasks_done("All tasks have been completed.")
+    assert check_all_tasks_done("Task finished. [ALL_TASKS_COMPLETED]")
+    assert check_all_tasks_done("All work completed. [ALL_TASKS_COMPLETED]")
 
     # Test that it's not triggered by partial matches
-    assert not check_all_tasks_done("All tasks")
-    assert not check_all_tasks_done("completed")
+    assert not check_all_tasks_done("[ALL_TASKS_COMPLETED")  # Missing closing bracket
+    assert not check_all_tasks_done("ALL_TASKS_COMPLETED]")  # Missing opening bracket
 
     # Test that instruction text doesn't trigger false positive
-    assert not check_all_tasks_done('return the message: "All tasks have been completed."')
-    assert not check_all_tasks_done('respond with "All tasks have been completed."')
+    assert not check_all_tasks_done('respond with "[ALL_TASKS_COMPLETED]"')
+    assert not check_all_tasks_done("respond with '[ALL_TASKS_COMPLETED]'")
 
 
 def test_build_fix_tests_rules() -> None:
@@ -172,11 +173,11 @@ def test_build_task_planner_rules() -> None:
     assert isinstance(rules[2], Rule)
 
     # Check that first rule stops when all tasks are done
-    assert rules[0].check("All tasks have been completed.")
+    assert rules[0].check("Task finished. [ALL_TASKS_COMPLETED]")
     assert rules[0].command is None
 
     # Check that second rule handles task completion
-    assert rules[1].check("Task completed")
+    assert rules[1].check("Work completed. [TASK_COMPLETED]")
 
 
 def test_get_task_rules_builder() -> None:
