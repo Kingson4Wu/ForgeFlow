@@ -17,8 +17,13 @@ def build_rules() -> list[Rule]:
             command="/clear",
         ),
         Rule(
+            check=lambda out: "tool_call" in out
+            and ("must be followed" in out or "did not have" in out),
+            command="/clear",
+        ),
+        Rule(
             check=lambda out: re.search(
-                r"✕ \[API Error: .* API quota exceeded: Your .* API quota has been exhausted\. Please wait for your quota to reset\.]",
+                r"✕ \[API Error: .* API quota exceeded: Your .* API quota has been exhausted\. Please wait for your quota to reset\.\]",
                 out,
             )
             is not None,
