@@ -177,6 +177,44 @@ Then, you can run all test cases with the following command:
 python -m pytest tests/ -v
 ```
 
+### Code Quality and Health Checks
+
+The project uses several tools to ensure code quality:
+
+1. **Ruff**: For linting and code formatting
+2. **Black**: For code formatting
+3. **MyPy**: For type checking
+4. **Bandit**: For security checking
+5. **Radon**: For complexity analysis
+6. **Flake8**: For additional code quality checks
+
+To run all health checks, use the provided script:
+
+```bash
+./scripts/check-health.sh
+```
+
+This script will run all the checks in sequence and provide detailed output about any issues found.
+
+You can also run individual checks:
+
+```bash
+# Run linting and formatting checks
+ruff check . && black --check .
+
+# Run type checking
+mypy forgeflow tests
+
+# Run security checks
+bandit -r forgeflow
+
+# Run complexity analysis
+radon cc forgeflow -a -s
+
+# Run additional code quality checks
+flake8 forgeflow --select B --ignore B018,B019
+```
+
 ### IDE Debugging
 
 The project includes default test cases for convenient breakpoint debugging in IDEs:
