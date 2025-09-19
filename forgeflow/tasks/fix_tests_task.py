@@ -10,11 +10,8 @@ logger = logging.getLogger("forgeflow")
 
 # ---------- Constants ----------
 TESTS_PASSED_INDICATOR = "[TESTS_PASSED]"
-TESTS_FAILED_INDICATOR = "[TESTS_FAILED]"
 RESPOND_WITH_TESTS_PASSED = f'respond with "{TESTS_PASSED_INDICATOR}"'
 RESPOND_WITH_TESTS_PASSED_SINGLE_QUOTE = f"respond with '{TESTS_PASSED_INDICATOR}'"
-RESPOND_WITH_TESTS_FAILED = f'respond with "{TESTS_FAILED_INDICATOR}"'
-RESPOND_WITH_TESTS_FAILED_SINGLE_QUOTE = f"respond with '{TESTS_FAILED_INDICATOR}'"
 
 
 # ---------- Task Configuration ----------
@@ -91,8 +88,6 @@ def _is_instruction_text_in_test_output(output_lower: str) -> bool:
     return (
         RESPOND_WITH_TESTS_PASSED.lower() in output_lower
         or RESPOND_WITH_TESTS_PASSED_SINGLE_QUOTE.lower() in output_lower
-        or RESPOND_WITH_TESTS_FAILED.lower() in output_lower
-        or RESPOND_WITH_TESTS_FAILED_SINGLE_QUOTE.lower() in output_lower
     )
 
 
@@ -125,16 +120,23 @@ def check_test_failures(output: str) -> bool:
 
 def check_all_tests_passed(output: str) -> bool:
     """Check if all tests have passed."""
+    # Check for our indicator
     target_text = TESTS_PASSED_INDICATOR
     output_lower = output.lower()
 
     # Check if the target text is present (case-insensitive)
     has_target_text = target_text.lower() in output_lower
 
-    # Prevent false positives by checking that this isn't just part of our own prompt
-    is_instruction_text = _is_instruction_text_in_test_output(output_lower)
+    # If we found our specific indicator, use that
+    if has_target_text:
+        # Prevent false positives by checking that this isn't just part of our own prompt
+        is_instruction_text = _is_instruction_text_in_test_output(output_lower)
+        return has_target_text and not is_instruction_text
 
-    return has_target_text and not is_instruction_text
+    # We don't check for natural language expressions like "all tests passed"
+    # because they are not part of our prompt and shouldn't be relied upon
+
+    return False
 
 
 def get_fix_test_cases_prompt(config: dict[str, Any]) -> str:

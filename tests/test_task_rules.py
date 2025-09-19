@@ -64,10 +64,13 @@ def test_check_test_failures() -> None:
 
 
 def test_check_all_tests_passed() -> None:
-    # Test cases where all tests passed
-    assert check_all_tests_passed("All tests passed")
-    assert check_all_tests_passed("Ran 5 tests, all passed")
-    assert check_all_tests_passed("OK 20 tests")
+    # Test cases where all tests passed (with our specific indicator)
+    assert check_all_tests_passed("[TESTS_PASSED]")
+
+    # These should return False because they're not our specific indicator
+    assert not check_all_tests_passed("All tests passed")
+    assert not check_all_tests_passed("Ran 5 tests, all passed")
+    assert not check_all_tests_passed("OK 20 tests")
 
     # Test cases where not all tests passed
     assert not check_all_tests_passed("1 test failed")
@@ -87,7 +90,8 @@ def test_check_coverage_target_reached() -> None:
     # Test cases with coverage meeting or exceeding target
     assert check_coverage_target_reached("coverage: 85%", 80)
     assert check_coverage_target_reached("coverage: 80%", 80)
-    assert check_coverage_target_reached("Coverage target reached", 90)
+    # This should return False because "Coverage target reached" is not a recognized indicator
+    assert not check_coverage_target_reached("Coverage target reached", 90)
 
     # Test cases with coverage below target
     assert not check_coverage_target_reached("coverage: 75%", 80)
@@ -137,7 +141,7 @@ def test_build_fix_tests_rules() -> None:
     assert isinstance(rules[2], Rule)
 
     # Check that first rule stops when tests pass
-    assert rules[0].check("All tests passed")
+    assert rules[0].check("[TESTS_PASSED]")
     assert rules[0].command is None
 
 

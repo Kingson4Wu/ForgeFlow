@@ -11,14 +11,9 @@ logger = logging.getLogger("forgeflow")
 
 # ---------- Constants ----------
 COVERAGE_TARGET_REACHED_INDICATOR = "[COVERAGE_TARGET_REACHED]"
-COVERAGE_BELOW_THRESHOLD_INDICATOR = "[COVERAGE_BELOW_THRESHOLD]"
 RESPOND_WITH_COVERAGE_TARGET_REACHED = f'respond with "{COVERAGE_TARGET_REACHED_INDICATOR}"'
 RESPOND_WITH_COVERAGE_TARGET_REACHED_SINGLE_QUOTE = (
     f"respond with '{COVERAGE_TARGET_REACHED_INDICATOR}'"
-)
-RESPOND_WITH_COVERAGE_BELOW_THRESHOLD = f'respond with "{COVERAGE_BELOW_THRESHOLD_INDICATOR}"'
-RESPOND_WITH_COVERAGE_BELOW_THRESHOLD_SINGLE_QUOTE = (
-    f"respond with '{COVERAGE_BELOW_THRESHOLD_INDICATOR}'"
 )
 
 
@@ -96,8 +91,6 @@ def _is_instruction_text_in_coverage_output(output_lower: str) -> bool:
     return (
         RESPOND_WITH_COVERAGE_TARGET_REACHED.lower() in output_lower
         or RESPOND_WITH_COVERAGE_TARGET_REACHED_SINGLE_QUOTE.lower() in output_lower
-        or RESPOND_WITH_COVERAGE_BELOW_THRESHOLD.lower() in output_lower
-        or RESPOND_WITH_COVERAGE_BELOW_THRESHOLD_SINGLE_QUOTE.lower() in output_lower
     )
 
 
@@ -123,18 +116,33 @@ def check_coverage_below_threshold(output: str, threshold: int = 80) -> bool:
     return is_below_threshold and not is_instruction_text
 
 
-def check_coverage_target_reached(output: str) -> bool:
+def check_coverage_target_reached(output: str, target_coverage: int = 80) -> bool:
     """Check if the target coverage has been reached."""
+    # Check for our indicator
     target_text = COVERAGE_TARGET_REACHED_INDICATOR
     output_lower = output.lower()
 
     # Check if the target text is present (case-insensitive)
     has_target_text = target_text.lower() in output_lower
 
-    # Prevent false positives by checking that this isn't just part of our own prompt
-    is_instruction_text = _is_instruction_text_in_coverage_output(output_lower)
+    # If we found our specific indicator, use that
+    if has_target_text:
+        # Prevent false positives by checking that this isn't just part of our own prompt
+        is_instruction_text = _is_instruction_text_in_coverage_output(output_lower)
+        return has_target_text and not is_instruction_text
 
-    return has_target_text and not is_instruction_text
+    # Otherwise, check for coverage percentage in the output
+    import re
+
+    coverage_match = re.search(r"coverage[:\s]+(\d+)%?", output_lower)
+    if coverage_match:
+        coverage = int(coverage_match.group(1))
+        return coverage >= target_coverage
+
+    # We don't check for natural language expressions like "coverage target reached"
+    # because they are not part of our prompt and shouldn't be relied upon
+
+    return False
 
 
 def get_improve_test_coverage_prompt(config: dict[str, Any]) -> str:
@@ -172,7 +180,7 @@ def build_rules(config: dict[str, Any]) -> list[Rule]:
 
     return [
         # Stop when target coverage is reached
-        Rule(check=check_coverage_target_reached, command=None),
+        Rule(check=lambda out: check_coverage_target_reached(out, target_coverage), command=None),
         # Handle low coverage
         Rule(
             check=lambda out: check_coverage_below_threshold(out, target_coverage),
