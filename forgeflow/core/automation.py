@@ -79,7 +79,13 @@ def run_monitor_mode(cfg: Config) -> int:
     log.info("Monitor mode started. Only monitoring task processing status.")
 
     # Track task processing state for notifications
-    was_processing = False
+    was_processing = None  # None means we haven't observed a task running yet
+    # Track consecutive checks with no task processing
+    no_processing_count = 0
+    # Require 3 consecutive checks with no processing before sending notification
+    NO_PROCESSING_THRESHOLD = 3
+    # Track if we've already sent a notification for current stoppage
+    notification_sent = False
 
     try:
         while True:
@@ -87,10 +93,41 @@ def run_monitor_mode(cfg: Config) -> int:
             is_processing = is_task_processing(output, cli_adapter)
 
             # Check for task processing state changes and send notifications
-            if was_processing and not is_processing:
-                # Task has stopped processing
-                _send_task_stopped_notification(log)
-            was_processing = is_processing
+            if is_processing:
+                # Task is currently processing
+                if was_processing is True:
+                    # Still processing, reset stoppage tracking
+                    no_processing_count = 0
+                    notification_sent = False
+                elif was_processing is False:
+                    # Transition from not processing to processing
+                    log.info("Task processing started")
+                    no_processing_count = 0
+                    notification_sent = False
+                # If was_processing is None, this is our first time seeing a task processing
+                # We set was_processing to True but don't send notifications
+                was_processing = True
+            else:
+                # Task is not currently processing
+                if was_processing is True:
+                    # Transition from processing to not processing
+                    # Start counting consecutive non-processing checks
+                    no_processing_count += 1
+                    if no_processing_count >= NO_PROCESSING_THRESHOLD and not notification_sent:
+                        # Task has been stopped for 3 consecutive checks
+                        _send_task_stopped_notification(log)
+                        notification_sent = True
+                elif was_processing is False:
+                    # Still not processing (was already not processing)
+                    # Continue counting consecutive non-processing checks ONLY if we've seen
+                    # a task running before
+                    no_processing_count += 1
+                    if no_processing_count >= NO_PROCESSING_THRESHOLD and not notification_sent:
+                        # Task has been stopped for 3 consecutive checks
+                        _send_task_stopped_notification(log)
+                        notification_sent = True
+                # If was_processing is None, this means we've never seen a task running
+                # We don't increment counters or send notifications in this case
 
             time.sleep(cfg.poll_interval)
 
