@@ -240,23 +240,22 @@ See [myproject_rules.py](examples/myproject_rules.py) for a complete template.
 
 We provide several examples to help you get started:
 
-1. [custom_rules_example.py](examples/custom_rules_example.py) - General custom rules example (
-   function: `build_rules`)
-2. [myproject_rules.py](examples/myproject_rules.py) - Template for creating your own project rules (
-   function: `build_rules`)
+1. [projects/](examples/projects/) - Project-specific rule examples
+    - [custom_project_rules.py](examples/projects/custom_project_rules.py) - General custom rules example
+    - [myproject_rules.py](examples/projects/myproject_rules.py) - Template for creating your own project rules
+    - [web_project_rules.py](examples/projects/web_project_rules.py) - Example web project rules
+2. [tasks/](examples/tasks/) - Task-specific rule examples
+    - [code_review_task.py](examples/tasks/code_review_task.py) - Code review task rules
 
-For default rules and task-specific rules, please check the [default_rules/](default_rules/) directory:
+For built-in default rules, please check:
 
-1. [cli_types/](default_rules/cli_types/) - Default rules for different CLI types
-    - [gemini_rules.py](default_rules/cli_types/gemini_rules.py) - Default rules for Gemini CLI
-    - [codex_rules.py](default_rules/cli_types/codex_rules.py) - Default rules for Codex CLI
-    - [claude_code_rules.py](default_rules/cli_types/claude_code_rules.py) - Default rules for Claude Code CLI
-2. [projects/](default_rules/projects/) - Project-specific rules
-    - [web_project_rules.py](default_rules/projects/web_project_rules.py) - Example web project rules
-3. [tasks/](default_rules/tasks/) - Task-specific rules and configurations
-    - [code_review_task.py](default_rules/tasks/code_review_task.py) - Code review task rules
-    - [improve_coverage_config.json](default_rules/tasks/improve_coverage_config.json) - Improve coverage task config
-    - [task_planner_config.json](default_rules/tasks/task_planner_config.json) - Task planner config
+1. [forgeflow/core/cli_types/](forgeflow/core/cli_types/) - Default rules for different CLI types
+    - [gemini_rules.py](forgeflow/core/cli_types/gemini_rules.py) - Default rules for Gemini CLI
+    - [codex_rules.py](forgeflow/core/cli_types/codex_rules.py) - Default rules for Codex CLI
+    - [claude_code_rules.py](forgeflow/core/cli_types/claude_code_rules.py) - Default rules for Claude Code CLI
+2. [forgeflow/tasks/configs/](forgeflow/tasks/configs/) - Default task configurations
+    - [improve_coverage_config.json](forgeflow/tasks/configs/improve_coverage_config.json) - Improve coverage task config
+    - [task_planner_config.json](forgeflow/tasks/configs/task_planner_config.json) - Task planner config
 
 #### Using Custom Rules
 

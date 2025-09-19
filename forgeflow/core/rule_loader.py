@@ -79,30 +79,22 @@ def _get_cli_types_rules_dir() -> str | None:
         import forgeflow as _forgeflow
 
         pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        cli_types_rules_dir = (repo_root / "default_rules" / "cli_types").resolve()
+        cli_types_rules_dir = (pkg_dir / "core" / "cli_types").resolve()
         return str(cli_types_rules_dir)
     except Exception:
         # Best effort; if not available, skip
         return None
 
 
+# These functions are no longer needed as we've reorganized the directory structure
+# Keeping them for backward compatibility but they will return None
 def _get_tasks_rules_dir() -> str | None:
     """Get the tasks rules directory path robustly.
 
     Returns:
         Path to tasks rules directory, or None if not found
     """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        tasks_rules_dir = (repo_root / "default_rules" / "tasks").resolve()
-        return str(tasks_rules_dir)
-    except Exception:
-        # Best effort; if not available, skip
-        return None
+    return None
 
 
 def _get_projects_rules_dir() -> str | None:
@@ -111,16 +103,7 @@ def _get_projects_rules_dir() -> str | None:
     Returns:
         Path to projects rules directory, or None if not found
     """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        projects_rules_dir = (repo_root / "default_rules" / "projects").resolve()
-        return str(projects_rules_dir)
-    except Exception:
-        # Best effort; if not available, skip
-        return None
+    return None
 
 
 def _get_user_custom_rules_dir() -> str | None:
@@ -189,14 +172,11 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
     The function will look for a file in this order:
     1. `{project_name}_rules.py` in the current working directory
     2. `{project_name}.py` in the current working directory
-    3. `{project_name}_rules.py` in the user_custom_rules directory
-    4. `{project_name}.py` in the user_custom_rules directory
-    5. `{project_name}_rules.py` in the default_rules/projects directory (for built-in project rules)
-    6. `{project_name}.py` in the default_rules/projects directory (for built-in project rules)
-    7. `{project_name}_rules.py` in the default_rules directory (for backward compatibility)
-    8. `{project_name}.py` in the default_rules directory (for backward compatibility)
-    9. `{project_name}_rules.py` in the forgeflow/examples directory (for backward compatibility)
-    10. `{project_name}.py` in the forgeflow/examples directory (for backward compatibility)
+    3. `user_custom_rules/projects/{project_name}_rules.py` in the user custom rules directory
+    4. `user_custom_rules/projects/{project_name}.py` in the user custom rules directory
+    5. `forgeflow/core/cli_types/{cli_type}_rules.py` for built-in CLI type rules
+    6. `examples/projects/{project_name}_rules.py` in the examples directory (for backward compatibility)
+    7. `examples/projects/{project_name}.py` in the examples directory (for backward compatibility)
 
     Args:
         project_name: Name of the project (used to find the rule file)
@@ -211,30 +191,20 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
     # Possible directories to look in
     possible_dirs = [workdir]
 
-    # Add user custom rules directory if available
+    # Add user custom rules projects directory if available
     user_custom_rules_dir = _get_user_custom_rules_dir()
     if user_custom_rules_dir:
-        possible_dirs.append(user_custom_rules_dir)
+        possible_dirs.append(os.path.join(user_custom_rules_dir, "projects"))
 
-    # Add projects rules directory if available
-    projects_rules_dir = _get_projects_rules_dir()
-    if projects_rules_dir:
-        possible_dirs.append(projects_rules_dir)
-
-    # Add default rules directory if available
-    default_rules_dir = _get_default_rules_dir()
-    if default_rules_dir:
-        possible_dirs.append(default_rules_dir)
-
-    # Add CLI types rules directory if available
+    # Add CLI types rules directory if available (for built-in CLI type rules)
     cli_types_rules_dir = _get_cli_types_rules_dir()
     if cli_types_rules_dir:
         possible_dirs.append(cli_types_rules_dir)
 
-    # Add repo examples directory if available (for backward compatibility)
+    # Add repo examples projects directory if available (for backward compatibility)
     examples_dir = _get_examples_dir()
     if examples_dir:
-        possible_dirs.append(examples_dir)
+        possible_dirs.append(os.path.join(examples_dir, "projects"))
 
     # Try to find the rule file
     rule_file_path = _find_rule_file(possible_files, possible_dirs)

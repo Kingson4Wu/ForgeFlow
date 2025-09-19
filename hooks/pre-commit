@@ -1,13 +1,18 @@
 #!/bin/bash
 set -e
 # pre-commit hook: Run code quality checks
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
 black .
 ruff check . --fix
 
+if [ -n "$STAGED_FILES" ]; then
+  git add $STAGED_FILES
+fi
 
 # Run unified health check script
 chmod +x scripts/check-health.sh
 ./scripts/check-health.sh
 
 echo "All pre-commit checks passed!"
-

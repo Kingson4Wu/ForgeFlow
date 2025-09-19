@@ -52,6 +52,11 @@ def test_cli_specific_rules():
     assert len(codex_rules) > 0
     assert len(claude_rules) > 0
 
-    # For now, they should have the same number of rules since they have the same
-    # CLI-specific rules implementation
-    assert len(gemini_rules) == len(codex_rules) == len(claude_rules)
+    # Gemini should have more rules than Codex and Claude Code
+    # because it has specific rules defined, while Codex and Claude Code are empty
+    assert len(gemini_rules) > len(codex_rules)
+    assert len(gemini_rules) > len(claude_rules)
+
+    # Codex and Claude Code should have the same number of rules
+    # because they both have empty rule lists
+    assert len(codex_rules) == len(claude_rules)

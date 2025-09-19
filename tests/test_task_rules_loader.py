@@ -114,16 +114,11 @@ def mock_get_user_custom_rules_dir():
     return None
 
 
-def mock_get_default_rules_dir():
-    return None
-
-
 def mock_get_examples_dir():
     return None
 
 
 @patch("forgeflow.core.task_rules._get_user_custom_rules_dir", mock_get_user_custom_rules_dir)
-@patch("forgeflow.core.task_rules._get_default_rules_dir", mock_get_default_rules_dir)
 @patch("forgeflow.core.task_rules._get_examples_dir", mock_get_examples_dir)
 def test_load_custom_task_rules_not_found():
     """Test load_custom_task_rules when no rule file is found."""

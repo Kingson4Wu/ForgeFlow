@@ -112,62 +112,83 @@ def build_default_rules(cli_type: str = "gemini") -> list[Rule]:
 
 def _build_gemini_rules() -> list[Rule]:
     """Build rules specific to Gemini CLI."""
-    return [
-        # Handle Gemini-specific API errors
-        Rule(
-            check=lambda out: "[API Error: 400 <400> InternalError" in out,
-            command="/clear",
-        ),
-        Rule(
-            check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
-            command="continue",
-        ),
-        Rule(
-            check=lambda out: "Connection reset by peer" in out,
-            command="continue",
-        ),
-        # Add more Gemini-specific rules here as needed
-    ]
+    # Import the gemini rules module dynamically
+    try:
+        from .cli_types.gemini_rules import build_rules
+
+        return build_rules()
+    except ImportError:
+        # Fallback to the previous implementation if the module cannot be imported
+        return [
+            # Handle Gemini-specific API errors
+            Rule(
+                check=lambda out: "[API Error: 400 <400> InternalError" in out,
+                command="/clear",
+            ),
+            Rule(
+                check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
+                command="continue",
+            ),
+            Rule(
+                check=lambda out: "Connection reset by peer" in out,
+                command="continue",
+            ),
+            # Add more Gemini-specific rules here as needed
+        ]
 
 
 def _build_codex_rules() -> list[Rule]:
     """Build rules specific to Codex CLI."""
-    return [
-        # Handle Codex-specific API errors
-        Rule(
-            check=lambda out: "[API Error: 400 <400> InternalError" in out,
-            command="/clear",
-        ),
-        Rule(
-            check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
-            command="continue",
-        ),
-        Rule(
-            check=lambda out: "Connection reset by peer" in out,
-            command="continue",
-        ),
-        # Add more Codex-specific rules here as needed
-    ]
+    # Import the codex rules module dynamically
+    try:
+        from .cli_types.codex_rules import build_rules
+
+        return build_rules()
+    except ImportError:
+        # Fallback to the previous implementation if the module cannot be imported
+        return [
+            # Handle Codex-specific API errors
+            Rule(
+                check=lambda out: "[API Error: 400 <400> InternalError" in out,
+                command="/clear",
+            ),
+            Rule(
+                check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
+                command="continue",
+            ),
+            Rule(
+                check=lambda out: "Connection reset by peer" in out,
+                command="continue",
+            ),
+            # Add more Codex-specific rules here as needed
+        ]
 
 
 def _build_claude_code_rules() -> list[Rule]:
     """Build rules specific to Claude Code CLI."""
-    return [
-        # Handle Claude-specific API errors
-        Rule(
-            check=lambda out: "[API Error: 400 <400> InternalError" in out,
-            command="/clear",
-        ),
-        Rule(
-            check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
-            command="continue",
-        ),
-        Rule(
-            check=lambda out: "Connection reset by peer" in out,
-            command="continue",
-        ),
-        # Add more Claude Code-specific rules here as needed
-    ]
+    # Import the claude code rules module dynamically
+    try:
+        from .cli_types.claude_code_rules import build_rules
+
+        return build_rules()
+    except ImportError:
+        # Fallback to the previous implementation if the module cannot be imported
+        return [
+            # Handle Claude-specific API errors
+            Rule(
+                check=lambda out: "[API Error: 400 <400> InternalError" in out,
+                command="/clear",
+            ),
+            Rule(
+                check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
+                command="continue",
+            ),
+            Rule(
+                check=lambda out: "Connection reset by peer" in out,
+                command="continue",
+            ),
+            # Add more Claude Code-specific rules here as needed
+        ]
 
 
 def next_command(output: str, rules: list[Rule]) -> str | None:
