@@ -1,3 +1,5 @@
+import re
+
 from forgeflow.core.rules import Rule
 
 
@@ -7,6 +9,14 @@ def build_rules() -> list[Rule]:
         Rule(
             check=lambda out: "✕ [API Error: 400 <400> InternalError.Algo.InvalidParameter" in out,
             command="/clear",
+        ),
+        Rule(
+            check=lambda out: re.search(
+                r"✕ \[API Error: .* API quota exceeded: Your Qwen API quota has been exhausted\. Please wait for your quota to reset\.]",
+                out,
+            )
+            is not None,
+            command=None,
         ),
         Rule(check=lambda out: "✕ [API Error: terminated]" in out, command="continue"),
         Rule(check=lambda out: "API Error" in out, command="continue"),

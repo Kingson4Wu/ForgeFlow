@@ -178,9 +178,9 @@ def build_rules(config: dict[str, Any]) -> list[Rule]:
             check=lambda out: check_task_completed(out, config),
             command=config.get(
                 "next_task_prompt",
-                "Please proceed with the next task in the TODO list, ensuring it meets your project’s completion standards and best practices (for example, tests are written and pass, and code follows style and review guidelines).",
+                "Please proceed with the next task in the TODO list only after ensuring the previous one fully meets your project’s completion standards and best practices (for example, tests are written and pass, and code follows style and review guidelines).",
             ),
         ),
         # Default task prompt
-        Rule(check=lambda out: True, command=lambda: get_next_task_prompt(config)),
+        Rule(check=lambda out: True, command=get_next_task_prompt(config)),
     ]

@@ -142,8 +142,8 @@ def build_rules(config: dict[str, Any]) -> list[Rule]:
         # Handle low coverage
         Rule(
             check=lambda out: check_coverage_below_threshold(out, target_coverage),
-            command=lambda: improve_test_coverage_prompt(target_coverage),
+            command=improve_test_coverage_prompt(target_coverage),
         ),
         # Default task prompt
-        Rule(check=lambda out: True, command=lambda: improve_test_coverage_prompt(target_coverage)),
+        Rule(check=lambda out: True, command=improve_test_coverage_prompt(target_coverage)),
     ]

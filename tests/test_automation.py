@@ -1,6 +1,12 @@
 from forgeflow.core.automation import (
     Config,
+    _handle_input_with_text,
+    _initialize_session,
+    _progressive_backspace_until_prompt,
     _recover_from_timeout,
+    _send_command,
+    _send_continue_and_return_timestamp,
+    _send_escape_and_wait,
     is_task_processing,
     setup_logger,
 )
@@ -87,6 +93,12 @@ class MockTmuxCtl:
     def send_text_then_enter(self, text):
         self.calls.append(f"send_text_then_enter({text})")
 
+    def send_enter(self):
+        self.calls.append("send_enter")
+
+    def create_session(self):
+        self.calls.append("create_session")
+
     def capture_output(self, include_ansi=False):
         self.calls.append(f"capture_output(include_ansi={include_ansi})")
         # Return output that indicates input prompt for the first few calls,
@@ -119,3 +131,81 @@ def test_recover_from_timeout():
     assert "send_escape" in tmux.calls
     assert any("send_backspace" in call for call in tmux.calls)
     assert "send_text_then_enter(continue)" in tmux.calls
+
+
+def test_send_escape_and_wait():
+    """Test _send_escape_and_wait function."""
+    tmux = MockTmuxCtl()
+    _send_escape_and_wait(tmux)
+
+    # Check that send_escape was called
+    assert "send_escape" in tmux.calls
+
+
+def test_progressive_backspace_until_prompt():
+    """Test _progressive_backspace_until_prompt function."""
+    tmux = MockTmuxCtl()
+    cli_adapter = get_cli_adapter("gemini")
+
+    _progressive_backspace_until_prompt(tmux, cli_adapter)
+
+    # Check that send_backspace was called
+    assert any("send_backspace" in call for call in tmux.calls)
+    assert any("capture_output" in call for call in tmux.calls)
+
+
+def test_send_continue_and_return_timestamp():
+    """Test _send_continue_and_return_timestamp function."""
+    tmux = MockTmuxCtl()
+
+    result = _send_continue_and_return_timestamp(tmux)
+
+    # Check that the function returned a timestamp (float)
+    assert isinstance(result, float)
+
+    # Check that send_text_then_enter was called with "continue"
+    assert "send_text_then_enter(continue)" in tmux.calls
+
+
+# Mock classes for testing new functions
+class MockConfig:
+    def __init__(self, ai_cmd="test_cmd"):
+        self.ai_cmd = ai_cmd
+
+
+def test_initialize_session():
+    """Test _initialize_session function."""
+    tmux = MockTmuxCtl()
+    cli_adapter = get_cli_adapter("gemini")
+    config = MockConfig()
+    logger = MockLogger()
+
+    _initialize_session(tmux, cli_adapter, config, logger)
+
+    # Check that create_session was called
+    assert "create_session" in str(tmux.calls)
+
+
+def test_send_command():
+    """Test _send_command function."""
+    tmux = MockTmuxCtl()
+    logger = MockLogger()
+
+    # Test with string command
+    _send_command(tmux, "test command", logger)
+    assert "send_text_then_enter(test command)" in tmux.calls
+
+    # Test with callable command
+    _send_command(tmux, lambda: "callable command", logger)
+    assert "send_text_then_enter(callable command)" in tmux.calls
+
+
+def test_handle_input_with_text():
+    """Test _handle_input_with_text function."""
+    tmux = MockTmuxCtl()
+    logger = MockLogger()
+
+    _handle_input_with_text(tmux, logger)
+
+    # Check that send_enter was called
+    assert "send_enter" in str(tmux.calls)

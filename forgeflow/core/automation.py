@@ -10,6 +10,17 @@ from .rule_loader import get_rules
 from .rules import next_command
 from .tmux_ctl import TmuxConfig, TmuxCtl
 
+# Constants for timing and behavior
+SESSION_CREATE_DELAY = 1.0
+CLI_START_DELAY = 5.0
+COMMAND_EXECUTION_DELAY = 2.0
+RECOVERY_STEP_DELAY = 0.5
+MAX_RECOVERY_ATTEMPTS = 20
+INITIAL_BACKSPACE_COUNT = 10
+MAX_BACKSPACE_COUNT = 200
+BACKSPACE_INCREMENT = 10
+LOG_COMMAND_TRUNCATE_LENGTH = 120
+
 
 @dataclass
 class Config:
@@ -47,19 +58,28 @@ def setup_logger(path: str, to_console: bool = True, level: str = "INFO") -> log
 def run_automation(cfg: Config) -> int:
     log = setup_logger(cfg.log_file, cfg.log_to_console, cfg.log_level)
     tmux = TmuxCtl(TmuxConfig(session=cfg.session, workdir=cfg.workdir))
-
-    # Get the appropriate CLI adapter
     cli_adapter = get_cli_adapter(cfg.cli_type)
 
-    # 1) Ensure session exists and start AI CLI
+    # Initialize session
+    _initialize_session(tmux, cli_adapter, cfg, log)
+
+    # Run main automation loop
+    return _run_automation_loop(tmux, cli_adapter, cfg, log)
+
+
+def _initialize_session(tmux: TmuxCtl, cli_adapter, cfg: Config, log: logging.Logger):
+    """Initialize tmux session and ensure AI CLI is running."""
     tmux.create_session()
-    time.sleep(1.0)
+    time.sleep(SESSION_CREATE_DELAY)
     output = tmux.capture_output(include_ansi=cli_adapter.wants_ansi())
     if not cli_adapter.is_ai_cli_exist(output):
         log.info(f"Ensuring AI CLI running: {cfg.ai_cmd}")
         tmux.send_text_then_enter(cfg.ai_cmd)
-        time.sleep(5.0)
+        time.sleep(CLI_START_DELAY)
 
+
+def _run_automation_loop(tmux: TmuxCtl, cli_adapter, cfg: Config, log: logging.Logger) -> int:
+    """Run the main automation loop."""
     rules = get_rules(cfg)
     last_output = ""
     last_input_prompt_time = time.time()
@@ -72,28 +92,19 @@ def run_automation(cfg: Config) -> int:
             if output != last_output:
                 last_output = output
 
-            if cli_adapter.is_input_prompt(output) and not is_task_processing(output, cli_adapter):
+            is_processing = is_task_processing(output, cli_adapter)
+            if cli_adapter.is_input_prompt(output) and not is_processing:
                 last_input_prompt_time = time.time()
                 cmd = next_command(output, rules)
                 if cmd is None:
                     log.info("No more commands to execute. Stopping.")
                     break
-                # Handle both string commands and callable commands
-                if callable(cmd):
-                    # Execute the callable to get the actual command string
-                    cmd = cmd()
-                    log.info(f"Sending command: {cmd[:120]}...")
-                else:
-                    log.info(f"Sending command: {cmd[:120]}...")
-                tmux.send_text_then_enter(cmd)
-                time.sleep(2.0)
+                _send_command(tmux, cmd, log)
+                time.sleep(COMMAND_EXECUTION_DELAY)
 
-            elif cli_adapter.is_input_prompt_with_text(output) and not is_task_processing(
-                output, cli_adapter
-            ):
-                log.info("Input line already has text → sending Enter")
-                tmux.send_enter()
-                time.sleep(2.0)
+            elif cli_adapter.is_input_prompt_with_text(output) and not is_processing:
+                _handle_input_with_text(tmux, log)
+                time.sleep(COMMAND_EXECUTION_DELAY)
 
             else:
                 # Timeout recovery or wait
@@ -105,12 +116,30 @@ def run_automation(cfg: Config) -> int:
 
     except KeyboardInterrupt:
         log.info("KeyboardInterrupt received. Exiting gracefully.")
+        return 0
     except Exception as e:
         log.exception(f"Unhandled error: {e}")
         return 1
 
     log.info("Automation finished.")
     return 0
+
+
+def _send_command(tmux: TmuxCtl, cmd, log: logging.Logger):
+    """Send command to tmux session."""
+    if callable(cmd):
+        # Execute the callable to get the actual command string
+        cmd = cmd()
+        log.info(f"Sending command: {cmd[:LOG_COMMAND_TRUNCATE_LENGTH]}...")
+    else:
+        log.info(f"Sending command: {cmd[:LOG_COMMAND_TRUNCATE_LENGTH]}...")
+    tmux.send_text_then_enter(cmd)
+
+
+def _handle_input_with_text(tmux: TmuxCtl, log: logging.Logger):
+    """Handle input prompt that already has text."""
+    log.info("Input line already has text → sending Enter")
+    tmux.send_enter()
 
 
 def is_task_processing(output: str, cli_adapter) -> bool:
@@ -125,17 +154,30 @@ def _recover_from_timeout(tmux: TmuxCtl, cli_adapter, log: logging.Logger) -> fl
     Returns the new timestamp for last_input_prompt_time.
     """
     log.info("Input prompt timeout exceeded, trying ESC/backspace recovery → continue")
-    tmux.send_escape()
-    time.sleep(0.5)
+    _send_escape_and_wait(tmux)
+    _progressive_backspace_until_prompt(tmux, cli_adapter)
+    return _send_continue_and_return_timestamp(tmux)
 
-    backspace_num = 10
-    for _ in range(20):  # cap iterations to avoid infinite loop
+
+def _send_escape_and_wait(tmux: TmuxCtl):
+    """Send ESC key and wait briefly."""
+    tmux.send_escape()
+    time.sleep(RECOVERY_STEP_DELAY)
+
+
+def _progressive_backspace_until_prompt(tmux: TmuxCtl, cli_adapter):
+    """Send progressive backspace until input prompt appears."""
+    backspace_num = INITIAL_BACKSPACE_COUNT
+    for _ in range(MAX_RECOVERY_ATTEMPTS):  # cap iterations to avoid infinite loop
         tmux.send_backspace(backspace_num)
-        time.sleep(0.5)
+        time.sleep(RECOVERY_STEP_DELAY)
         output = tmux.capture_output(include_ansi=cli_adapter.wants_ansi())
         if cli_adapter.is_input_prompt(output):
             break
-        backspace_num = min(backspace_num + 10, 200)
+        backspace_num = min(backspace_num + BACKSPACE_INCREMENT, MAX_BACKSPACE_COUNT)
 
+
+def _send_continue_and_return_timestamp(tmux: TmuxCtl) -> float:
+    """Send continue command and return current timestamp."""
     tmux.send_text_then_enter("continue")
     return time.time()
