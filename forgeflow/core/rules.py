@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 # ---------- Task and Verification Prompts ----------
 ALL_TASKS_DONE_TEXT = "All tasks have been completed."

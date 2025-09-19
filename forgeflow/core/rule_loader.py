@@ -4,8 +4,9 @@ import importlib.util
 import logging
 import os
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 from .rules import Rule, build_default_rules
 from .task_rules import get_task_rules_builder, load_custom_task_rules

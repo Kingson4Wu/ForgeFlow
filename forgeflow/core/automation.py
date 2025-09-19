@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from .cli_adapters.base import CLIAdapter
 from .cli_adapters.factory import get_cli_adapter

@@ -10,10 +10,10 @@ This guide will help you quickly set up and use ForgeFlow on macOS.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-### 2. Install Python 3.9+
+### 2. Install Python 3.13+
 
 ```bash
-brew install python@3.9
+brew install python@3.13
 ```
 
 ### 3. Install tmux
@@ -54,7 +54,7 @@ pip install -e .
 Or using Conda:
 
 ```bash
-conda create -n forgeflow python=3.9
+conda create -n forgeflow python=3.13
 conda activate forgeflow
 pip install -e .
 ```

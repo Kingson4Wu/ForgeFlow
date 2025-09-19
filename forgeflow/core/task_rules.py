@@ -3,8 +3,9 @@ import json
 import logging
 import os
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from .rules import Rule
 
@@ -12,7 +13,7 @@ logger = logging.getLogger("forgeflow")
 
 
 # ---------- Task Configuration ----------
-def _get_config_directory(dir_type: str) -> Optional[str]:
+def _get_config_directory(dir_type: str) -> str | None:
     """Get configuration directory path for the specified type.
 
     Args:
@@ -92,7 +93,7 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
 
 
 # ---------- Dynamic Task Rule Loading ----------
-def _find_rule_file(file_names: list[str], directories: list[str]) -> Optional[str]:
+def _find_rule_file(file_names: list[str], directories: list[str]) -> str | None:
     """Find a rule file in the given directories.
 
     Args:
@@ -110,7 +111,7 @@ def _find_rule_file(file_names: list[str], directories: list[str]) -> Optional[s
     return None
 
 
-def _get_examples_dir() -> Optional[str]:
+def _get_examples_dir() -> str | None:
     """Get the examples directory path robustly.
 
     Returns:
@@ -128,7 +129,7 @@ def _get_examples_dir() -> Optional[str]:
         return None
 
 
-def _get_examples_tasks_dir() -> Optional[str]:
+def _get_examples_tasks_dir() -> str | None:
     """Get the examples tasks directory path robustly.
 
     Returns:
@@ -146,7 +147,7 @@ def _get_examples_tasks_dir() -> Optional[str]:
         return None
 
 
-def _get_user_custom_rules_dir() -> Optional[str]:
+def _get_user_custom_rules_dir() -> str | None:
     """Get the user custom rules directory path robustly.
 
     Returns:
@@ -164,7 +165,7 @@ def _get_user_custom_rules_dir() -> Optional[str]:
         return None
 
 
-def _get_user_custom_rules_tasks_dir() -> Optional[str]:
+def _get_user_custom_rules_tasks_dir() -> str | None:
     """Get the user custom rules tasks directory path robustly.
 
     Returns:
@@ -182,7 +183,7 @@ def _get_user_custom_rules_tasks_dir() -> Optional[str]:
         return None
 
 
-def _load_module_from_file(file_path: str, module_name: str) -> Optional[object]:
+def _load_module_from_file(file_path: str, module_name: str) -> object | None:
     """Load a Python module from a file path.
 
     Args:
@@ -207,7 +208,7 @@ def _load_module_from_file(file_path: str, module_name: str) -> Optional[object]
         return None
 
 
-def _find_build_function(module: object, possible_names: list[str]) -> Optional[Callable]:
+def _find_build_function(module: object, possible_names: list[str]) -> Callable | None:
     """Find a build function in a module.
 
     Args:
@@ -225,7 +226,7 @@ def _find_build_function(module: object, possible_names: list[str]) -> Optional[
 
 def load_custom_task_rules(
     task_name: str, workdir: str
-) -> Optional[Callable[[dict[str, Any]], list[Rule]]]:
+) -> Callable[[dict[str, Any]], list[Rule]] | None:
     """Load custom task rules from a Python file.
 
     The function will look for a file in this order:
@@ -295,7 +296,7 @@ def load_custom_task_rules(
     return build_func
 
 
-def get_task_rules_builder(task_name: str) -> Optional[Callable[[dict[str, Any]], list[Rule]]]:
+def get_task_rules_builder(task_name: str) -> Callable[[dict[str, Any]], list[Rule]] | None:
     """Get task rules builder function for a specific task type.
 
     This function first looks for custom task rules, then falls back to built-in rules.

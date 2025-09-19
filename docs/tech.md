@@ -2,7 +2,7 @@
 
 ## Core Technologies
 
-1. **Python**: The main programming language for the project, requiring Python 3.9 or higher.
+1. **Python**: The main programming language for the project, requiring Python 3.13 or higher.
 
 2. **tmux**: Terminal multiplexer used to create and manage terminal sessions. The project controls the AI CLI through
    tmux.

@@ -46,7 +46,7 @@ If you prefer to use a Conda environment, you can set it up with the following s
 
 1. Create a new Conda environment:
    ```bash
-   conda create -n forgeflow python=3.9
+   conda create -n forgeflow python=3.13
    ```
 
 2. Activate the Conda environment:
