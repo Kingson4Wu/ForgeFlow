@@ -5,21 +5,25 @@ This guide will help you quickly set up and use ForgeFlow on macOS.
 ## Prerequisites
 
 ### 1. Install Homebrew (if not already installed)
+
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
 ### 2. Install Python 3.9+
+
 ```bash
 brew install python@3.9
 ```
 
 ### 3. Install tmux
+
 ```bash
 brew install tmux
 ```
 
 ### 4. Install an AI CLI Tool
+
 For this example, we'll use the Gemini CLI:
 
 ```bash
@@ -32,12 +36,14 @@ pip install gemini-cli  # This is just an example, replace with actual installat
 ## Installation
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/Kingson4Wu/ForgeFlow
 cd ForgeFlow
 ```
 
 ### 2. Set Up Python Environment
+
 ```bash
 # Using virtual environment (recommended)
 python3 -m venv venv
@@ -46,6 +52,7 @@ pip install -e .
 ```
 
 Or using Conda:
+
 ```bash
 conda create -n forgeflow python=3.9
 conda activate forgeflow
@@ -55,6 +62,7 @@ pip install -e .
 ## Quick Usage
 
 ### 1. Basic Command
+
 ```bash
 forgeflow \
   --session my_session \
@@ -66,6 +74,7 @@ forgeflow \
 ```
 
 ### 2. With Custom Rules
+
 ```bash
 forgeflow \
   --session my_session \
@@ -80,6 +89,7 @@ forgeflow \
 ## Creating Custom Rules
 
 ### 1. Create a Rule File
+
 Create a file named `myproject_rules.py` in your project directory:
 
 ```python
@@ -100,6 +110,7 @@ def build_rules() -> list[Rule]:
 ```
 
 ### 2. Run with Custom Rules
+
 ```bash
 forgeflow \
   --session my_session \
@@ -114,26 +125,31 @@ forgeflow \
 ## Useful tmux Commands
 
 ### View Sessions
+
 ```bash
 tmux list-sessions
 ```
 
 ### Attach to a Session
+
 ```bash
 tmux attach -t my_session
 ```
 
 ### Detach from a Session
+
 Press `Ctrl+b` then `d`
 
 ### Kill a Session
+
 ```bash
 tmux kill-session -t my_session
 ```
 
 ## Keeping Your Mac Awake During Long Tasks
 
-When running long automation tasks with ForgeFlow, you might want to prevent your Mac from going to sleep or dimming the screen. macOS provides a built-in utility called `caffeinate` for this purpose.
+When running long automation tasks with ForgeFlow, you might want to prevent your Mac from going to sleep or dimming the
+screen. macOS provides a built-in utility called `caffeinate` for this purpose.
 
 ### Using caffeinate
 
@@ -158,6 +174,7 @@ caffeinate forgeflow \
 - `caffeinate -s` prevents the system from sleeping (only works when plugged in with AC power)
 
 For example, to prevent both the system and display from sleeping:
+
 ```bash
 caffeinate -d -i forgeflow \
   --session my_session \
@@ -173,14 +190,17 @@ Note that `caffeinate` will release its assertions when the wrapped command fini
 ## Troubleshooting
 
 ### 1. If tmux sessions are not being created
+
 - Ensure tmux is properly installed: `tmux -V`
 - Check if you have proper permissions
 
 ### 2. If AI CLI is not starting
+
 - Verify the AI CLI tool is installed and accessible from your PATH
 - Test the AI CLI independently to ensure it works
 
 ### 3. If rules are not being applied
+
 - Check that your rule file is in the correct location
 - Verify the function name is `build_rules`
 - Check the log file for any error messages

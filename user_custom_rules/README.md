@@ -4,13 +4,16 @@ This directory is for storing your custom rules and configurations for ForgeFlow
 
 ## Purpose
 
-The `user_custom_rules` directory is designed to hold user-defined rule files and configuration files that customize ForgeFlow's behavior for your specific projects. Unlike the `examples/` directory which contains sample files, and the `default_rules/` directory which contains built-in rules, this directory is specifically for your own custom rules.
+The `user_custom_rules` directory is designed to hold user-defined rule files and configuration files that customize
+ForgeFlow's behavior for your specific projects. Unlike the `examples/` directory which contains sample files, and
+the `default_rules/` directory which contains built-in rules, this directory is specifically for your own custom rules.
 
 ## Usage
 
 ### Custom Rule Files
 
-You can place your custom rule files in this directory. ForgeFlow will automatically look for rule files in the following order:
+You can place your custom rule files in this directory. ForgeFlow will automatically look for rule files in the
+following order:
 
 1. `{project_name}_rules.py` in the current working directory
 2. `{project_name}.py` in the current working directory
@@ -23,7 +26,8 @@ You can place your custom rule files in this directory. ForgeFlow will automatic
 
 ### Configuration Files
 
-You can also place task configuration files in this directory. ForgeFlow will look for configuration files in the following order:
+You can also place task configuration files in this directory. ForgeFlow will look for configuration files in the
+following order:
 
 1. `{task_name}_config.json` in the current working directory
 2. `{task_name}_config.json` in this `user_custom_rules/` directory
@@ -45,6 +49,7 @@ To create a custom rule file for a project named "myproject":
 3. Run ForgeFlow with `--project myproject`
 
 Example `myproject_rules.py`:
+
 ```python
 from forgeflow.core.rules import Rule
 

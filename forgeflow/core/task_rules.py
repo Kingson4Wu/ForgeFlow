@@ -15,8 +15,12 @@ logger = logging.getLogger("forgeflow")
 def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
     """Load task configuration from a JSON file.
 
-    The function will look for a file named `{task_name}_config.json` in the workdir.
-    If not found, it returns an empty dict.
+    The function will look for a file named `{task_name}_config.json` in this order:
+    1. Current working directory
+    2. user_custom_rules directory
+    3. default_rules/tasks directory
+    4. default_rules directory (for backward compatibility)
+    5. forgeflow/examples directory (for backward compatibility)
 
     Args:
         task_name: Name of the task
@@ -39,7 +43,19 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
         except Exception:
             pass
 
-    # If not found in user custom rules directory, try default rules directory
+    # If not found in user custom rules directory, try tasks rules directory
+    if not os.path.exists(config_file):
+        try:
+            import forgeflow as _forgeflow
+
+            pkg_dir = Path(_forgeflow.__file__).resolve().parent
+            repo_root = pkg_dir.parent
+            tasks_rules_dir = (repo_root / "default_rules" / "tasks").resolve()
+            config_file = os.path.join(tasks_rules_dir, f"{task_name}_config.json")
+        except Exception:
+            pass
+
+    # If not found in tasks rules directory, try default rules directory
     if not os.path.exists(config_file):
         try:
             import forgeflow as _forgeflow
@@ -129,6 +145,24 @@ def _get_default_rules_dir() -> Optional[str]:
         return None
 
 
+def _get_tasks_rules_dir() -> Optional[str]:
+    """Get the tasks rules directory path robustly.
+
+    Returns:
+        Path to tasks rules directory, or None if not found
+    """
+    try:
+        import forgeflow as _forgeflow
+
+        pkg_dir = Path(_forgeflow.__file__).resolve().parent
+        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
+        tasks_rules_dir = (repo_root / "default_rules" / "tasks").resolve()
+        return str(tasks_rules_dir)
+    except Exception:
+        # Best effort; if not available, skip
+        return None
+
+
 def _get_user_custom_rules_dir() -> Optional[str]:
     """Get the user custom rules directory path robustly.
 
@@ -198,10 +232,12 @@ def load_custom_task_rules(
     2. `{task_name}.py` in the current working directory
     3. `{task_name}_task.py` in the user_custom_rules directory
     4. `{task_name}.py` in the user_custom_rules directory
-    5. `{task_name}_task.py` in the default_rules directory (for built-in default rules)
-    6. `{task_name}.py` in the default_rules directory (for built-in default rules)
-    7. `{task_name}_task.py` in the forgeflow/examples directory (for backward compatibility)
-    8. `{task_name}.py` in the forgeflow/examples directory (for backward compatibility)
+    5. `{task_name}_task.py` in the default_rules/tasks directory (for built-in task rules)
+    6. `{task_name}.py` in the default_rules/tasks directory (for built-in task rules)
+    7. `{task_name}_task.py` in the default_rules directory (for backward compatibility)
+    8. `{task_name}.py` in the default_rules directory (for backward compatibility)
+    9. `{task_name}_task.py` in the forgeflow/examples directory (for backward compatibility)
+    10. `{task_name}.py` in the forgeflow/examples directory (for backward compatibility)
 
     Args:
         task_name: Name of the task (used to find the rule file)
@@ -220,6 +256,11 @@ def load_custom_task_rules(
     user_custom_rules_dir = _get_user_custom_rules_dir()
     if user_custom_rules_dir:
         possible_dirs.append(user_custom_rules_dir)
+
+    # Add tasks rules directory if available
+    tasks_rules_dir = _get_tasks_rules_dir()
+    if tasks_rules_dir:
+        possible_dirs.append(tasks_rules_dir)
 
     # Add default rules directory if available
     default_rules_dir = _get_default_rules_dir()

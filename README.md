@@ -11,7 +11,8 @@ Automatically drives AI CLI to continuously complete programming tasks within a 
   commands.
 - **Configurable Rule System**: Rules are evaluated in order, with priority matching taking effect, and custom rules are
   supported.
-- **Multi-CLI Support**: Supports different AI CLI tools through an adapter pattern (currently supports Gemini as the default, with a placeholder for Claude Code).
+- **Multi-CLI Support**: Supports different AI CLI tools through an adapter pattern (currently supports Gemini as the
+  default, with a placeholder for Claude Code).
 - **Reliable Input Detection**: Regular expressions detect "input prompts" and "existing text in input box" specific to
   each CLI tool.
 - **Timeout Recovery Strategy**: Long periods without input prompt → send `ESC` → backspace clear → `continue`.
@@ -32,7 +33,8 @@ To clone and set up the project, follow these steps:
 
 ### Quick Start for Mac Users
 
-For Mac users, see our [Quick Start Guide for Mac Users](docs/quick_start_mac.md) which provides detailed step-by-step instructions for setting up and using ForgeFlow on macOS.
+For Mac users, see our [Quick Start Guide for Mac Users](docs/quick_start_mac.md) which provides detailed step-by-step
+instructions for setting up and using ForgeFlow on macOS.
 
 ### Installation
 
@@ -194,6 +196,18 @@ These test cases can be run and debugged directly in IDEs to help you quickly ve
 
 ForgeFlow's core design philosophy is to allow users to customize rules according to different project requirements.
 
+#### CLI Type Specific Rules
+
+ForgeFlow now supports CLI type specific default rules. Different AI CLI tools may have different error patterns and
+behaviors, so ForgeFlow provides specific default rules for each supported CLI type:
+
+1. **Gemini CLI**: Rules specific to Google's Gemini CLI
+2. **Codex CLI**: Rules specific to OpenAI's Codex CLI
+3. **Claude Code CLI**: Rules specific to Anthropic's Claude Code CLI
+
+These default rules handle common error patterns and recovery strategies for each CLI type. You can specify the CLI type
+using the `--cli-type` parameter when running ForgeFlow.
+
 #### Creating Custom Rule Files
 
 To create custom rules, you need to implement the following components:
@@ -233,9 +247,16 @@ We provide several examples to help you get started:
 
 For default rules and task-specific rules, please check the [default_rules/](default_rules/) directory:
 
-1. [fastproxy_rules.py](default_rules/fastproxy_rules.py) - Fastproxy project specific rules
-2. [web_project_rules.py](default_rules/web_project_rules.py) - Web project specific rules
-3. [code_review_task.py](default_rules/code_review_task.py) - Code review task rules
+1. [cli_types/](default_rules/cli_types/) - Default rules for different CLI types
+    - [gemini_rules.py](default_rules/cli_types/gemini_rules.py) - Default rules for Gemini CLI
+    - [codex_rules.py](default_rules/cli_types/codex_rules.py) - Default rules for Codex CLI
+    - [claude_code_rules.py](default_rules/cli_types/claude_code_rules.py) - Default rules for Claude Code CLI
+2. [projects/](default_rules/projects/) - Project-specific rules
+    - [web_project_rules.py](default_rules/projects/web_project_rules.py) - Example web project rules
+3. [tasks/](default_rules/tasks/) - Task-specific rules and configurations
+    - [code_review_task.py](default_rules/tasks/code_review_task.py) - Code review task rules
+    - [improve_coverage_config.json](default_rules/tasks/improve_coverage_config.json) - Improve coverage task config
+    - [task_planner_config.json](default_rules/tasks/task_planner_config.json) - Task planner config
 
 #### Using Custom Rules
 
@@ -256,11 +277,13 @@ The system will automatically search for your rule file in the following order:
 7. `{project_name}_rules.py` in the `examples/` directory (for backward compatibility)
 8. `{project_name}.py` in the `examples/` directory (for backward compatibility)
 
-It will then look for a rule-building function. The recommended function name is `build_rules`, which provides consistency across all projects.
+It will then look for a rule-building function. The recommended function name is `build_rules`, which provides
+consistency across all projects.
 
 ### Task Mode
 
-ForgeFlow also supports task mode, which allows you to define reusable rules for specific types of tasks. Task mode can be used in conjunction with project mode to provide finer control over specific tasks.
+ForgeFlow also supports task mode, which allows you to define reusable rules for specific types of tasks. Task mode can
+be used in conjunction with project mode to provide finer control over specific tasks.
 
 To use task mode, specify the task type using the `--task` parameter:
 
@@ -276,22 +299,29 @@ forgeflow \
 ```
 
 ForgeFlow comes with several built-in task types:
+
 - `fix_tests`: Automatically fix failing test cases
 - `improve_coverage`: Improve test coverage to a target percentage
 - `task_planner`: Follow a TODO list to complete tasks in order
 
-Additionally, you can create custom task types by implementing a Python module with a `build_rules` function. Default task configurations can be found in the [default_rules/](default_rules/) directory. See [Task Mode Documentation](docs/task_mode.md) for more details on creating custom tasks.
+Additionally, you can create custom task types by implementing a Python module with a `build_rules` function. Default
+task configurations can be found in the [default_rules/](default_rules/) directory.
+See [Task Mode Documentation](docs/task_mode.md) for more details on creating custom tasks.
 
 ### CLI Adapter Pattern
 
-ForgeFlow uses an adapter pattern to support different AI CLI tools. Each CLI tool has its own adapter that implements the `CLIAdapter` interface, which defines methods for detecting input prompts, task processing states, and CLI existence.
+ForgeFlow uses an adapter pattern to support different AI CLI tools. Each CLI tool has its own adapter that implements
+the `CLIAdapter` interface, which defines methods for detecting input prompts, task processing states, and CLI
+existence.
 
 Currently supported adapters:
+
 - **Gemini**: The default and currently only fully implemented adapter for Google's Qwen/Gemini CLI
 - **Claude Code**: Placeholder adapter for Anthropic's Claude Code CLI (contains TODOs for implementation)
 
 To add support for a new CLI tool:
-1. Create a new adapter class that extends `CLIAdapter` 
+
+1. Create a new adapter class that extends `CLIAdapter`
 2. Implement all abstract methods according to your CLI's behavior
 3. Register your adapter in the factory function in `forgeflow/core/cli_adapters/factory.py`
 4. Use the `--cli-type` parameter to select your adapter

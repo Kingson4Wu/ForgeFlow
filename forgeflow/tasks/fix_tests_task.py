@@ -14,8 +14,11 @@ logger = logging.getLogger("forgeflow")
 def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
     """Load task configuration from a JSON file.
 
-    The function will look for a file named `{task_name}_config.json` in the workdir.
-    If not found, it returns an empty dict.
+    The function will look for a file named `{task_name}_config.json` in this order:
+    1. Current working directory
+    2. user_custom_rules directory
+    3. default_rules/tasks directory
+    4. forgeflow/examples directory (for backward compatibility)
 
     Args:
         task_name: Name of the task
@@ -26,7 +29,31 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
     """
     config_file = os.path.join(workdir, f"{task_name}_config.json")
 
-    # If not found in workdir, try examples directory
+    # If not found in workdir, try user custom rules directory
+    if not os.path.exists(config_file):
+        try:
+            import forgeflow as _forgeflow
+
+            pkg_dir = Path(_forgeflow.__file__).resolve().parent
+            repo_root = pkg_dir.parent
+            user_custom_rules_dir = (repo_root / "user_custom_rules").resolve()
+            config_file = os.path.join(user_custom_rules_dir, f"{task_name}_config.json")
+        except Exception:
+            pass
+
+    # If not found in user custom rules directory, try tasks rules directory
+    if not os.path.exists(config_file):
+        try:
+            import forgeflow as _forgeflow
+
+            pkg_dir = Path(_forgeflow.__file__).resolve().parent
+            repo_root = pkg_dir.parent
+            tasks_rules_dir = (repo_root / "default_rules" / "tasks").resolve()
+            config_file = os.path.join(tasks_rules_dir, f"{task_name}_config.json")
+        except Exception:
+            pass
+
+    # If not found in tasks rules directory, try examples directory (for backward compatibility)
     if not os.path.exists(config_file):
         try:
             import forgeflow as _forgeflow

@@ -1,6 +1,7 @@
 # Task Mode Configuration
 
-ForgeFlow supports task mode, allowing you to define reusable rules for specific types of tasks. Task mode can be used in conjunction with project mode to provide finer control over specific tasks.
+ForgeFlow supports task mode, allowing you to define reusable rules for specific types of tasks. Task mode can be used
+in conjunction with project mode to provide finer control over specific tasks.
 
 ## Using Task Mode
 
@@ -20,12 +21,15 @@ forgeflow \
 ## Available Task Types
 
 ### 1. `fix_tests` - Fix Test Cases
+
 This task type focuses on identifying and fixing failing test cases.
 
 ### 2. `improve_coverage` - Improve Test Coverage
+
 This task type focuses on improving the test coverage of the project.
 
 ### 3. `task_planner` - Task Planner
+
 This task type follows a TODO file to complete tasks in order, marking them as completed as it goes.
 
 ## Creating Custom Task Types
@@ -34,7 +38,8 @@ ForgeFlow now supports creating custom task types that can be reused across proj
 
 1. Create a Python file named `{task_name}_task.py` or `{task_name}.py`
 2. Implement a `build_rules(config)` function that returns a list of Rule objects
-3. Place the file in your project directory, in the `user_custom_rules/` directory, or in the `default_rules/` directory for built-in default rules
+3. Place the file in your project directory, in the `user_custom_rules/` directory, or in the `default_rules/` directory
+   for built-in default rules
 
 ### Example Custom Task
 
@@ -72,7 +77,8 @@ def build_rules(config: dict) -> list[Rule]:
     ]
 ```
 
-Save this as `code_review_task.py` in your project directory, in the `user_custom_rules/` directory, or in the `default_rules/` directory, and then use it with:
+Save this as `code_review_task.py` in your project directory, in the `user_custom_rules/` directory, or in
+the `default_rules/` directory, and then use it with:
 
 ```bash
 forgeflow \
@@ -87,7 +93,8 @@ forgeflow \
 
 ## Task Configuration
 
-You can create configuration files for tasks to customize their behavior. Configuration files should be placed in the project's working directory with the filename format `{task_name}_config.json`.
+You can create configuration files for tasks to customize their behavior. Configuration files should be placed in the
+project's working directory with the filename format `{task_name}_config.json`.
 
 ### Example: Improve Coverage Task Configuration
 
@@ -123,6 +130,7 @@ Create a file named `task_planner_config.json`:
 ```
 
 This configuration defines:
+
 - The TODO file to use (`TODO.md`)
 - Characters to mark completed and pending tasks
 - Regex pattern to identify tasks in the TODO file
@@ -132,7 +140,8 @@ This configuration defines:
 
 ## Using with Project Mode
 
-Task mode can be used in conjunction with project mode. When both `--project` and `--task` parameters are specified, task mode rules take precedence over project rules:
+Task mode can be used in conjunction with project mode. When both `--project` and `--task` parameters are specified,
+task mode rules take precedence over project rules:
 
 ```bash
 forgeflow \
@@ -146,4 +155,5 @@ forgeflow \
   --log-file forgeflow.log
 ```
 
-In this example, the rules for the `fix_tests` task will be used, but if the task rules are not found or fail to load, the system will fall back to the `web_project` project rules.
+In this example, the rules for the `fix_tests` task will be used, but if the task rules are not found or fail to load,
+the system will fall back to the `web_project` project rules.

@@ -79,8 +79,9 @@ If all conditions are satisfied, return:
 """
 
 
-def build_default_rules() -> list[Rule]:
-    return [
+def build_default_rules(cli_type: str = "gemini") -> list[Rule]:
+    # Common rules that apply to all CLI types
+    common_rules = [
         Rule(check=is_all_task_finished, command=final_verification_prompt()),
         Rule(check=is_final_verification_finished, command=None),  # stop
         Rule(
@@ -89,7 +90,83 @@ def build_default_rules() -> list[Rule]:
         ),
         Rule(check=lambda out: "✕ [API Error: terminated]" in out, command="continue"),
         Rule(check=lambda out: "API Error" in out, command="continue"),
-        Rule(check=lambda out: True, command=final_verification_prompt()),
+    ]
+
+    # CLI type specific rules
+    cli_specific_rules = []
+    if cli_type == "gemini":
+        cli_specific_rules = _build_gemini_rules()
+    elif cli_type == "codex":
+        cli_specific_rules = _build_codex_rules()
+    elif cli_type == "claude_code":
+        cli_specific_rules = _build_claude_code_rules()
+
+    # Combine rules: CLI-specific rules take precedence, followed by common rules
+    all_rules = cli_specific_rules + common_rules
+
+    # Add the default task prompt as the last rule
+    all_rules.append(Rule(check=lambda out: True, command=final_verification_prompt()))
+
+    return all_rules
+
+
+def _build_gemini_rules() -> list[Rule]:
+    """Build rules specific to Gemini CLI."""
+    return [
+        # Handle Gemini-specific API errors
+        Rule(
+            check=lambda out: "[API Error: 400 <400> InternalError" in out,
+            command="/clear",
+        ),
+        Rule(
+            check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
+            command="continue",
+        ),
+        Rule(
+            check=lambda out: "Connection reset by peer" in out,
+            command="continue",
+        ),
+        # Add more Gemini-specific rules here as needed
+    ]
+
+
+def _build_codex_rules() -> list[Rule]:
+    """Build rules specific to Codex CLI."""
+    return [
+        # Handle Codex-specific API errors
+        Rule(
+            check=lambda out: "[API Error: 400 <400> InternalError" in out,
+            command="/clear",
+        ),
+        Rule(
+            check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
+            command="continue",
+        ),
+        Rule(
+            check=lambda out: "Connection reset by peer" in out,
+            command="continue",
+        ),
+        # Add more Codex-specific rules here as needed
+    ]
+
+
+def _build_claude_code_rules() -> list[Rule]:
+    """Build rules specific to Claude Code CLI."""
+    return [
+        # Handle Claude-specific API errors
+        Rule(
+            check=lambda out: "[API Error: 400 <400> InternalError" in out,
+            command="/clear",
+        ),
+        Rule(
+            check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
+            command="continue",
+        ),
+        Rule(
+            check=lambda out: "Connection reset by peer" in out,
+            command="continue",
+        ),
+        # Add more Claude Code-specific rules here as needed
     ]
 
 
