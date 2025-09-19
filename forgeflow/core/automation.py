@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from .cli_adapters.base import CLIAdapter
 from .cli_adapters.factory import get_cli_adapter
+from .notifier import send_notification
 from .rule_loader import get_rules
 from .rules import next_command
 from .tmux_ctl import TmuxConfig, TmuxCtl
@@ -69,6 +70,41 @@ def run_automation(cfg: Config) -> int:
     return _run_automation_loop(tmux, cli_adapter, cfg, log)
 
 
+def run_monitor_mode(cfg: Config) -> int:
+    """Run in monitor-only mode that only sends notifications when tasks stop processing."""
+    log = setup_logger(cfg.log_file, cfg.log_to_console, cfg.log_level)
+    tmux = TmuxCtl(TmuxConfig(session=cfg.session, workdir=cfg.workdir or ""))
+    cli_adapter = get_cli_adapter(cfg.cli_type)
+
+    log.info("Monitor mode started. Only monitoring task processing status.")
+
+    # Track task processing state for notifications
+    was_processing = False
+
+    try:
+        while True:
+            output = tmux.capture_output(include_ansi=cli_adapter.wants_ansi())
+            is_processing = is_task_processing(output, cli_adapter)
+
+            # Check for task processing state changes and send notifications
+            if was_processing and not is_processing:
+                # Task has stopped processing
+                _send_task_stopped_notification(log)
+            was_processing = is_processing
+
+            time.sleep(cfg.poll_interval)
+
+    except KeyboardInterrupt:
+        log.info("KeyboardInterrupt received. Exiting gracefully.")
+        return 0
+    except Exception as e:
+        log.exception(f"Unhandled error: {e}")
+        return 1
+
+    log.info("Monitor mode finished.")
+    return 0
+
+
 def _initialize_session(
     tmux: TmuxCtl, cli_adapter: CLIAdapter, cfg: Config, log: logging.Logger
 ) -> None:
@@ -89,6 +125,8 @@ def _run_automation_loop(
     rules = get_rules(cfg)
     last_output = ""
     last_input_prompt_time = time.time()
+    # Track task processing state for notifications
+    was_processing = False
 
     log.info("Automation started.")
 
@@ -99,6 +137,13 @@ def _run_automation_loop(
                 last_output = output
 
             is_processing = is_task_processing(output, cli_adapter)
+
+            # Check for task processing state changes and send notifications
+            if was_processing and not is_processing:
+                # Task has stopped processing
+                _send_task_stopped_notification(log)
+            was_processing = is_processing
+
             if cli_adapter.is_input_prompt(output) and not is_processing:
                 last_input_prompt_time = time.time()
                 cmd = next_command(output, rules)
@@ -187,3 +232,10 @@ def _send_continue_and_return_timestamp(tmux: TmuxCtl) -> float:
     """Send continue command and return current timestamp."""
     tmux.send_text_then_enter("continue")
     return time.time()
+
+
+def _send_task_stopped_notification(log: logging.Logger) -> None:
+    """Send a notification when task processing has stopped."""
+    message = "ForgeFlow task has stopped processing. Please check what happened."
+    log.info(f"Task stopped. Sending notification: {message}")
+    send_notification("ForgeFlow Task Stopped", message)

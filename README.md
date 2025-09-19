@@ -13,6 +13,7 @@ Automatically drives AI CLI to continuously complete programming tasks within a 
 - **Reliable Input Detection**: Regular expressions detect "input prompts" and "existing text in input box" specific to each CLI tool.
 - **Timeout Recovery Strategy**: Long periods without input prompt → send `ESC` → backspace clear → `continue`.
 - **Logging and Debugging**: Dual channel file + console logging with timestamps.
+- **Task Monitoring**: Monitors task processing status and sends desktop notifications when tasks stop processing (macOS notifications supported).
 
 ## Quick Start
 
@@ -127,21 +128,39 @@ forgeflow \
   --log-file forgeflow.log
 ```
 
+### Monitor-Only Mode
+
+ForgeFlow also supports a monitor-only mode that watches an existing tmux session and sends desktop notifications when tasks stop processing, without sending any commands to the AI CLI. This is useful for monitoring tasks while you work on other things.
+
+To run in monitor-only mode:
+
+```bash
+forgeflow \\
+  --session qwen_session \\
+  --monitor-only \\
+  --poll 10 \\
+  --log-file forgeflow.log
+```
+
+Note: In monitor-only mode, the `--ai-cmd` and `--workdir` parameters are not required since ForgeFlow will not be starting or controlling the AI CLI, only monitoring its status.
+
 ### Running the Script Directly (without installation)
 
 If you want to run the script directly without installing the package, you can use the following command:
 
 ```bash
-python -m forgeflow.cli \
-  --session qwen_session \
-  --workdir "/absolute/path/to/your/project" \
-  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
-  --poll 10 \
-  --timeout 2000 \
+python -m forgeflow.cli \\
+  --session qwen_session \\
+  --workdir "/absolute/path/to/your/project" \\
+  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \\
+  --poll 10 \\
+  --timeout 2000 \\
   --log-file forgeflow.log
 ```
 
 Note: When using this method, make sure you're running the command in the project's root directory.
+
+### Running in Monitor-Only Mode (Direct Script)\n\nTo run the monitor-only mode directly without installation:\n\n```bash\npython -m forgeflow.cli \\\n  --session qwen_session \\\n  --monitor-only \\\n  --poll 10 \\\n  --log-file forgeflow.log\n```
 
 ### Exiting
 
