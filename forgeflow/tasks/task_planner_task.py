@@ -172,8 +172,8 @@ Task Planning Task:
    * Repeat steps 1-5 until all tasks are done.
 
 Use the following indicators to determine if a task is complete:
-If you've completed the current task, {RESPOND_WITH_TASK_COMPLETED} and wait for further instructions.
-If you've completed ALL tasks in the TODO file, {RESPOND_WITH_ALL_TASKS_COMPLETED}.
+If you've completed the current task, {RESPOND_WITH_TASK_COMPLETED} as the last line of your output and then wait for further instructions.
+If you've completed ALL tasks in the TODO file, {RESPOND_WITH_ALL_TASKS_COMPLETED} as the last line of your output.
 """
 
 

@@ -9,6 +9,18 @@ from forgeflow.core.rules import Rule
 
 logger = logging.getLogger("forgeflow")
 
+# ---------- Constants ----------
+COVERAGE_TARGET_REACHED_INDICATOR = "[COVERAGE_TARGET_REACHED]"
+COVERAGE_BELOW_THRESHOLD_INDICATOR = "[COVERAGE_BELOW_THRESHOLD]"
+RESPOND_WITH_COVERAGE_TARGET_REACHED = f'respond with "{COVERAGE_TARGET_REACHED_INDICATOR}"'
+RESPOND_WITH_COVERAGE_TARGET_REACHED_SINGLE_QUOTE = (
+    f"respond with '{COVERAGE_TARGET_REACHED_INDICATOR}'"
+)
+RESPOND_WITH_COVERAGE_BELOW_THRESHOLD = f'respond with "{COVERAGE_BELOW_THRESHOLD_INDICATOR}"'
+RESPOND_WITH_COVERAGE_BELOW_THRESHOLD_SINGLE_QUOTE = (
+    f"respond with '{COVERAGE_BELOW_THRESHOLD_INDICATOR}'"
+)
+
 
 # ---------- Task Configuration ----------
 def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
@@ -79,6 +91,16 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
 
 
 # ---------- Task Rules ----------
+def _is_instruction_text_in_coverage_output(output_lower: str) -> bool:
+    """Check if the output contains instruction text that should be ignored for coverage completion."""
+    return (
+        RESPOND_WITH_COVERAGE_TARGET_REACHED.lower() in output_lower
+        or RESPOND_WITH_COVERAGE_TARGET_REACHED_SINGLE_QUOTE.lower() in output_lower
+        or RESPOND_WITH_COVERAGE_BELOW_THRESHOLD.lower() in output_lower
+        or RESPOND_WITH_COVERAGE_BELOW_THRESHOLD_SINGLE_QUOTE.lower() in output_lower
+    )
+
+
 def check_coverage_below_threshold(output: str, threshold: int = 80) -> bool:
     """Check if test coverage is below the specified threshold."""
     # More robust check for coverage information
@@ -87,32 +109,39 @@ def check_coverage_below_threshold(output: str, threshold: int = 80) -> bool:
     coverage_match = re.search(r"coverage[:\s]+(\d+)%?", output.lower())
     if coverage_match:
         coverage = int(coverage_match.group(1))
-        return coverage < threshold
+        is_below_threshold = coverage < threshold
+    else:
+        # Fallback to keyword-based check
+        output_lower = output.lower()
+        is_below_threshold = f"coverage: {threshold}%" not in output_lower and (
+            "coverage below threshold" in output_lower or "coverage:" in output_lower
+        )
 
-    # Fallback to keyword-based check
-    output_lower = output.lower()
-    return f"coverage: {threshold}%" not in output_lower and (
-        "coverage below threshold" in output_lower or "coverage:" in output_lower
-    )
+    # Prevent false positives by checking that this isn't just part of our own prompt
+    is_instruction_text = _is_instruction_text_in_coverage_output(output.lower())
+
+    return is_below_threshold and not is_instruction_text
 
 
-def check_coverage_target_reached(output: str, target: int = 80) -> bool:
+def check_coverage_target_reached(output: str) -> bool:
     """Check if the target coverage has been reached."""
-
-    # Look for coverage percentage in the output
-    coverage_match = re.search(r"coverage[:\s]+(\d+)%?", output.lower())
-    if coverage_match:
-        coverage = int(coverage_match.group(1))
-        return coverage >= target
-
-    # Fallback to keyword-based check
+    target_text = COVERAGE_TARGET_REACHED_INDICATOR
     output_lower = output.lower()
-    return f"coverage: {target}%" in output_lower or "coverage target reached" in output_lower
+
+    # Check if the target text is present (case-insensitive)
+    has_target_text = target_text.lower() in output_lower
+
+    # Prevent false positives by checking that this isn't just part of our own prompt
+    is_instruction_text = _is_instruction_text_in_coverage_output(output_lower)
+
+    return has_target_text and not is_instruction_text
 
 
-def improve_test_coverage_prompt(target_coverage: int = 80) -> str:
+def get_improve_test_coverage_prompt(config: dict[str, Any]) -> str:
     """Task prompt for improving test coverage."""
-    return f"""
+    target_coverage = config.get("target_coverage", 80)
+    return (
+        f"""
 Test Coverage Improvement Task:
 1. Analyze current test coverage report:
    - Identify which files/modules have low coverage
@@ -128,7 +157,12 @@ Test Coverage Improvement Task:
 4. Aim for {target_coverage}% coverage
 5. Run tests and verify improved coverage
 6. Reassess and continue improving until target is reached
+
+When you've reached the target coverage of {target_coverage}%, """
+        + RESPOND_WITH_COVERAGE_TARGET_REACHED
+        + """ as the last line of your output.
 """
+    )
 
 
 def build_rules(config: dict[str, Any]) -> list[Rule]:
@@ -138,15 +172,15 @@ def build_rules(config: dict[str, Any]) -> list[Rule]:
 
     return [
         # Stop when target coverage is reached
-        Rule(
-            check=lambda out: check_coverage_target_reached(out, target_coverage),
-            command=None,
-        ),
+        Rule(check=check_coverage_target_reached, command=None),
         # Handle low coverage
         Rule(
             check=lambda out: check_coverage_below_threshold(out, target_coverage),
-            command=improve_test_coverage_prompt(target_coverage),
+            command=config.get(
+                "improve_coverage_prompt",
+                "Please analyze the test coverage report and write additional test cases to improve coverage. Focus on areas with the lowest coverage first.",
+            ),
         ),
         # Default task prompt
-        Rule(check=lambda out: True, command=improve_test_coverage_prompt(target_coverage)),
+        Rule(check=lambda out: True, command=get_improve_test_coverage_prompt(config)),
     ]
