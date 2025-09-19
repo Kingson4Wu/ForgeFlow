@@ -18,7 +18,7 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install -e . ruff black pytest
+          pip install -e .[dev]
       - name: Run health checks
         run: |
           chmod +x scripts/check-health.sh

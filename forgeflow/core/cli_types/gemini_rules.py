@@ -12,7 +12,7 @@ def build_rules() -> list[Rule]:
         ),
         Rule(
             check=lambda out: re.search(
-                r"✕ \[API Error: .* API quota exceeded: Your Qwen API quota has been exhausted\. Please wait for your quota to reset\.]",
+                r"✕ \[API Error: .* API quota exceeded: Your .* API quota has been exhausted\. Please wait for your quota to reset\.]",
                 out,
             )
             is not None,
