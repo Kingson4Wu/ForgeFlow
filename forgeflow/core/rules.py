@@ -32,6 +32,26 @@ class Rule:
     command: str | None
 
 
+class CommandPostProcessor:
+    """Abstract base class for command post-processing.
+
+    Subclasses can override the post_process_command method to implement
+    custom logic for modifying commands after they are determined by rules.
+    """
+
+    def post_process_command(self, output: str, initial_command: str | None) -> str | None:
+        """Post-process a command after it has been determined by rules.
+
+        Args:
+            output: The AI CLI output that the command is responding to
+            initial_command: The command determined by the rules
+
+        Returns:
+            The post-processed command, or None to keep the initial command unchanged
+        """
+        return None
+
+
 def default_task_prompt() -> str:
     return r"""
 **Important rule:** Do not commit any code until the task fully meets the guidelines in
@@ -146,13 +166,48 @@ def _build_claude_code_rules() -> list[Rule]:
         return []
 
 
-def next_command(output: str, rules: list[Rule]) -> str | None:
+def get_command_post_processor(cli_type: str = "gemini") -> CommandPostProcessor | None:
+    """Get the command post-processor for the specified CLI type.
+
+    Args:
+        cli_type: The CLI type to get the post-processor for
+
+    Returns:
+        The command post-processor for the CLI type, or None if none exists
+    """
+    if cli_type == "codex":
+        from .cli_types.codex_rules import CodexCommandPostProcessor
+
+        return CodexCommandPostProcessor()
+    # Add other CLI types here as needed
+    return None
+
+
+def next_command(output: str, rules: list[Rule], cli_type: str = "gemini") -> str | None:
+    # First, determine the command using the existing rule system
+    initial_command = None
     for rule in rules:
         try:
             if rule.check(output):
-                return rule.command
+                initial_command = rule.command
+                break
         except Exception:
             # Ignore exceptions in individual rules and continue evaluation
             # This is a deliberate design choice to ensure robust rule evaluation
             continue
-    return "continue"
+
+    # If no rule matched, default to "continue"
+    if initial_command is None:
+        initial_command = "continue"
+
+    # Get the post-processor for this CLI type
+    post_processor = get_command_post_processor(cli_type)
+
+    # If there's a post-processor, let it modify the command
+    if post_processor:
+        processed_command = post_processor.post_process_command(output, initial_command)
+        if processed_command is not None:
+            return processed_command
+
+    # Return the initial command if no post-processing occurred
+    return initial_command
