@@ -20,7 +20,7 @@ def build_rules() -> list[Rule]:
         Rule(
             check=lambda out: (
                 "stream error: stream disconnected before completion: "
-                "Your input exceeds the context window of this model" in out
+                "Your input exceeds the context window of this model" in out.replace("\n", " ")
                 and "Compact task completed" not in out
             ),
             command="/compact",
