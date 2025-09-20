@@ -175,9 +175,8 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
     2. `{project_name}.py` in the current working directory
     3. `user_custom_rules/projects/{project_name}_rules.py` in the user custom rules directory
     4. `user_custom_rules/projects/{project_name}.py` in the user custom rules directory
-    5. `forgeflow/core/cli_types/{cli_type}_rules.py` for built-in CLI type rules
-    6. `examples/projects/{project_name}_rules.py` in the examples directory (for backward compatibility)
-    7. `examples/projects/{project_name}.py` in the examples directory (for backward compatibility)
+    5. `examples/projects/{project_name}_rules.py` in the examples directory (for backward compatibility)
+    6. `examples/projects/{project_name}.py` in the examples directory (for backward compatibility)
 
     Args:
         project_name: Name of the project (used to find the rule file)
@@ -196,11 +195,6 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
     user_custom_rules_dir = _get_user_custom_rules_dir()
     if user_custom_rules_dir:
         possible_dirs.append(os.path.join(user_custom_rules_dir, "projects"))
-
-    # Add CLI types rules directory if available (for built-in CLI type rules)
-    cli_types_rules_dir = _get_cli_types_rules_dir()
-    if cli_types_rules_dir:
-        possible_dirs.append(cli_types_rules_dir)
 
     # Add repo examples projects directory if available (for backward compatibility)
     examples_dir = _get_examples_dir()
@@ -253,7 +247,7 @@ def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
     """
     Get predefined rules for a specific task type.
 
-    This function first looks for custom task rules, then falls back to built-in rules.
+    This function loads CLI type rules as the base, then adds task-specific rules.
 
     Args:
         task_name: Name of the task type (e.g., 'fix_tests', 'improve_coverage')
@@ -262,6 +256,10 @@ def get_task_rules(task_name: str, workdir: str) -> list[Rule] | None:
     Returns:
         List of Rule objects if found, None otherwise
     """
+    # Load CLI type rules as the base (highest priority)
+    # Note: We'll get the CLI type from the config when this function is called from get_rules
+    # For now, we'll load task rules and let get_rules combine them with CLI type rules
+
     # First, try to load custom task rules
     custom_rules_builder = load_custom_task_rules(task_name, workdir)
     if custom_rules_builder:
@@ -301,9 +299,11 @@ def get_rules(config: Any) -> list[Rule]:
     """
     Get rules based on the configuration.
 
-    If a task type is specified, use task-specific rules.
-    If a project name is specified, try to load custom rules.
-    Otherwise, use the default rules.
+    The function loads rules in this priority order:
+    1. CLI type rules from @forgeflow/core/cli_types/ (highest priority)
+    2. Task-specific rules (if task specified)
+    3. Project-specific custom rules (if project specified)
+    4. Default rules (fallback)
 
     Args:
         config: Configuration object containing project name, task type and other settings
@@ -311,27 +311,35 @@ def get_rules(config: Any) -> list[Rule]:
     Returns:
         List of Rule objects
     """
-    # If task specified, try to load task rules first
+    # Start with CLI type rules as the base (highest priority)
+    cli_type_rules = build_default_rules(config.cli_type)
+    logger.info(f"Loaded CLI type rules for: {config.cli_type}")
+
+    # If task specified, try to load task rules and combine with CLI type rules
     if config.task:
         task_rules = get_task_rules(config.task, config.workdir)
         if task_rules:
             logger.info(f"Using task rules for: {config.task}")
-            return task_rules
+            # Combine CLI type rules with task rules
+            # CLI type rules come first, then task rules
+            return cli_type_rules + task_rules
         else:
             logger.warning(f"Failed to load task rules for '{config.task}'")
 
-    # If no project specified and no valid task rules, use default rules
-    if not config.project:
-        logger.info("Using default rules")
-        return build_default_rules(config.cli_type)
+    # If project specified, try to load custom rules and combine with CLI type rules
+    if config.project:
+        custom_rules = load_custom_rules(config.project, config.workdir)
+        if custom_rules:
+            # Combine CLI type rules with custom rules
+            # CLI type rules come first, then custom rules
+            combined_rules = cli_type_rules + custom_rules
+            logger.info(f"Using combined CLI type and custom rules for project: {config.project}")
+            return combined_rules
+        else:
+            logger.warning(
+                f"Failed to load custom rules for project '{config.project}', using CLI type rules only"
+            )
 
-    # Try to load custom rules
-    custom_rules = load_custom_rules(config.project, config.workdir)
-    if custom_rules:
-        return custom_rules
-
-    # Fallback to default rules if custom rules failed to load
-    logger.warning(
-        f"Failed to load custom rules for project '{config.project}', using default rules"
-    )
-    return build_default_rules(config.cli_type)
+    # If no project or task specified, just use CLI type rules
+    logger.info("Using CLI type rules only")
+    return cli_type_rules
