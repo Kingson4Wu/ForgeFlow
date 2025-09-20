@@ -13,12 +13,16 @@ def build_rules() -> list[Rule]:
                     out,
                     re.DOTALL,
                 )
-            ),
+            )
+            and "Compact task completed" not in out,
             command="/compact",
         ),
         Rule(
-            check=lambda out: "stream error: stream disconnected before completion: "
-            "Your input exceeds the context window of this model" in out,
-            command="/compact",
+            check=lambda out: (
+                "stream error: stream disconnected before completion: "
+                "Your input exceeds the context window of this model" in out
+                and "Compact task completed" not in out
+            ),
+            command="" "/compact",
         ),
     ]

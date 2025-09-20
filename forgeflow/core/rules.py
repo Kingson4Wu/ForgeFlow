@@ -81,15 +81,15 @@ If all conditions are satisfied, return:
 
 def build_default_rules(cli_type: str = "gemini") -> list[Rule]:
     # Common rules that apply to all CLI types
-    common_rules = [
-        Rule(check=is_all_task_finished, command=final_verification_prompt()),
-        Rule(check=is_final_verification_finished, command=None),  # stop
-        Rule(
-            check=lambda out: "✕ [API Error: 400 <400> InternalError.Algo.InvalidParameter" in out,
-            command="/clear",
-        ),
-        Rule(check=lambda out: "✕ [API Error: terminated]" in out, command="continue"),
-        Rule(check=lambda out: "API Error" in out, command="continue"),
+    common_rules: list[Rule] = [
+        # Rule(check=is_all_task_finished, command=final_verification_prompt()),
+        # Rule(check=is_final_verification_finished, command=None),  # stop
+        # Rule(
+        #     check=lambda out: "✕ [API Error: 400 <400> InternalError.Algo.InvalidParameter" in out,
+        #     command="/clear",
+        # ),
+        # Rule(check=lambda out: "✕ [API Error: terminated]" in out, command="continue"),
+        # Rule(check=lambda out: "API Error" in out, command="continue"),
     ]
 
     # CLI type specific rules
@@ -105,7 +105,7 @@ def build_default_rules(cli_type: str = "gemini") -> list[Rule]:
     all_rules = cli_specific_rules + common_rules
 
     # Add the default task prompt as the last rule
-    all_rules.append(Rule(check=lambda out: True, command=final_verification_prompt()))
+    # all_rules.append(Rule(check=lambda out: True, command=final_verification_prompt()))
 
     return all_rules
 
@@ -119,22 +119,7 @@ def _build_gemini_rules() -> list[Rule]:
         return build_rules()
     except ImportError:
         # Fallback to the previous implementation if the module cannot be imported
-        return [
-            # Handle Gemini-specific API errors
-            Rule(
-                check=lambda out: "[API Error: 400 <400> InternalError" in out,
-                command="/clear",
-            ),
-            Rule(
-                check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
-                command="continue",
-            ),
-            Rule(
-                check=lambda out: "Connection reset by peer" in out,
-                command="continue",
-            ),
-            # Add more Gemini-specific rules here as needed
-        ]
+        return []
 
 
 def _build_codex_rules() -> list[Rule]:
@@ -146,22 +131,7 @@ def _build_codex_rules() -> list[Rule]:
         return build_rules()
     except ImportError:
         # Fallback to the previous implementation if the module cannot be imported
-        return [
-            # Handle Codex-specific API errors
-            Rule(
-                check=lambda out: "[API Error: 400 <400> InternalError" in out,
-                command="/clear",
-            ),
-            Rule(
-                check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
-                command="continue",
-            ),
-            Rule(
-                check=lambda out: "Connection reset by peer" in out,
-                command="continue",
-            ),
-            # Add more Codex-specific rules here as needed
-        ]
+        return []
 
 
 def _build_claude_code_rules() -> list[Rule]:
@@ -173,22 +143,7 @@ def _build_claude_code_rules() -> list[Rule]:
         return build_rules()
     except ImportError:
         # Fallback to the previous implementation if the module cannot be imported
-        return [
-            # Handle Claude-specific API errors
-            Rule(
-                check=lambda out: "[API Error: 400 <400> InternalError" in out,
-                command="/clear",
-            ),
-            Rule(
-                check=lambda out: "Too many requests" in out or "Rate limit exceeded" in out,
-                command="continue",
-            ),
-            Rule(
-                check=lambda out: "Connection reset by peer" in out,
-                command="continue",
-            ),
-            # Add more Claude Code-specific rules here as needed
-        ]
+        return []
 
 
 def next_command(output: str, rules: list[Rule]) -> str | None:

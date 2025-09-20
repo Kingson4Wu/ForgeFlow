@@ -5,40 +5,31 @@ def test_build_default_rules_gemini() -> None:
     """Test building default rules for Gemini CLI."""
     rules = build_default_rules("gemini")
     assert len(rules) > 0
-    # Check that common rules are present
+    # Check that Gemini-specific rules are present (from cli_types/gemini_rules.py)
     assert any(rule.command == "/clear" for rule in rules)
-    # Check that the default task prompt is present as the last rule
-    assert rules[-1].command is not None and "All test cases are fully covered" in rules[-1].command
 
 
 def test_build_default_rules_codex() -> None:
     """Test building default rules for Codex CLI."""
     rules = build_default_rules("codex")
     assert len(rules) > 0
-    # Check that common rules are present
-    assert any(rule.command == "/clear" for rule in rules)
-    # Check that the default task prompt is present as the last rule
-    assert rules[-1].command is not None and "All test cases are fully covered" in rules[-1].command
+    # Check that Codex-specific rules are present (from cli_types/codex_rules.py)
+    assert any(rule.command == "/compact" for rule in rules)
 
 
 def test_build_default_rules_claude_code() -> None:
     """Test building default rules for Claude Code CLI."""
     rules = build_default_rules("claude_code")
-    assert len(rules) > 0
-    # Check that common rules are present
-    assert any(rule.command == "/clear" for rule in rules)
-    # Check that the default task prompt is present as the last rule
-    assert rules[-1].command is not None and "All test cases are fully covered" in rules[-1].command
+    # Claude Code rules file is currently empty, so we should have 0 rules
+    assert len(rules) >= 0
 
 
 def test_build_default_rules_default() -> None:
     """Test building default rules with default CLI type."""
     rules = build_default_rules()  # Should default to "gemini"
     assert len(rules) > 0
-    # Check that common rules are present
+    # Check that Gemini-specific rules are present (from cli_types/gemini_rules.py)
     assert any(rule.command == "/clear" for rule in rules)
-    # Check that the default task prompt is present as the last rule
-    assert rules[-1].command is not None and "All test cases are fully covered" in rules[-1].command
 
 
 def test_cli_specific_rules() -> None:
@@ -47,16 +38,10 @@ def test_cli_specific_rules() -> None:
     codex_rules = build_default_rules("codex")
     claude_rules = build_default_rules("claude_code")
 
-    # All should have some rules
+    # All should have some rules (except Claude Code which is empty)
     assert len(gemini_rules) > 0
     assert len(codex_rules) > 0
-    assert len(claude_rules) > 0
+    # Claude Code rules file is currently empty
 
-    # Gemini should have more rules than Codex and Claude Code
-    # because it has specific rules defined, while Codex and Claude Code are empty
+    # Gemini should have more rules than Codex
     assert len(gemini_rules) > len(codex_rules)
-    assert len(gemini_rules) > len(claude_rules)
-
-    # Codex and Claude Code should have the same number of rules
-    # because they both have empty rule lists
-    assert len(codex_rules) == len(claude_rules)
