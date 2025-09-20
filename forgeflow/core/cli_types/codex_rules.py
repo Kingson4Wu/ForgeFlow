@@ -9,7 +9,7 @@ class CodexCommandPostProcessor(CommandPostProcessor):
     Implements logic to send "/new" instead of "/compact" after 3 consecutive "/compact" commands.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._compact_counter = 0
 
     def post_process_command(self, output: str, initial_command: str | None) -> str | None:
