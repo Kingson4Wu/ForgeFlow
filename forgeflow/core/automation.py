@@ -86,65 +86,41 @@ def run_monitor_mode(cfg: Config) -> int:
     log.info("Monitor mode started. Only monitoring task processing status.")
 
     # Track task processing state for notifications
-    was_processing = None  # None means we haven't observed a task running yet
+    was_processing = False
     # Track consecutive checks with no task processing
     no_processing_count = 0
     # Require 3 consecutive checks with no processing before sending notification
     NO_PROCESSING_THRESHOLD = 3
-    # Track if we've already sent a notification for current stoppage
-    notification_sent = False
 
     try:
         while True:
             output = tmux.capture_output(include_ansi=cli_adapter.wants_ansi())
             is_processing = is_task_processing(output, cli_adapter)
 
-            # Debug logging to help understand state transitions
-            if was_processing != is_processing:
-                log.debug(f"Processing state transition: {was_processing} -> {is_processing}")
-
             # Check for task processing state changes and send notifications
             if is_processing:
                 # Task is currently processing
-                if was_processing is True:
-                    # Still processing, reset stoppage tracking
-                    no_processing_count = 0
-                    notification_sent = False
-                elif was_processing is False:
+                if not was_processing:
                     # Transition from not processing to processing
                     log.info("Task processing started")
-                    no_processing_count = 0
-                    notification_sent = False
-                # If was_processing is None, this is our first time seeing a task processing
-                # We set was_processing to True and log that processing has started
-                elif was_processing is None:
-                    log.info("Task processing started")
                 was_processing = True
+                no_processing_count = 0
             else:
                 # Task is not currently processing
-                if was_processing is True:
+                if was_processing:
                     # Transition from processing to not processing
                     # Start counting consecutive non-processing checks
                     no_processing_count += 1
-                    log.debug(f"Task not processing. Count: {no_processing_count}")
-                    if no_processing_count >= NO_PROCESSING_THRESHOLD and not notification_sent:
+                    if no_processing_count >= NO_PROCESSING_THRESHOLD:
                         # Task has been stopped for 3 consecutive checks
+                        # log.info(f"Full output: {output}")
                         _send_task_stopped_notification(log)
-                        notification_sent = True
-                elif was_processing is False:
-                    # Still not processing (was already not processing)
-                    # Continue counting consecutive non-processing checks ONLY if we've seen
-                    # a task running before
-                    no_processing_count += 1
-                    log.debug(f"Task still not processing. Count: {no_processing_count}")
-                    if no_processing_count >= NO_PROCESSING_THRESHOLD and not notification_sent:
-                        # Task has been stopped for 3 consecutive checks
-                        _send_task_stopped_notification(log)
-                        notification_sent = True
-                # If was_processing is None, this means we've never seen a task running
-                # We don't increment counters or send notifications in this case
-                elif was_processing is None:
-                    log.debug("Task not processing (initial state)")
+                        # Reset state after sending notification
+                        was_processing = False
+                        no_processing_count = 0
+                else:
+                    # Still not processing
+                    no_processing_count = 0
 
             time.sleep(cfg.poll_interval)
 
