@@ -24,6 +24,13 @@ MAX_BACKSPACE_COUNT = 200
 BACKSPACE_INCREMENT = 10
 LOG_COMMAND_TRUNCATE_LENGTH = 120
 
+# Constants for tracking unchanged outputs
+UNCHANGED_OUTPUT_THRESHOLD = 5
+
+# Module-level variables for tracking consecutive unchanged outputs
+_previous_output = ""
+_consecutive_unchanged_count = 0
+
 
 @dataclass
 class Config:
@@ -224,8 +231,33 @@ def _handle_input_with_text(tmux: TmuxCtl, log: logging.Logger) -> None:
 
 
 def is_task_processing(output: str, cli_adapter: CLIAdapter) -> bool:
-    """Check if a task is currently being processed using the provided CLI adapter."""
+    """Check if a task is currently being processed using the provided CLI adapter.
+
+    Returns False if the output hasn't changed for UNCHANGED_OUTPUT_THRESHOLD consecutive checks.
+    """
+    global _previous_output, _consecutive_unchanged_count
+
+    # Check if output has changed
+    if output != _previous_output:
+        # Output has changed, reset counter
+        _previous_output = output
+        _consecutive_unchanged_count = 0
+    else:
+        # Output hasn't changed, increment counter
+        _consecutive_unchanged_count += 1
+        # If unchanged for threshold, return False (not processing)
+        if _consecutive_unchanged_count >= UNCHANGED_OUTPUT_THRESHOLD:
+            return False
+
+    # Use the CLI adapter's original logic
     return cli_adapter.is_task_processing(output)
+
+
+def reset_unchanged_output_tracking() -> None:
+    """Reset the tracking of consecutive unchanged outputs."""
+    global _previous_output, _consecutive_unchanged_count
+    _previous_output = ""
+    _consecutive_unchanged_count = 0
 
 
 def _recover_from_timeout(tmux: TmuxCtl, cli_adapter: CLIAdapter, log: logging.Logger) -> float:

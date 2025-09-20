@@ -69,6 +69,51 @@ def test_is_task_processing() -> None:
     assert is_task_processing(output, cli_adapter) is False
 
 
+def test_is_task_processing_unchanged_output_tracking() -> None:
+    """Test is_task_processing function with unchanged output tracking."""
+    from forgeflow.core.automation import reset_unchanged_output_tracking
+
+    # Get a CLI adapter for testing
+    cli_adapter = get_cli_adapter("gemini")
+
+    # Reset tracking to ensure clean state
+    reset_unchanged_output_tracking()
+
+    # Test output that indicates task processing
+    processing_output = "(esc to cancel...)"
+
+    # First check should return True (assuming the CLI adapter recognizes it as processing)
+    result1 = is_task_processing(processing_output, cli_adapter)
+
+    # For the next 4 checks with the same output, it should still return True
+    result2 = is_task_processing(processing_output, cli_adapter)
+    result3 = is_task_processing(processing_output, cli_adapter)
+    result4 = is_task_processing(processing_output, cli_adapter)
+    result5 = is_task_processing(processing_output, cli_adapter)
+
+    # All should be True
+    assert result1 is True
+    assert result2 is True
+    assert result3 is True
+    assert result4 is True
+    assert result5 is True
+
+    # The 5th consecutive check with the same output should return False
+    result6 = is_task_processing(processing_output, cli_adapter)
+    assert result6 is False
+
+    # Reset tracking
+    reset_unchanged_output_tracking()
+
+    # After changing the output, it should return True again
+    different_output = "(esc to cancel - different)"
+    result7 = is_task_processing(different_output, cli_adapter)
+    assert result7 is True
+
+    # Reset tracking for clean state
+    reset_unchanged_output_tracking()
+
+
 def test_setup_logger() -> None:
     """Test setup_logger function."""
     logger = setup_logger("/tmp/test.log", to_console=False, level="DEBUG")
