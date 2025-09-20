@@ -143,8 +143,8 @@ class MockTmuxCtl:
     def send_enter(self) -> None:
         self.calls.append("send_enter")
 
-    def create_session(self) -> None:
-        self.calls.append("create_session")
+    def create_session(self, cli_type: str = "gemini") -> None:
+        self.calls.append(f"create_session(cli_type={cli_type})")
 
     def capture_output(self, include_ansi: bool = False) -> str:
         self.calls.append(f"capture_output(include_ansi={include_ansi})")
@@ -216,8 +216,9 @@ def test_send_continue_and_return_timestamp() -> None:
 
 # Mock classes for testing new functions
 class MockConfig:
-    def __init__(self, ai_cmd: str = "test_cmd") -> None:
+    def __init__(self, ai_cmd: str = "test_cmd", cli_type: str = "gemini") -> None:
         self.ai_cmd = ai_cmd
+        self.cli_type = cli_type
 
 
 def test_initialize_session() -> None:
@@ -229,8 +230,8 @@ def test_initialize_session() -> None:
 
     _initialize_session(tmux, cli_adapter, config, logger)  # type: ignore
 
-    # Check that create_session was called
-    assert "create_session" in str(tmux.calls)
+    # Check that create_session was called with cli_type
+    assert any("create_session" in call for call in tmux.calls)
 
 
 def test_send_command() -> None:

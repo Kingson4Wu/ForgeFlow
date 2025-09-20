@@ -27,6 +27,9 @@ class MockTmuxCtl:
         if self.output_index < len(self.outputs) - 1:
             self.output_index += 1
 
+    def create_session(self, cli_type: str = "gemini") -> None:
+        self.calls.append(f"create_session(cli_type={cli_type})")
+
 
 class MockCLIAdapter:
     def __init__(self, processing_outputs=None):

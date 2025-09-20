@@ -23,6 +23,10 @@ def build_rules() -> list[Rule]:
                 "Your input exceeds the context window of this model" in out
                 and "Compact task completed" not in out
             ),
-            command="" "/compact",
+            command="/compact",
+        ),
+        Rule(
+            check=lambda out: ("You've hit your usage limit" in out),
+            command=None,
         ),
     ]

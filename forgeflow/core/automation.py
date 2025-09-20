@@ -83,6 +83,9 @@ def run_monitor_mode(cfg: Config) -> int:
     tmux = TmuxCtl(TmuxConfig(session=cfg.session, workdir=cfg.workdir or ""))
     cli_adapter = get_cli_adapter(cfg.cli_type)
 
+    # Initialize session with proper width for codex
+    tmux.create_session(cfg.cli_type)
+
     # Warn if using default Gemini adapter, as user might want to specify a different CLI type
     if cfg.cli_type == "gemini":
         log.info(
@@ -146,7 +149,7 @@ def _initialize_session(
     tmux: TmuxCtl, cli_adapter: CLIAdapter, cfg: Config, log: logging.Logger
 ) -> None:
     """Initialize tmux session and ensure AI CLI is running."""
-    tmux.create_session()
+    tmux.create_session(cfg.cli_type)
     time.sleep(SESSION_CREATE_DELAY)
     output = tmux.capture_output(include_ansi=cli_adapter.wants_ansi())
     if not cli_adapter.is_ai_cli_exist(output):
