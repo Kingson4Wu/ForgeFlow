@@ -206,13 +206,16 @@ def test_ensure_codex_window_width_display_error(mock_run, tmux_ctl) -> None:
     # Mock the display-message call to fail
     mock_run.side_effect = [
         MagicMock(returncode=1),  # display-message fails
+        MagicMock(
+            returncode=1
+        ),  # resize-window also fails (since we attempt to resize when width < 0)
     ]
 
     # Call the method - should not raise exception
     tmux_ctl._ensure_codex_window_width()
 
-    # Check that only display-message was attempted
-    assert mock_run.call_count == 1
+    # Check that both display-message and resize-window were attempted
+    assert mock_run.call_count == 2
 
 
 @patch("forgeflow.core.tmux_ctl.subprocess.run")

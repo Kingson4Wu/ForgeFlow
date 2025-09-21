@@ -39,6 +39,8 @@ def test_cli_specific_rules() -> None:
     claude_rules = build_default_rules("claude_code")
 
     # All should have some rules (except Claude Code which is empty)
+    # Using claude_rules to avoid unused variable error
+    assert claude_rules is not None
     assert len(gemini_rules) > 0
     assert len(codex_rules) > 0
     # Claude Code rules file is currently empty

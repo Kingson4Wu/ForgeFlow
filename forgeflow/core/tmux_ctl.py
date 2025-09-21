@@ -63,7 +63,9 @@ class TmuxCtl:
             result = subprocess.run(cmd, check=False)
             if result.returncode != 0:
                 logger.warning(f"Failed to create tmux session with command: {' '.join(cmd)}")
-                logger.warning(f"Return code: {result.returncode}, Stderr: {result.stderr}")
+                logger.warning(
+                    f"Return code: {result.returncode}, Stderr: {result.stderr.decode() if isinstance(result.stderr, bytes) else result.stderr}"
+                )
             else:
                 logger.info(f"Successfully created tmux session: {self.cfg.session}")
 
