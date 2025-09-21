@@ -22,7 +22,7 @@ def test_config_defaults() -> None:
     assert config.workdir == "/tmp"
     assert config.ai_cmd == "test_cmd"
     assert config.poll_interval == 10
-    assert config.input_prompt_timeout == 2000
+    assert config.input_prompt_timeout == 1000
     assert config.log_file == "forgeflow.log"
     assert config.log_to_console is True
     assert config.project is None
