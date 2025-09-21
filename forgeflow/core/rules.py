@@ -30,6 +30,7 @@ def is_final_verification_finished(output: str) -> bool:
 class Rule:
     check: Callable[[str], bool]
     command: str | None
+    description: str = ""
 
 
 class CommandPostProcessor:
@@ -183,20 +184,29 @@ def get_command_post_processor(cli_type: str = "gemini") -> CommandPostProcessor
     return None
 
 
-def next_command(output: str, rules: list[Rule], cli_type: str = "gemini") -> str | None:
+def next_command(
+    output: str, rules: list[Rule], cli_type: str = "gemini", logger=None
+) -> str | None:
     # First, determine the command using the existing rule system
     initial_command = None
     rule_matched = False
+    matched_rule = None
     for rule in rules:
         try:
             if rule.check(output):
                 initial_command = rule.command
                 rule_matched = True
+                matched_rule = rule
                 break
         except Exception:
             # Ignore exceptions in individual rules and continue evaluation
             # This is a deliberate design choice to ensure robust rule evaluation
             continue
+
+    # If a rule matched, log the description if available
+    if rule_matched and matched_rule and matched_rule.description:
+        if logger:
+            logger.info(f"Rule matched: {matched_rule.description}")
 
     # If a rule matched and it explicitly returns None, stop automation
     if rule_matched and initial_command is None:
@@ -212,6 +222,14 @@ def next_command(output: str, rules: list[Rule], cli_type: str = "gemini") -> st
     # If there's a post-processor, let it modify the command
     if post_processor:
         processed_command = post_processor.post_process_command(output, initial_command)
+        # If post-processing changed the command, log it
+        if processed_command is not None and logger:
+            if rule_matched and matched_rule and matched_rule.description:
+                logger.info(
+                    f"Post-processed command '{initial_command}' to '{processed_command}' based on rule: {matched_rule.description}"
+                )
+            else:
+                logger.info(f"Post-processed command: {processed_command}")
         if processed_command is not None:
             return processed_command
 

@@ -15,11 +15,13 @@ def build_rules() -> list[Rule]:
                 )
             ),
             command="/clear",
+            description="Invalid parameter error - send /clear command",
         ),
         Rule(
             check=lambda out: "tool_call" in out
             and ("must be followed" in out or "did not have" in out),
             command="/clear",
+            description="Tool call error - send /clear command",
         ),
         Rule(
             check=lambda out: re.search(
@@ -28,7 +30,16 @@ def build_rules() -> list[Rule]:
             )
             is not None,
             command=None,
+            description="API quota exceeded - stop automation",
         ),
-        Rule(check=lambda out: "✕ [API Error: terminated]" in out, command="continue"),
-        Rule(check=lambda out: "API Error" in out, command="continue"),
+        Rule(
+            check=lambda out: "✕ [API Error: terminated]" in out,
+            command="continue",
+            description="API terminated error - continue execution",
+        ),
+        Rule(
+            check=lambda out: "API Error" in out,
+            command="continue",
+            description="General API error - continue execution",
+        ),
     ]

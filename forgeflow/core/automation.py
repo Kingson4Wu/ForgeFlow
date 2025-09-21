@@ -178,7 +178,7 @@ def _run_automation_loop(
 
             if cli_adapter.is_input_prompt(output) and not is_processing:
                 last_input_prompt_time = time.time()
-                cmd = next_command(output, rules, cfg.cli_type)
+                cmd = next_command(output, rules, cfg.cli_type, log)
                 if cmd is None:
                     log.info("No more commands to execute. Stopping.")
                     break

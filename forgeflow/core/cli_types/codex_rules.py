@@ -55,6 +55,7 @@ def build_rules() -> list[Rule]:
             )
             and "Compact task completed" not in out,
             command="/compact",
+            description="Context window exceeded - send /compact command",
         ),
         Rule(
             check=lambda out: (
@@ -63,9 +64,11 @@ def build_rules() -> list[Rule]:
                 and "Compact task completed" not in out
             ),
             command="/compact",
+            description="Stream error due to context window exceeded - send /compact command",
         ),
         Rule(
             check=lambda out: ("You've hit your usage limit" in out),
             command=None,
+            description="Usage limit reached - stop automation",
         ),
     ]
