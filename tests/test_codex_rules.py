@@ -38,8 +38,8 @@ def test_codex_rules_usage_limit() -> None:
     output = "You've hit your usage limit"
 
     command = next_command(output, rules, "codex")
-    # The rule returns None, but next_command defaults to "continue"
-    assert command == "continue"
+    # The rule returns None to stop automation
+    assert command is None
 
 
 def test_codex_command_post_processor_compact_to_new() -> None:

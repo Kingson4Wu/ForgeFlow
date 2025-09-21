@@ -186,18 +186,24 @@ def get_command_post_processor(cli_type: str = "gemini") -> CommandPostProcessor
 def next_command(output: str, rules: list[Rule], cli_type: str = "gemini") -> str | None:
     # First, determine the command using the existing rule system
     initial_command = None
+    rule_matched = False
     for rule in rules:
         try:
             if rule.check(output):
                 initial_command = rule.command
+                rule_matched = True
                 break
         except Exception:
             # Ignore exceptions in individual rules and continue evaluation
             # This is a deliberate design choice to ensure robust rule evaluation
             continue
 
+    # If a rule matched and it explicitly returns None, stop automation
+    if rule_matched and initial_command is None:
+        return None
+
     # If no rule matched, default to "continue"
-    if initial_command is None:
+    if not rule_matched:
         initial_command = "continue"
 
     # Get the post-processor for this CLI type
