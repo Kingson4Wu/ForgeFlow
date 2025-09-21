@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 
 from .base import CLIAdapter
 
@@ -32,7 +33,34 @@ class GeminiCLIAdapter(CLIAdapter):
         return False
 
     def is_ai_cli_exist(self, output: str) -> bool:
+        # First check the existing prompt-based detection
         for line in output.splitlines():
             if self.PROMPT_AI_CLI_EXIST.match(line.strip()):
                 return True
+
+        # If that fails, check for Qwen or Gemini in tmux pane titles
+        try:
+            # Execute tmux command to list panes with specific format
+            result = subprocess.run(
+                [
+                    "tmux",
+                    "list-panes",
+                    "-t",
+                    "auto_session",
+                    "-F",
+                    "#{pane_index} #{pane_pid} #{pane_title}",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            # If command succeeded, check for Qwen or Gemini in the output
+            if result.returncode == 0:
+                if "Qwen" in result.stdout or "Gemini" in result.stdout:
+                    return True
+        except Exception:
+            # If any error occurs, we continue with the original logic
+            pass
+
         return False
