@@ -38,7 +38,7 @@ class Config:
     workdir: str
     ai_cmd: str
     poll_interval: int = 10
-    input_prompt_timeout: int = 2000  # seconds
+    input_prompt_timeout: int = 1000  # seconds
     log_file: str = "forgeflow.log"
     log_to_console: bool = True
     project: str | None = None
@@ -165,8 +165,6 @@ def _run_automation_loop(
     rules = get_rules(cfg)
     last_output = ""
     last_input_prompt_time = time.time()
-    # Track task processing state for notifications
-    was_processing = False
 
     log.info("Automation started.")
 
@@ -178,12 +176,6 @@ def _run_automation_loop(
 
             is_processing = is_task_processing(output, cli_adapter)
 
-            # Check for task processing state changes and send notifications
-            if was_processing and not is_processing:
-                # Task has stopped processing
-                _send_task_stopped_notification(log)
-            was_processing = is_processing
-
             if cli_adapter.is_input_prompt(output) and not is_processing:
                 last_input_prompt_time = time.time()
                 cmd = next_command(output, rules, cfg.cli_type)
@@ -191,6 +183,7 @@ def _run_automation_loop(
                     log.info("No more commands to execute. Stopping.")
                     break
                 _send_command(tmux, cmd, log)
+                # log.info(f"output: {output}")
                 time.sleep(COMMAND_EXECUTION_DELAY)
 
             elif cli_adapter.is_input_prompt_with_text(output) and not is_processing:
