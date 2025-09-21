@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -185,7 +186,10 @@ def get_command_post_processor(cli_type: str = "gemini") -> CommandPostProcessor
 
 
 def next_command(
-    output: str, rules: list[Rule], cli_type: str = "gemini", logger=None
+    output: str,
+    rules: list[Rule],
+    cli_type: str = "gemini",
+    logger: logging.Logger | None = None,
 ) -> str | None:
     # First, determine the command using the existing rule system
     initial_command = None
