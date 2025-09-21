@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 import subprocess
 import time
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -66,8 +69,9 @@ class TmuxCtl:
                 current_width = int(result.stdout.strip())
                 # If current width is less than 120, we should set width to 120
                 return current_width < 120
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to determine terminal width: {e}")
+            logger.debug("Exception details", exc_info=True)
 
         # If we can't determine terminal width, default to setting it to 120
         return True
@@ -89,8 +93,9 @@ class TmuxCtl:
 
             if result.returncode == 0:
                 return int(result.stdout.strip())
-        except (ValueError, subprocess.SubprocessError):
-            pass
+        except (ValueError, subprocess.SubprocessError) as e:
+            logger.warning(f"Failed to get window width: {e}")
+            logger.debug("Exception details", exc_info=True)
 
         return -1
 
@@ -109,7 +114,9 @@ class TmuxCtl:
                 ["tmux", "resize-window", "-t", self.cfg.session, "-x", str(width)], check=False
             )
             return result.returncode == 0
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Failed to resize window width: {e}")
+            logger.debug("Exception details", exc_info=True)
             return False
 
     def _ensure_codex_window_width(self) -> None:
