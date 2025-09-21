@@ -12,7 +12,7 @@ class GeminiCLIAdapter(CLIAdapter):
     PROMPT_RE = re.compile(r">.*Type your message or @[\w/]+(?:\.\w+)?")
     # Match input lines enclosed in vertical bars (as loose as possible)
     PROMPT_WITH_TEXT_RE = re.compile(r"\u2502 > .*? \u2502")
-    PROMPT_TASK_PROCESSING = re.compile(r"^\(esc to cancel.*\)$")
+    PROMPT_TASK_PROCESSING = re.compile(r"\(esc to cancel.*\)")
     PROMPT_AI_CLI_EXIST = re.compile(r"^YOLO mode \(ctrl \+ y to toggle\)(.*)?$")
 
     def is_input_prompt(self, output: str) -> bool:
@@ -27,7 +27,7 @@ class GeminiCLIAdapter(CLIAdapter):
 
     def is_task_processing(self, output: str) -> bool:
         for line in output.splitlines():
-            if self.PROMPT_TASK_PROCESSING.match(line.strip()):
+            if self.PROMPT_TASK_PROCESSING.search(line.strip()):
                 return True
         return False
 

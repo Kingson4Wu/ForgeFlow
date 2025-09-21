@@ -33,6 +33,15 @@ def build_rules() -> list[Rule]:
             description="API quota exceeded - stop automation",
         ),
         Rule(
+            check=lambda out: re.search(
+                r"\[API Error.*You exceeded your current quota, please check your plan and billing details",
+                " ".join(out.split()),
+            )
+            is not None,
+            command=None,
+            description="API quota exceeded [new] - stop automation",
+        ),
+        Rule(
             check=lambda out: "✕ [API Error: terminated]" in out,
             command="continue",
             description="API terminated error - continue execution",

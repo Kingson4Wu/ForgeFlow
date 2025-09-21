@@ -32,13 +32,13 @@ def test_main() -> None:
     cfg = Config(
         session="qwen_session",
         workdir=str(Path.home() / "programming/rust-src/mesh-talk"),
-        ai_cmd="codex --yolo",
+        ai_cmd="gemini --yolo",
         poll_interval=10,
         input_prompt_timeout=2000,
         log_file="forge_flow.log",
         log_to_console=True,
         project="mesh-talk",
-        cli_type="codex",
+        cli_type="gemini",
         task="task_planner",
     )
     run_automation(cfg)
