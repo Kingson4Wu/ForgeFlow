@@ -180,7 +180,11 @@ def build_rules(config: dict[str, Any]) -> list[Rule]:
 
     return [
         # Stop when target coverage is reached
-        Rule(check=lambda out: check_coverage_target_reached(out, target_coverage), command=None),
+        Rule(
+            check=lambda out: check_coverage_target_reached(out, target_coverage),
+            command=None,
+            description="Target test coverage reached - stop automation",
+        ),
         # Handle low coverage
         Rule(
             check=lambda out: check_coverage_below_threshold(out, target_coverage),
@@ -188,7 +192,12 @@ def build_rules(config: dict[str, Any]) -> list[Rule]:
                 "improve_coverage_prompt",
                 "Please analyze the test coverage report and write additional test cases to improve coverage. Focus on areas with the lowest coverage first.",
             ),
+            description="Test coverage below threshold - improve coverage",
         ),
         # Default task prompt
-        Rule(check=lambda out: True, command=get_improve_test_coverage_prompt(config)),
+        Rule(
+            check=lambda out: True,
+            command=get_improve_test_coverage_prompt(config),
+            description="Default improve coverage prompt - continue improving coverage",
+        ),
     ]

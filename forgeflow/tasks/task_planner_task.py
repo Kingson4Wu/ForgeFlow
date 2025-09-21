@@ -181,15 +181,24 @@ def build_rules(config: dict[str, Any]) -> list[Rule]:
     """Build rules for task planner task."""
     return [
         # Stop when all tasks are completed
-        Rule(check=check_all_tasks_done, command=None),
+        Rule(
+            check=check_all_tasks_done,
+            command=None,
+            description="All tasks completed - stop automation",
+        ),
         # Handle task completion
         Rule(
             check=lambda out: check_task_completed(out, config),
             command=config.get(
                 "next_task_prompt",
-                "Please proceed with the next task in the TODO list only after ensuring the previous one fully meets your project’s completion standards and best practices (for example, tests are written and pass, and code follows style and review guidelines).",
+                "Please proceed with the next task in the TODO list only after ensuring the previous one fully meets your project's completion standards and best practices (for example, tests are written and pass, and code follows style and review guidelines).",
             ),
+            description="Task completed - proceed to next task",
         ),
         # Default task prompt
-        Rule(check=lambda out: True, command=get_next_task_prompt(config)),
+        Rule(
+            check=lambda out: True,
+            command=get_next_task_prompt(config),
+            description="Default task prompt - continue with current task",
+        ),
     ]

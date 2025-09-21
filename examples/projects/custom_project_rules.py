@@ -44,17 +44,43 @@ Custom verification steps:
 
 
 # Build custom rules
-def build_rules() -> list[Rule]:
-    """Build a list of custom rules."""
+def build_rules(config: dict[str, Any]) -> list[Rule]:
+    """Build rules for custom project."""
     return [
-        # Stop rule - when this condition is met, automation stops
-        Rule(check=lambda out: "All custom tasks completed" in out, command=None),
-        # Custom error handling rules
-        Rule(check=check_specific_error, command="/clear"),
-        Rule(check=lambda out: "Another Error" in out, command="retry"),
-        # Pattern-based rules
-        Rule(check=check_custom_pattern, command=custom_task_prompt()),
-        Rule(check=check_complex_condition, command=custom_verification_prompt()),
-        # Default rule that always matches (acts as a fallback)
-        Rule(check=lambda out: True, command=custom_task_prompt()),
+        # Stop when all custom tasks are completed
+        Rule(
+            check=lambda out: "All custom tasks completed" in out,
+            command=None,
+            description="Custom project tasks completed - stop automation",
+        ),
+        # Handle specific errors
+        Rule(
+            check=check_specific_error,
+            command="/clear",
+            description="Specific error detected - clear session",
+        ),
+        # Handle another error
+        Rule(
+            check=lambda out: "Another Error" in out,
+            command="retry",
+            description="Another error detected - retry",
+        ),
+        # Handle custom patterns
+        Rule(
+            check=check_custom_pattern,
+            command=custom_task_prompt(),
+            description="Custom pattern detected - execute custom task",
+        ),
+        # Handle complex conditions
+        Rule(
+            check=check_complex_condition,
+            command=custom_verification_prompt(),
+            description="Complex condition met - execute custom verification",
+        ),
+        # Default task prompt
+        Rule(
+            check=lambda out: True,
+            command=custom_task_prompt(),
+            description="Default custom project prompt - continue with custom task",
+        ),
     ]

@@ -169,7 +169,11 @@ def build_rules(config: dict[str, Any]) -> list[Rule]:
     """Build rules for fixing test cases task."""
     return [
         # Stop when all tests pass
-        Rule(check=check_all_tests_passed, command=None),
+        Rule(
+            check=check_all_tests_passed,
+            command=None,
+            description="All tests passed - stop automation",
+        ),
         # Handle test failures
         Rule(
             check=check_test_failures,
@@ -177,7 +181,12 @@ def build_rules(config: dict[str, Any]) -> list[Rule]:
                 "fix_test_cases_prompt",
                 "Please analyze the test failures and fix the issues in the code. Make sure to re-run the tests after each fix to verify they pass.",
             ),
+            description="Test failures detected - fix test cases",
         ),
         # Default task prompt
-        Rule(check=lambda out: True, command=get_fix_test_cases_prompt(config)),
+        Rule(
+            check=lambda out: True,
+            command=get_fix_test_cases_prompt(config),
+            description="Default fix tests prompt - continue fixing tests",
+        ),
     ]

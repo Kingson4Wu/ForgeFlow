@@ -23,16 +23,21 @@ Code Review Task:
 """
 
 
-def build_rules(config: dict) -> list[Rule]:
-    """Build rules for code review task.
-
-    This is the standard function name that ForgeFlow looks for.
-    """
+def build_rules(config: dict[str, Any]) -> list[Rule]:
+    """Build rules for code review task."""
     return [
         # Stop when review is completed
-        Rule(check=check_review_completed, command=None),
-        # Default task prompt
-        Rule(check=lambda out: True, command=code_review_prompt()),
+        Rule(
+            check=check_review_completed,
+            command=None,
+            description="Code review completed - stop automation",
+        ),
+        # Default review prompt
+        Rule(
+            check=lambda out: True,
+            command=code_review_prompt(),
+            description="Default code review prompt - continue with code review",
+        ),
     ]
 
 
