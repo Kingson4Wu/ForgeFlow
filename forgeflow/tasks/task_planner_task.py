@@ -1,0 +1,133 @@
+import logging
+from typing import Any
+
+from forgeflow.core.rules import Rule
+
+logger = logging.getLogger("forgeflow")
+
+# ---------- Constants ----------
+TASK_COMPLETED_INDICATOR = "[TASK_COMPLETED]"
+ALL_TASKS_COMPLETED_INDICATOR = "[ALL_TASKS_COMPLETED]"
+RESPOND_WITH_TASK_COMPLETED = f'respond with "{TASK_COMPLETED_INDICATOR}"'
+RESPOND_WITH_TASK_COMPLETED_SINGLE_QUOTE = f"respond with '{TASK_COMPLETED_INDICATOR}'"
+RESPOND_WITH_ALL_TASKS_COMPLETED = f'respond with "{ALL_TASKS_COMPLETED_INDICATOR}"'
+RESPOND_WITH_ALL_TASKS_COMPLETED_SINGLE_QUOTE = f"respond with '{ALL_TASKS_COMPLETED_INDICATOR}'"
+
+
+# ---------- Task Rules ----------
+def _is_instruction_text_in_task_output(output_lower: str) -> bool:
+    """Check if the output contains instruction text that should be ignored for task completion."""
+    return (
+        RESPOND_WITH_TASK_COMPLETED.lower() in output_lower
+        or RESPOND_WITH_TASK_COMPLETED_SINGLE_QUOTE.lower() in output_lower
+    )
+
+
+def check_task_completed(output: str, config: dict[str, Any]) -> bool:
+    """Check if a task has been completed based on the output and config."""
+    # Get task completion indicators from config, with defaults
+    completion_indicators = config.get(
+        "task_completion_indicators",
+        [TASK_COMPLETED_INDICATOR],
+    )
+
+    output_lower = output.lower()
+
+    # Check if any completion indicator is present (case-insensitive)
+    has_completion_indicator = any(
+        indicator.lower() in output_lower for indicator in completion_indicators
+    )
+
+    # Prevent false positives by checking that this isn't just part of our own prompt
+    # If we're seeing our own instruction text, it's not a real completion
+    is_instruction_text = _is_instruction_text_in_task_output(output_lower)
+
+    return has_completion_indicator and not is_instruction_text
+
+
+def _is_instruction_text_in_output(output_lower: str) -> bool:
+    """Check if the output contains instruction text that should be ignored."""
+    return (
+        RESPOND_WITH_ALL_TASKS_COMPLETED.lower() in output_lower
+        or RESPOND_WITH_ALL_TASKS_COMPLETED_SINGLE_QUOTE.lower() in output_lower
+    )
+
+
+def check_all_tasks_done(output: str) -> bool:
+    """Check if all tasks are done."""
+    target_text = ALL_TASKS_COMPLETED_INDICATOR
+    output_lower = output.lower()
+
+    # Check if the target text is present (case-insensitive)
+    has_target_text = target_text.lower() in output_lower
+
+    # Prevent false positives by checking that this isn't just part of our own prompt
+    # If we're seeing our own instruction text, it's not a real completion
+    is_instruction_text = _is_instruction_text_in_output(output_lower)
+
+    return has_target_text and not is_instruction_text
+
+
+def get_next_task_prompt(config: dict[str, Any]) -> str:
+    """Get the prompt for the next task."""
+    todo_file = config.get("todo_file", "TODO.md")
+
+    return f"""
+Task Planning Task:
+
+0. Check for abnormal interruption.
+   * If the previous task was abnormally interrupted, resume and complete it before proceeding.
+
+1. Check the TODO file ({todo_file}) to see the list of tasks.
+
+2. Identify the first incomplete task.
+   * If the current task is not completed, continue working on it.
+
+3. Work on completing that task.
+   * Follow any specific instructions in the task description.
+   * Ensure code quality and testing standards.
+   * Make sure the implementation meets requirements.
+
+4. Verify against completion standards.
+   * Only when the task fully meets your project's own completion standards and best practices, you may proceed (for example, ensure tests are written and pass, and code follows style and review guidelines).
+   * If it does not fully follow the guidelines, continue refining the task.
+
+5. Mark and commit the task properly.
+   * Once the task meets both the implementation plan and best practices:
+     * Commit the code to the local repository, ensuring the commit follows the rules in your git commit standard.
+     * Mark the task as completed in the TODO file.
+
+6. Move to the next task.
+   * Repeat steps 1-5 until all tasks are done.
+
+Use the following indicators to determine if a task is complete:
+If you've completed the current task, {RESPOND_WITH_TASK_COMPLETED} as the last line of your output and then wait for further instructions.
+If you've completed ALL tasks in the TODO file, {RESPOND_WITH_ALL_TASKS_COMPLETED} as the last line of your output.
+"""
+
+
+def build_rules(config: dict[str, Any]) -> list[Rule]:
+    """Build rules for task planner task."""
+    return [
+        # Stop when all tasks are completed
+        Rule(
+            check=check_all_tasks_done,
+            command=None,
+            description="All tasks completed - stop automation",
+        ),
+        # Handle task completion
+        Rule(
+            check=lambda out: check_task_completed(out, config),
+            command=config.get(
+                "next_task_prompt",
+                "Please proceed with the next task in the TODO list only after ensuring the previous one fully meets your project's completion standards and best practices (for example, tests are written and pass, and code follows style and review guidelines).",
+            ),
+            description="Task completed - proceed to next task",
+        ),
+        # Default task prompt
+        Rule(
+            check=lambda out: True,
+            command=get_next_task_prompt(config),
+            description="Default task prompt - continue with current task",
+        ),
+    ]

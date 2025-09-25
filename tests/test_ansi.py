@@ -1,12 +1,12 @@
 from forgeflow.core.ansi import Style, parse_ansi_segments, split_segments_lines, strip_ansi
 
 
-def test_strip_ansi_basic():
+def test_strip_ansi_basic() -> None:
     s = "Hello \x1b[31mred\x1b[0m world\n\x1b[1mBold\x1b[22m!"
     assert strip_ansi(s) == "Hello red world\nBold!"
 
 
-def test_parse_segments_basic_colors():
+def test_parse_segments_basic_colors() -> None:
     s = "X \x1b[31mred\x1b[0m Y"
     segs = parse_ansi_segments(s)
     assert [seg.text for seg in segs] == ["X ", "red", " Y"]
@@ -17,7 +17,7 @@ def test_parse_segments_basic_colors():
     assert segs[2].style == Style.default()
 
 
-def test_parse_segments_attributes_and_reset():
+def test_parse_segments_attributes_and_reset() -> None:
     s = "\x1b[1;4mBU\x1b[22m still_ul \x1b[24m plain"
     segs = parse_ansi_segments(s)
     # Expect segments: ["", "BU", " still_ul ", " plain"] where first may be empty
@@ -33,7 +33,7 @@ def test_parse_segments_attributes_and_reset():
     assert seg_plain.style.underline is False
 
 
-def test_parse_segments_256_and_truecolor():
+def test_parse_segments_256_and_truecolor() -> None:
     s = "\x1b[38;5;196mERR\x1b[0m and \x1b[48;2;10;20;30mBG\x1b[0m"
     segs = parse_ansi_segments(s)
     # Find ERR segment
@@ -44,7 +44,7 @@ def test_parse_segments_256_and_truecolor():
     assert seg_bg.style.bg_truecolor == (10, 20, 30)
 
 
-def test_split_segments_lines():
+def test_split_segments_lines() -> None:
     s = "Line1\n\x1b[31mLine2\x1b[0m\nLine3"
     lines = split_segments_lines(parse_ansi_segments(s))
     assert len(lines) == 3
