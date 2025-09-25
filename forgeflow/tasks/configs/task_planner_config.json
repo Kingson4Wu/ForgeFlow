@@ -1,0 +1,7 @@
+{
+  "todo_file": "TODO.md",
+  "completed_marker": "✓",
+  "pending_marker": "☐",
+  "task_pattern": "^\\s*[-*]\\s+\\[(.)\\]\\s+(.+)$",
+  "commit_message_template": "Complete task: {task_title}"
+}

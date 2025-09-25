@@ -48,16 +48,37 @@ My Project Verification Steps:
 
 
 # Build custom rules
-def build_rules() -> list[Rule]:
-    """Build a list of custom rules for my project."""
+def build_rules(config: dict[str, Any]) -> list[Rule]:
+    """Build rules for my project."""
     return [
-        # Stop rule - when this condition is met, automation stops
-        Rule(check=lambda out: "My project tasks completed" in out, command=None),
-        # Custom error handling rules
-        Rule(check=check_project_specific_message, command="/clear"),
-        Rule(check=lambda out: "Another Project Error" in out, command="retry"),
-        # Pattern-based rules
-        Rule(check=check_custom_pattern, command=my_project_task_prompt()),
-        # Default rule that always matches (acts as a fallback)
-        Rule(check=lambda out: True, command=my_project_task_prompt()),
+        # Stop when my project tasks are completed
+        Rule(
+            check=lambda out: "My project tasks completed" in out,
+            command=None,
+            description="My project tasks completed - stop automation",
+        ),
+        # Handle project specific messages
+        Rule(
+            check=check_project_specific_message,
+            command="/clear",
+            description="Project specific message detected - clear session",
+        ),
+        # Handle another project error
+        Rule(
+            check=lambda out: "Another Project Error" in out,
+            command="retry",
+            description="Another project error detected - retry",
+        ),
+        # Handle custom patterns
+        Rule(
+            check=check_custom_pattern,
+            command=my_project_task_prompt(),
+            description="Custom pattern detected - execute my project task",
+        ),
+        # Default task prompt
+        Rule(
+            check=lambda out: True,
+            command=my_project_task_prompt(),
+            description="Default my project prompt - continue with my project task",
+        ),
     ]

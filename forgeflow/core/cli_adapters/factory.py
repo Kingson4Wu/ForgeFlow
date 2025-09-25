@@ -19,7 +19,11 @@ def get_cli_adapter(cli_type: str = "gemini") -> CLIAdapter:
     Raises:
         ValueError: If the cli_type is not supported
     """
-    key = (cli_type or "").strip().lower()
+    # Handle None or empty string by using default
+    if not cli_type:
+        cli_type = "gemini"
+
+    key = cli_type.strip().lower()
     if key == "gemini":
         return GeminiCLIAdapter()
     elif key == "codex":

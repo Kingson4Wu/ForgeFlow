@@ -7,16 +7,13 @@ Automatically drives AI CLI to continuously complete programming tasks within a 
 
 ## Features
 
-- **Robust Session Management**: Automatically creates/reuses `tmux` sessions, separating text from enter when pasting
-  commands.
-- **Configurable Rule System**: Rules are evaluated in order, with priority matching taking effect, and custom rules are
-  supported.
+- **Robust Session Management**: Automatically creates/reuses `tmux` sessions, separating text from enter when pasting commands.
+- **Configurable Rule System**: Rules are evaluated in order, with priority matching taking effect, and custom rules are supported.
 - **Multi-CLI Support**: Supports different AI CLI tools through an adapter pattern (currently supports Gemini as the default, with a placeholder for Claude Code).
-- **Reliable Input Detection**: Regular expressions detect "input prompts" and "existing text in input box" specific to
-  each CLI tool.
+- **Reliable Input Detection**: Regular expressions detect "input prompts" and "existing text in input box" specific to each CLI tool.
 - **Timeout Recovery Strategy**: Long periods without input prompt → send `ESC` → backspace clear → `continue`.
 - **Logging and Debugging**: Dual channel file + console logging with timestamps.
-- **CI and Testing**: `ruff` + `black` compliance, `pytest` unit tests covering core logic.
+- **Task Monitoring**: Monitors task processing status and sends desktop notifications when tasks stop processing (macOS notifications supported).
 
 ## Quick Start
 
@@ -50,7 +47,7 @@ If you prefer to use a Conda environment, you can set it up with the following s
 
 1. Create a new Conda environment:
    ```bash
-   conda create -n forgeflow python=3.9
+   conda create -n forgeflow python=3.13
    ```
 
 2. Activate the Conda environment:
@@ -92,6 +89,19 @@ forgeflow \
   --log-file forgeflow.log
 ```
 
+To use predefined rules for a specific task type, add the `--task` parameter:
+
+```bash
+forgeflow \
+  --session qwen_session \
+  --workdir "/absolute/path/to/your/project" \
+  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
+  --task fix_tests \
+  --poll 10 \
+  --timeout 2000 \
+  --log-file forgeflow.log
+```
+
 To specify a different AI CLI tool, use the `--cli-type` parameter (default is "gemini"):
 
 ```bash
@@ -118,138 +128,71 @@ forgeflow \
   --log-file forgeflow.log
 ```
 
+### Monitor-Only Mode
+
+ForgeFlow also supports a monitor-only mode that watches an existing tmux session and sends desktop notifications when tasks stop processing, without sending any commands to the AI CLI. This is useful for monitoring tasks while you work on other things.
+
+To run in monitor-only mode:
+
+```bash
+forgeflow \\
+  --session qwen_session \\
+  --monitor-only \\
+  --poll 10 \\
+  --log-file forgeflow.log
+```
+
+Note: In monitor-only mode, the `--ai-cmd` and `--workdir` parameters are not required since ForgeFlow will not be starting or controlling the AI CLI, only monitoring its status.
+
+By default, ForgeFlow uses the Gemini CLI adapter to monitor task processing status. If you're monitoring a session that's using a different AI CLI tool, you should specify the appropriate `--cli-type` parameter:
+
+```bash
+forgeflow \\
+  --session claude_session \\
+  --monitor-only \\
+  --cli-type claude_code \\
+  --poll 10 \\
+  --log-file forgeflow.log
+```
+
 ### Running the Script Directly (without installation)
 
 If you want to run the script directly without installing the package, you can use the following command:
 
 ```bash
-python -m forgeflow.cli \
-  --session qwen_session \
-  --workdir "/absolute/path/to/your/project" \
-  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
-  --poll 10 \
-  --timeout 2000 \
-  --log-file forgeflow.log
-```
-
-To specify a different AI CLI tool:
-
-```bash
-python -m forgeflow.cli \
-  --session qwen_session \
-  --workdir "/absolute/path/to/your/project" \
-  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
-  --poll 10 \
-  --timeout 2000 \
+python -m forgeflow.cli \\
+  --session qwen_session \\
+  --workdir "/absolute/path/to/your/project" \\
+  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \\
+  --poll 10 \\
+  --timeout 2000 \\
   --log-file forgeflow.log
 ```
 
 Note: When using this method, make sure you're running the command in the project's root directory.
 
-## Development Guide
+### Running in Monitor-Only Mode (Direct Script)
 
-### Running Test Cases
-
-First, ensure you have installed the development dependencies:
+To run the monitor-only mode directly without installation:
 
 ```bash
-pip install -e ".[dev]"
+python -m forgeflow.cli 
+  --session qwen_session 
+  --monitor-only 
+  --poll 10 
+  --log-file forgeflow.log
 ```
 
-Then, you can run all test cases with the following command:
+Note: When using monitor-only mode, if you're monitoring a session that's using a different AI CLI tool than the default Gemini, you should specify the appropriate `--cli-type` parameter:
 
 ```bash
-python -m pytest tests/ -v
+python -m forgeflow.cli 
+  --session claude_session 
+  --monitor-only 
+  --cli-type claude_code 
+  --poll 10 
+  --log-file forgeflow.log
 ```
-
-### IDE Debugging
-
-The project includes default test cases for convenient breakpoint debugging in IDEs:
-
-1. `tests/test_prompt_detection.py`:
-    - `test_is_input_prompt_false_on_empty()`: Tests input prompt detection with empty string
-    - `test_is_input_prompt_with_text_false_on_empty()`: Tests input prompt with text detection with empty string
-    - `test_is_input_prompt_true_sample()`: Tests detection of sample input prompt
-
-2. `tests/test_rules.py`:
-    - `test_is_all_task_finished_ok()`: Tests detection of task completion status
-    - `test_is_final_verification_finished_ok()`: Tests detection of final verification status
-
-These test cases can be run and debugged directly in IDEs to help you quickly verify code changes.
-
-### Custom Rules
-
-ForgeFlow's core design philosophy is to allow users to customize rules according to different project requirements.
-
-#### Creating Custom Rule Files
-
-To create custom rules, you need to implement the following components:
-
-1. **Check Functions**: Receive AI output string and return a boolean value
-2. **Command Strings**: Instructions to send to the AI when the check function returns True
-3. **Rule List**: A list of Rule objects combining check functions and command strings
-4. **Build Function**: A function named `build_rules` that returns the list of rules
-
-##### File Naming
-
-Your custom rule file can be named either:
-
-- `{project_name}_rules.py` (e.g., `myproject_rules.py`)
-- `{project_name}.py` (e.g., `myproject.py`)
-
-##### Function Naming
-
-The rule-building function should be named `build_rules` for consistency across all projects:
-
-```python
-def build_rules() -> list[Rule]:
-    # Your custom rules here
-    pass
-```
-
-See [myproject_rules.py](examples/myproject_rules.py) for a complete template.
-
-#### Examples
-
-We provide several examples to help you get started:
-
-1. [custom_rules_example.py](examples/custom_rules_example.py) - General custom rules example (
-   function: `build_rules`)
-2. [web_project_rules.py](examples/web_project_rules.py) - Web project specific rules example (
-   function: `build_rules`)
-3. [myproject_rules.py](examples/myproject_rules.py) - Template for creating your own project rules (
-   function: `build_rules`)
-
-#### Using Custom Rules
-
-Use the `--project` parameter to automatically load your custom rules:
-
-1. Create a rule file named `{project_name}_rules.py` (e.g., `myproject_rules.py`) or `{project_name}.py`
-2. Place it in your project directory or in the `examples/` directory
-3. Run ForgeFlow with `--project myproject` parameter
-
-The system will automatically search for your rule file in the following order:
-
-1. `{project_name}_rules.py` in the current working directory
-2. `{project_name}.py` in the current working directory
-3. `{project_name}_rules.py` in the `examples/` directory
-4. `{project_name}.py` in the `examples/` directory
-
-It will then look for a rule-building function. The recommended function name is `build_rules`, which provides consistency across all projects.
-
-### CLI Adapter Pattern
-
-ForgeFlow uses an adapter pattern to support different AI CLI tools. Each CLI tool has its own adapter that implements the `CLIAdapter` interface, which defines methods for detecting input prompts, task processing states, and CLI existence.
-
-Currently supported adapters:
-- **Gemini**: The default and currently only fully implemented adapter for Google's Qwen/Gemini CLI
-- **Claude Code**: Placeholder adapter for Anthropic's Claude Code CLI (contains TODOs for implementation)
-
-To add support for a new CLI tool:
-1. Create a new adapter class that extends `CLIAdapter` 
-2. Implement all abstract methods according to your CLI's behavior
-3. Register your adapter in the factory function in `forgeflow/core/cli_adapters/factory.py`
-4. Use the `--cli-type` parameter to select your adapter
 
 ### Exiting
 
