@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xsl" href="atom.xsl"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://kingson4wu.github.io/ForgeFlow/blog</id>
+    <title>ForgeFlow Blog</title>
+    <updated>2025-09-16T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://kingson4wu.github.io/ForgeFlow/blog"/>
+    <subtitle>ForgeFlow Blog</subtitle>
+    <icon>https://kingson4wu.github.io/ForgeFlow/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[FORGEFLOW: Engineering-Grade Automation for AI CLIs Inside Tmux]]></title>
+        <id>https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation</id>
+        <link href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation"/>
+        <updated>2025-09-16T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[ForgeFlow automates interactive AI CLIs (e.g., Qwen, Gemini, Claude) inside a tmux session using a clean "adapter + rules" architecture. It detects prompts and processing states, sends the right commands, and keeps going until tasks converge — with logs, extensibility, and sensible recovery behavior.]]></summary>
+        <content type="html"><![CDATA[<p>ForgeFlow automates interactive AI CLIs (e.g., Qwen, Gemini, Claude) inside a tmux session using a clean "adapter + rules" architecture. It detects prompts and processing states, sends the right commands, and keeps going until tasks converge — with logs, extensibility, and sensible recovery behavior.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="this-guide-covers">This guide covers:<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#this-guide-covers" class="hash-link" aria-label="Direct link to This guide covers:" title="Direct link to This guide covers:" translate="no">​</a></h2>
+<ul>
+<li class="">How to install and use ForgeFlow (focus)</li>
+<li class="">Architecture overview, key interfaces, and ANSI support</li>
+<li class="">Extending with custom rules and adapters</li>
+<li class="">A simple flow diagram in Markdown</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="who-its-for">Who It's For<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#who-its-for" class="hash-link" aria-label="Direct link to Who It's For" title="Direct link to Who It's For" translate="no">​</a></h2>
+<ul>
+<li class="">Developers who live in the terminal and use AI CLIs</li>
+<li class="">Teams that want a repeatable driver for long-running, iterative tasks</li>
+<li class="">Anyone who needs logging and simple extensibility without reinventing the loop</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="requirements">Requirements<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#requirements" class="hash-link" aria-label="Direct link to Requirements" title="Direct link to Requirements" translate="no">​</a></h2>
+<ul>
+<li class="">macOS/Linux</li>
+<li class="">Python 3.9+</li>
+<li class="">tmux installed and on PATH</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="install-and-run">Install And Run<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#install-and-run" class="hash-link" aria-label="Direct link to Install And Run" title="Direct link to Install And Run" translate="no">​</a></h2>
+<ul>
+<li class="">Dev install (pinned tooling):<!-- -->
+<ul>
+<li class=""><code>pip install -e .[dev] -c constraints-dev.txt</code></li>
+</ul>
+</li>
+<li class="">Runtime install:<!-- -->
+<ul>
+<li class=""><code>pip install -e .</code></li>
+</ul>
+</li>
+<li class="">Makefile helpers:<!-- -->
+<ul>
+<li class=""><code>make dev-install</code> — install dev deps with constraints</li>
+<li class=""><code>make lint</code> / <code>make fmt</code> / <code>make test</code></li>
+<li class=""><code>make setup-hooks</code> — optional Git hooks</li>
+</ul>
+</li>
+<li class="">Typical run:</li>
+</ul>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">forgeflow \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--session qwen_session \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--workdir "/abs/path/to/your/project" \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--ai-cmd "qwen --proxy http://localhost:7890 --yolo" \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--cli-type qwen \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--poll 10 \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--timeout 2000 \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--log-level INFO \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--log-file forgeflow.log</span><br></span></code></pre></div></div>
+<ul>
+<li class="">Switch adapters:<!-- -->
+<ul>
+<li class=""><code>--cli-type qwen</code> or <code>--cli-type gemini</code> (claude_code is a placeholder)</li>
+</ul>
+</li>
+<li class="">Use project-specific rules:<!-- -->
+<ul>
+<li class="">Add <code>{project}_rules.py</code> or <code>{project}.py</code> in your project root or in examples/</li>
+<li class="">Run with <code>--project myproject</code></li>
+</ul>
+</li>
+</ul>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">forgeflow \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--session qwen_session \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--workdir "/abs/path/to/your/project" \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--ai-cmd "qwen --proxy http://localhost:7890 --yolo" \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--project myproject \</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">--cli-type qwen</span><br></span></code></pre></div></div>
+<ul>
+<li class="">Logging:<!-- -->
+<ul>
+<li class=""><code>--log-file forgeflow.log</code> writes file logs</li>
+<li class=""><code>--no-console</code> disables console logging</li>
+<li class=""><code>--log-level</code> supports DEBUG/INFO/WARNING/ERROR</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="python-api">Python API<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#python-api" class="hash-link" aria-label="Direct link to Python API" title="Direct link to Python API" translate="no">​</a></h2>
+<div class="language-python codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-python codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token keyword" style="color:#00009f">from</span><span class="token plain"> forgeflow</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">core</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">automation </span><span class="token keyword" style="color:#00009f">import</span><span class="token plain"> Config</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> run_automation</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">cfg </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> Config</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    session</span><span class="token operator" style="color:#393A34">=</span><span class="token string" style="color:#e3116c">"qwen_session"</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    workdir</span><span class="token operator" style="color:#393A34">=</span><span class="token string" style="color:#e3116c">"/abs/path/to/your/project"</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    ai_cmd</span><span class="token operator" style="color:#393A34">=</span><span class="token string" style="color:#e3116c">"qwen --proxy http://localhost:7890 --yolo"</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    cli_type</span><span class="token operator" style="color:#393A34">=</span><span class="token string" style="color:#e3116c">"qwen"</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    poll_interval</span><span class="token operator" style="color:#393A34">=</span><span class="token number" style="color:#36acaa">10</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    input_prompt_timeout</span><span class="token operator" style="color:#393A34">=</span><span class="token number" style="color:#36acaa">2000</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    log_file</span><span class="token operator" style="color:#393A34">=</span><span class="token string" style="color:#e3116c">"forgeflow.log"</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    log_to_console</span><span class="token operator" style="color:#393A34">=</span><span class="token boolean" style="color:#36acaa">True</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    project</span><span class="token operator" style="color:#393A34">=</span><span class="token string" style="color:#e3116c">"myproject"</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain">   </span><span class="token comment" style="color:#999988;font-style:italic"># optional</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    log_level</span><span class="token operator" style="color:#393A34">=</span><span class="token string" style="color:#e3116c">"INFO"</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">run_automation</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">cfg</span><span class="token punctuation" style="color:#393A34">)</span><br></span></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="rules-project-level-customization">Rules: Project-Level Customization<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#rules-project-level-customization" class="hash-link" aria-label="Direct link to Rules: Project-Level Customization" title="Direct link to Rules: Project-Level Customization" translate="no">​</a></h2>
+<ul>
+<li class="">File naming:<!-- -->
+<ul>
+<li class=""><code>{project}_rules.py</code> or <code>{project}.py</code></li>
+</ul>
+</li>
+<li class="">Function name (recommended):<!-- -->
+<ul>
+<li class=""><code>build_rules()</code> -&gt; <code>list[Rule]</code></li>
+</ul>
+</li>
+<li class="">Minimal example:</li>
+</ul>
+<div class="language-python codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-python codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token comment" style="color:#999988;font-style:italic"># examples/myproject_rules.py</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token keyword" style="color:#00009f">from</span><span class="token plain"> forgeflow</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">core</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">rules </span><span class="token keyword" style="color:#00009f">import</span><span class="token plain"> Rule</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token keyword" style="color:#00009f">def</span><span class="token plain"> </span><span class="token function" style="color:#d73a49">build_rules</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"> </span><span class="token operator" style="color:#393A34">-</span><span class="token operator" style="color:#393A34">&gt;</span><span class="token plain"> </span><span class="token builtin">list</span><span class="token punctuation" style="color:#393A34">[</span><span class="token plain">Rule</span><span class="token punctuation" style="color:#393A34">]</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token keyword" style="color:#00009f">def</span><span class="token plain"> </span><span class="token function" style="color:#d73a49">done</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">output</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"> </span><span class="token builtin">str</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"> </span><span class="token operator" style="color:#393A34">-</span><span class="token operator" style="color:#393A34">&gt;</span><span class="token plain"> </span><span class="token builtin">bool</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        </span><span class="token keyword" style="color:#00009f">return</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">"All tasks have been completed."</span><span class="token plain"> </span><span class="token keyword" style="color:#00009f">in</span><span class="token plain"> output</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token keyword" style="color:#00009f">return</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">[</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        Rule</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">check</span><span class="token operator" style="color:#393A34">=</span><span class="token plain">done</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> command</span><span class="token operator" style="color:#393A34">=</span><span class="token boolean" style="color:#36acaa">None</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain">  </span><span class="token comment" style="color:#999988;font-style:italic"># stop</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        Rule</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">check</span><span class="token operator" style="color:#393A34">=</span><span class="token keyword" style="color:#00009f">lambda</span><span class="token plain"> out</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">"API Error"</span><span class="token plain"> </span><span class="token keyword" style="color:#00009f">in</span><span class="token plain"> out</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> command</span><span class="token operator" style="color:#393A34">=</span><span class="token string" style="color:#e3116c">"continue"</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        Rule</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">check</span><span class="token operator" style="color:#393A34">=</span><span class="token keyword" style="color:#00009f">lambda</span><span class="token plain"> out</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"> </span><span class="token boolean" style="color:#36acaa">True</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> command</span><span class="token operator" style="color:#393A34">=</span><span class="token string" style="color:#e3116c">"continue"</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token punctuation" style="color:#393A34">]</span><br></span></code></pre></div></div>
+<ul>
+<li class="">Rule behavior:<!-- -->
+<ul>
+<li class="">Rules are evaluated in order, the first matching rule returns its command.</li>
+<li class="">If command is None, automation stops.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="architecture-overview">Architecture Overview<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#architecture-overview" class="hash-link" aria-label="Direct link to Architecture Overview" title="Direct link to Architecture Overview" translate="no">​</a></h2>
+<ul>
+<li class="">Core loop (<code>forgeflow/core/automation.py</code>)<!-- -->
+<ul>
+<li class="">Creates/attaches tmux session</li>
+<li class="">Determines adapter by <code>--cli-type</code></li>
+<li class="">Captures tmux output, checks "prompt vs. processing", evaluates rules</li>
+<li class="">Timeout recovery: ESC → progressive Backspace until prompt → send continue</li>
+<li class="">Logging level configurable; file and console outputs supported</li>
+</ul>
+</li>
+<li class="">tmux I/O (<code>forgeflow/core/tmux_ctl.py</code>)<!-- -->
+<ul>
+<li class="">Encapsulates tmux operations: session creation, send keys, capture pane</li>
+<li class=""><code>capture_output(include_ansi=False)</code> supports capturing raw ANSI when needed</li>
+</ul>
+</li>
+<li class="">Adapters (<code>forgeflow/core/cli_adapters/*</code>)<!-- -->
+<ul>
+<li class="">Interface <code>CLIAdapter</code>:<!-- -->
+<ul>
+<li class=""><code>is_input_prompt(output)</code> -&gt; <code>bool</code></li>
+<li class=""><code>is_input_prompt_with_text(output)</code> -&gt; <code>bool</code></li>
+<li class=""><code>is_task_processing(output)</code> -&gt; <code>bool</code></li>
+<li class=""><code>is_ai_cli_exist(output)</code> -&gt; <code>bool</code></li>
+<li class=""><code>wants_ansi()</code> -&gt; <code>bool</code> — ask automation to capture pane with ANSI codes</li>
+</ul>
+</li>
+<li class="">Implementations: <code>qwen.py</code>, <code>gemini.py</code> (claude_code placeholder present)</li>
+<li class="">Adapter resolution via <code>get_cli_adapter(cli_type)</code></li>
+</ul>
+</li>
+<li class="">Rules (<code>forgeflow/core/rules.py</code>)<!-- -->
+<ul>
+<li class=""><code>Rule(check: Callable[[str], bool], command: str | None)</code></li>
+<li class="">Default rules and <code>next_command(output, rules)</code></li>
+</ul>
+</li>
+<li class="">Rule loader (<code>forgeflow/core/rule_loader.py</code>)<!-- -->
+<ul>
+<li class="">Dynamically loads <code>{project}_rules.py</code> or <code>{project}.py</code> from workdir or examples/</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="ansi-utilities-for-smarter-detection">ANSI Utilities For Smarter Detection<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#ansi-utilities-for-smarter-detection" class="hash-link" aria-label="Direct link to ANSI Utilities For Smarter Detection" title="Direct link to ANSI Utilities For Smarter Detection" translate="no">​</a></h2>
+<p>Some CLIs render distinct prompt colors or attributes. You can opt-in to capture ANSI and parse it in your adapter:</p>
+<ul>
+<li class="">Adapter opt-in:</li>
+</ul>
+<div class="language-python codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-python codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token keyword" style="color:#00009f">def</span><span class="token plain"> </span><span class="token function" style="color:#d73a49">wants_ansi</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">self</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"> </span><span class="token operator" style="color:#393A34">-</span><span class="token operator" style="color:#393A34">&gt;</span><span class="token plain"> </span><span class="token builtin">bool</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token keyword" style="color:#00009f">return</span><span class="token plain"> </span><span class="token boolean" style="color:#36acaa">True</span><br></span></code></pre></div></div>
+<ul>
+<li class="">Utilities (<code>forgeflow/core/ansi.py</code>):<!-- -->
+<ul>
+<li class=""><code>strip_ansi(text)</code> -&gt; <code>str</code> — removes all ANSI escape sequences</li>
+<li class=""><code>parse_ansi_segments(text)</code> -&gt; <code>list[Segment]</code>
+<ul>
+<li class="">Splits text into styled segments (tracks SGR attributes)</li>
+<li class="">Supports bold, dim, italic, underline, blink, inverse, strike</li>
+<li class="">Supports FG/BG basic (30–37/90–97/40–47/100–107), 256-color, truecolor</li>
+</ul>
+</li>
+<li class=""><code>split_segments_lines(segments)</code> -&gt; <code>list[list[Segment]]</code>
+<ul>
+<li class="">Split by newline while preserving styles</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="">Example usage in an adapter:</li>
+</ul>
+<div class="language-python codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-python codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token keyword" style="color:#00009f">from</span><span class="token plain"> forgeflow</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">core</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">ansi </span><span class="token keyword" style="color:#00009f">import</span><span class="token plain"> parse_ansi_segments</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token keyword" style="color:#00009f">class</span><span class="token plain"> </span><span class="token class-name">MyAdapter</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">CLIAdapter</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token keyword" style="color:#00009f">def</span><span class="token plain"> </span><span class="token function" style="color:#d73a49">wants_ansi</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">self</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"> </span><span class="token operator" style="color:#393A34">-</span><span class="token operator" style="color:#393A34">&gt;</span><span class="token plain"> </span><span class="token builtin">bool</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        </span><span class="token keyword" style="color:#00009f">return</span><span class="token plain"> </span><span class="token boolean" style="color:#36acaa">True</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token keyword" style="color:#00009f">def</span><span class="token plain"> </span><span class="token function" style="color:#d73a49">is_input_prompt</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">self</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> output</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"> </span><span class="token builtin">str</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"> </span><span class="token operator" style="color:#393A34">-</span><span class="token operator" style="color:#393A34">&gt;</span><span class="token plain"> </span><span class="token builtin">bool</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        </span><span class="token comment" style="color:#999988;font-style:italic"># Example heuristic: find a red prompt marker at end of screen</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        segments </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> parse_ansi_segments</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">output</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        text </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">''</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">join</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">seg</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">text </span><span class="token keyword" style="color:#00009f">for</span><span class="token plain"> seg </span><span class="token keyword" style="color:#00009f">in</span><span class="token plain"> segments</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        </span><span class="token keyword" style="color:#00009f">return</span><span class="token plain"> text</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">rstrip</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">endswith</span><span class="token punctuation" style="color:#393A34">(</span><span class="token string" style="color:#e3116c">'&gt;'</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain">  </span><span class="token comment" style="color:#999988;font-style:italic"># combine with color checks if needed</span><br></span></code></pre></div></div>
+<p>This keeps default behavior unchanged while enabling color-aware rules when helpful.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="simple-flow-diagram">Simple Flow Diagram<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#simple-flow-diagram" class="hash-link" aria-label="Direct link to Simple Flow Diagram" title="Direct link to Simple Flow Diagram" translate="no">​</a></h2>
+<div class="language-mermaid codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-mermaid codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">flowchart TD</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    A[Start forgeflow] --&gt; B[Create/attach tmux session]</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    B --&gt; C[Ensure AI CLI running]</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    C --&gt; D{Capture output&lt;br/&gt;(ANSI optional)}</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    D --&gt; |prompt &amp; idle| E[Evaluate rules -&gt; command]</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    E --&gt; F[Send text + Enter]</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    F --&gt; G[Sleep 2s]</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    G --&gt; D</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    D --&gt; |prompt has text| H[Send Enter]</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    H --&gt; G</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    D --&gt; |processing| I[Wait poll interval]</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    I --&gt; D</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    D --&gt; |timeout| J[ESC + progressive backspace]</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    J --&gt; K[Send "continue"]</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    K --&gt; D</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    E --&gt; |None| L[Stop]</span><br></span></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="troubleshooting">Troubleshooting<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#troubleshooting" class="hash-link" aria-label="Direct link to Troubleshooting" title="Direct link to Troubleshooting" translate="no">​</a></h2>
+<ul>
+<li class="">"tmux is required but not found"<!-- -->
+<ul>
+<li class="">Install tmux and ensure <code>tmux -V</code> succeeds</li>
+</ul>
+</li>
+<li class="">CLI not detected as running<!-- -->
+<ul>
+<li class="">Check <code>--ai-cmd</code> and allow a few seconds post-launch</li>
+</ul>
+</li>
+<li class="">No project rules<!-- -->
+<ul>
+<li class="">Defaults are used; add custom rules for better convergence</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="repository-and-license">Repository And License<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#repository-and-license" class="hash-link" aria-label="Direct link to Repository And License" title="Direct link to Repository And License" translate="no">​</a></h2>
+<ul>
+<li class="">Repo: <a href="https://github.com/kingson4wu/ForgeFlow" target="_blank" rel="noopener noreferrer" class="">https://github.com/kingson4wu/ForgeFlow</a></li>
+<li class="">License: MIT</li>
+</ul>]]></content>
+        <author>
+            <name>Kingson Wu</name>
+            <uri>https://github.com/kingson4wu</uri>
+        </author>
+        <category label="AI" term="AI"/>
+        <category label="Automation" term="Automation"/>
+        <category label="Tmux" term="Tmux"/>
+        <category label="CLI" term="CLI"/>
+        <category label="ForgeFlow" term="ForgeFlow"/>
+        <category label="Development" term="Development"/>
+    </entry>
+</feed>

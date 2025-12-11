@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkwebsite=globalThis.webpackChunkwebsite||[]).push([[1903],{1912:o=>{o.exports=JSON.parse('{"blogBasePath":"/ForgeFlow/blog","blogTitle":"Blog","authorsListPath":"/ForgeFlow/blog/authors"}')}}]);
