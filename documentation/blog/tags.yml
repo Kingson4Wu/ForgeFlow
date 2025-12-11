@@ -1,0 +1,29 @@
+ai:
+  label: AI
+  permalink: /ai
+  description: Posts about AI automation and tools
+
+automation:
+  label: Automation
+  permalink: /automation
+  description: Posts about automation workflows and tools
+
+cli:
+  label: CLI
+  permalink: /cli
+  description: Posts about command-line interface tools
+
+tmux:
+  label: Tmux
+  permalink: /tmux
+  description: Posts about tmux and terminal automation
+
+forgeflow:
+  label: ForgeFlow
+  permalink: /forgeflow
+  description: Posts specifically about the ForgeFlow tool
+
+development:
+  label: Development
+  permalink: /development
+  description: Posts about development practices and tools

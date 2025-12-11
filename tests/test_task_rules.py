@@ -234,7 +234,7 @@ def test_get_examples_dir() -> None:
     # Test that it returns a path (we can't easily test the exact path)
     result = _get_examples_dir()
     # Should be either a string or None
-    assert isinstance(result, (str, type(None)))
+    assert isinstance(result, str | type(None))
 
 
 def test_load_module_from_file() -> None:
