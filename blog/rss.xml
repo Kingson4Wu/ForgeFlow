@@ -208,5 +208,55 @@
             <category>ForgeFlow</category>
             <category>Development</category>
         </item>
+        <item>
+            <title><![CDATA[Tmux Inner Network Tunneling: Simple Remote Development]]></title>
+            <link>https://kingson4wu.github.io/ForgeFlow/blog/tmux-inner-network-tunneling-for-remote-development</link>
+            <guid>https://kingson4wu.github.io/ForgeFlow/blog/tmux-inner-network-tunneling-for-remote-development</guid>
+            <pubDate>Thu, 28 Aug 2025 00:00:00 GMT</pubDate>
+            <description><![CDATA[Simple guide to using tmux with SSH tunneling for persistent remote development sessions.]]></description>
+            <content:encoded><![CDATA[<p>Tmux inner network tunneling is a technique that combines tmux's session persistence with SSH tunneling to create stable remote development connections. This approach allows you to maintain persistent development sessions that survive network disconnections.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="core-principle">Core Principle<a href="https://kingson4wu.github.io/ForgeFlow/blog/tmux-inner-network-tunneling-for-remote-development#core-principle" class="hash-link" aria-label="Direct link to Core Principle" title="Direct link to Core Principle" translate="no">​</a></h2>
+<p>The key insight is simple:</p>
+<ul>
+<li class=""><strong>tmux</strong> maintains persistent terminal sessions even when SSH connections drop</li>
+<li class=""><strong>SSH tunneling</strong> creates secure pathways to access internal services</li>
+<li class="">Together, they enable reliable remote development from anywhere</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="basic-setup">Basic Setup<a href="https://kingson4wu.github.io/ForgeFlow/blog/tmux-inner-network-tunneling-for-remote-development#basic-setup" class="hash-link" aria-label="Direct link to Basic Setup" title="Direct link to Basic Setup" translate="no">​</a></h2>
+<ol>
+<li class="">Install SSH and tmux on your target machine</li>
+<li class="">Set up tunneling tools (like Cloudflare Tunnel, frp, or ZeroTier) to expose SSH service</li>
+<li class="">Create persistent tmux sessions to hold your work environment</li>
+</ol>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain"># Create a persistent session</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">tmux new-session -d -s remote_dev</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"># Attach to the session from anywhere</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">tmux attach -t remote_dev</span><br></span></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="ssh-tunneling-with-tmux">SSH Tunneling with tmux<a href="https://kingson4wu.github.io/ForgeFlow/blog/tmux-inner-network-tunneling-for-remote-development#ssh-tunneling-with-tmux" class="hash-link" aria-label="Direct link to SSH Tunneling with tmux" title="Direct link to SSH Tunneling with tmux" translate="no">​</a></h2>
+<p>Create a dedicated session for managing tunnels:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain"># Create a tunnel management session</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">tmux new-session -d -s tunnels</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"># Start SSH port forwarding (forward local port 8080 to remote port 8080)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">tmux send-keys -t tunnels 'ssh -L 8080:localhost:8080 user@remote-server -N' Enter</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"># Add more tunnels as needed</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">tmux split-window -h -t tunnels</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">tmux send-keys -t tunnels 'ssh -L 3306:localhost:3306 user@db-server -N' Enter</span><br></span></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-this-works">Why This Works<a href="https://kingson4wu.github.io/ForgeFlow/blog/tmux-inner-network-tunneling-for-remote-development#why-this-works" class="hash-link" aria-label="Direct link to Why This Works" title="Direct link to Why This Works" translate="no">​</a></h2>
+<ul>
+<li class="">When your SSH connection drops, the tmux session remains active on the remote machine</li>
+<li class="">You can reconnect to the same session later and pick up exactly where you left off</li>
+<li class="">Multiple tunnels can be managed within organized tmux windows</li>
+<li class="">Development workflow stays uninterrupted despite network changes</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="quick-start">Quick Start<a href="https://kingson4wu.github.io/ForgeFlow/blog/tmux-inner-network-tunneling-for-remote-development#quick-start" class="hash-link" aria-label="Direct link to Quick Start" title="Direct link to Quick Start" translate="no">​</a></h2>
+<ol>
+<li class="">Set up SSH access to your development machine</li>
+<li class="">Install and configure a tunneling solution (Cloudflare Tunnel, frp, etc.)</li>
+<li class="">Create a persistent tmux session before disconnecting:</li>
+</ol>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">tmux new-session -d -s mydev -c ~</span><br></span></code></pre></div></div>
+<ol start="4">
+<li class="">Connect from anywhere and resume work:</li>
+</ol>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">tmux attach -t mydev</span><br></span></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="conclusion">Conclusion<a href="https://kingson4wu.github.io/ForgeFlow/blog/tmux-inner-network-tunneling-for-remote-development#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion" translate="no">​</a></h2>
+<p>Tmux inner network tunneling simplifies remote development by combining session persistence with secure tunneling. This approach eliminates the complexity of managing multiple connections while ensuring work is never lost due to network interruptions.</p>]]></content:encoded>
+            <category>Tmux</category>
+            <category>tunneling</category>
+            <category>remote-development</category>
+            <category>networking</category>
+            <category>ssh</category>
+        </item>
     </channel>
 </rss>
