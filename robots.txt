@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://kingson4wu.github.io/ForgeFlow/sitemap.xml

@@ -12,7 +12,7 @@
         <id>https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation</id>
         <link href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation"/>
         <updated>2025-09-16T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[ForgeFlow automates interactive AI CLIs (e.g., Qwen, Gemini, Claude) inside a tmux session using a clean "adapter + rules" architecture. It detects prompts and processing states, sends the right commands, and keeps going until tasks converge — with logs, extensibility, and sensible recovery behavior.]]></summary>
+        <summary type="html"><![CDATA[Comprehensive guide to ForgeFlow - an engineering-grade automation tool that drives AI CLI tools (Qwen, Gemini, Claude) inside tmux sessions with configurable rules.]]></summary>
         <content type="html"><![CDATA[<p>ForgeFlow automates interactive AI CLIs (e.g., Qwen, Gemini, Claude) inside a tmux session using a clean "adapter + rules" architecture. It detects prompts and processing states, sends the right commands, and keeps going until tasks converge — with logs, extensibility, and sensible recovery behavior.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="this-guide-covers">This guide covers:<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#this-guide-covers" class="hash-link" aria-label="Direct link to This guide covers:" title="Direct link to This guide covers:" translate="no">​</a></h2>
 <ul>
