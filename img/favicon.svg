@@ -1,0 +1,43 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2e8555" />
+      <stop offset="100%" stop-color="#44d860" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <rect x="0" y="0" width="256" height="256" rx="32" fill="white" />
+  
+  <!-- Terminal representation -->
+  <rect x="38" y="64" width="180" height="128" rx="8" fill="#f0f0f0" stroke="#ccc" stroke-width="4"/>
+  
+  <!-- Terminal header/title bar -->
+  <rect x="38" y="64" width="180" height="20" fill="#e0e0e0" rx="4" />
+  
+  <!-- Terminal content area -->
+  <rect x="42" y="90" width="172" height="100" fill="white" />
+  
+  <!-- Terminal prompt indicator -->
+  <circle cx="58" cy="102" r="5" fill="#ff6b6b" />
+  <circle cx="72" cy="102" r="5" fill="#ffd166" />
+  <circle cx="86" cy="102" r="5" fill="#06d6a0" />
+  
+  <!-- Command prompt line -->
+  <text x="100" y="106" font-family="monospace" font-size="14" fill="#333">$ forgeflow</text>
+  
+  <!-- Flow arrows representing automation -->
+  <path d="M68 140 Q128 120 188 140" fill="none" stroke="url(#flowGradient)" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowhead)" />
+  <path d="M188 160 Q128 180 68 160" fill="none" stroke="url(#flowGradient)" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowhead2)" />
+  
+  <!-- Arrowhead markers -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e8555" />
+    </marker>
+    <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e8555" />
+    </marker>
+  </defs>
+  
+</svg>
