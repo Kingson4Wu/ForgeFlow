@@ -15,6 +15,17 @@ Automatically drives AI CLI to continuously complete programming tasks within a 
 - **Logging and Debugging**: Dual channel file + console logging with timestamps.
 - **Task Monitoring**: Monitors task processing status and sends desktop notifications when tasks stop processing (macOS notifications supported).
 
+## Documentation
+
+Detailed documentation is available in multiple formats:
+
+- **[Docusaurus Site](documentation/)** - Modern documentation website with blog, tutorials, and guides
+  - Run locally: `cd documentation && npm run start`
+- **[docs/](docs/)** - Additional documentation files:
+  - [Quick Start Guide for Mac Users](docs/quick_start_mac.md)
+  - [Task Mode Configuration](docs/task_mode.md)
+  - [Technology Stack](docs/tech.md)
+
 ## Quick Start
 
 ### Clone and Set Up the Project
@@ -26,10 +37,6 @@ To clone and set up the project, follow these steps:
    git clone https://github.com/Kingson4Wu/ForgeFlow
    cd ForgeFlow
    ```
-
-### Quick Start for Mac Users
-
-For Mac users, see our [Quick Start Guide for Mac Users](docs/quick_start_mac.md) which provides detailed step-by-step instructions for setting up and using ForgeFlow on macOS.
 
 ### Installation
 
@@ -198,6 +205,29 @@ python -m forgeflow.cli
 
 * Normal exit: Automatically exits when final verification is detected.
 * Force stop: `Ctrl-C` (the script will exit gracefully without closing your `tmux` session).
+
+## Project Structure
+
+```
+ForgeFlow/
+├── forgeflow/           # Main Python package
+│   ├── cli.py           # Command-line interface
+│   ├── core/            # Core automation logic
+│   │   ├── automation.py
+│   │   ├── tmux_ctl.py
+│   │   ├── rules.py
+│   │   ├── rule_loader.py
+│   │   ├── task_rules.py
+│   │   ├── notifier.py
+│   │   └── cli_adapters/  # Adapter pattern for different AI CLIs
+│   └── tasks/           # Task mode implementations
+├── documentation/       # Docusaurus documentation site
+├── docs/               # Additional documentation
+├── user_custom_rules/  # Custom rule definitions
+├── examples/           # Example configurations
+├── tests/              # Test suite
+└── scripts/            # Utility scripts
+```
 
 ## License
 
