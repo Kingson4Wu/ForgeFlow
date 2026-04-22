@@ -2,12 +2,14 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from forgeflow.core.task_rules import (
+from forgeflow.core._shared_utils import (
     _find_build_function,
     _find_rule_file,
     _get_examples_dir,
     _get_user_custom_rules_dir,
     _load_module_from_file,
+)
+from forgeflow.core.task_rules import (
     load_custom_task_rules,
     load_task_config,
 )
@@ -118,8 +120,8 @@ def mock_get_examples_dir() -> None:
     return None
 
 
-@patch("forgeflow.core.task_rules._get_user_custom_rules_dir", mock_get_user_custom_rules_dir)
-@patch("forgeflow.core.task_rules._get_examples_dir", mock_get_examples_dir)
+@patch("forgeflow.core._shared_utils._get_user_custom_rules_dir", mock_get_user_custom_rules_dir)
+@patch("forgeflow.core._shared_utils._get_examples_dir", mock_get_examples_dir)
 def test_load_custom_task_rules_not_found() -> None:
     """Test load_custom_task_rules when no rule file is found."""
     result = load_custom_task_rules("nonexistent_task", "/tmp")

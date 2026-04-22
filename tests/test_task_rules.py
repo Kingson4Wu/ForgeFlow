@@ -4,12 +4,14 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
-from forgeflow.core.rules import Rule
-from forgeflow.core.task_rules import (
+from forgeflow.core._shared_utils import (
     _find_build_function,
     _find_rule_file,
     _get_examples_dir,
     _load_module_from_file,
+)
+from forgeflow.core.rules import Rule
+from forgeflow.core.task_rules import (
     get_task_rules_builder,
     load_task_config,
 )

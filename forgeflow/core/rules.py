@@ -102,18 +102,6 @@ If all conditions are satisfied, return:
 
 
 def build_default_rules(cli_type: str = "gemini") -> list[Rule]:
-    # Common rules that apply to all CLI types
-    common_rules: list[Rule] = [
-        # Rule(check=is_all_task_finished, command=final_verification_prompt()),
-        # Rule(check=is_final_verification_finished, command=None),  # stop
-        # Rule(
-        #     check=lambda out: "✕ [API Error: 400 <400> InternalError.Algo.InvalidParameter" in out,
-        #     command="/clear",
-        # ),
-        # Rule(check=lambda out: "✕ [API Error: terminated]" in out, command="continue"),
-        # Rule(check=lambda out: "API Error" in out, command="continue"),
-    ]
-
     # CLI type specific rules
     cli_specific_rules = []
     if cli_type == "gemini":
@@ -123,13 +111,10 @@ def build_default_rules(cli_type: str = "gemini") -> list[Rule]:
     elif cli_type == "claude_code":
         cli_specific_rules = _build_claude_code_rules()
 
-    # Combine rules: CLI-specific rules take precedence, followed by common rules
-    all_rules = cli_specific_rules + common_rules
-
     # Add the default task prompt as the last rule
     # all_rules.append(Rule(check=lambda out: True, command=final_verification_prompt()))
 
-    return all_rules
+    return cli_specific_rules
 
 
 def _build_gemini_rules() -> list[Rule]:

@@ -61,8 +61,6 @@ def check_coverage_target_reached(output: str, target_coverage: int = 80) -> boo
         return has_target_text and not is_instruction_text
 
     # Otherwise, check for coverage percentage in the output
-    import re
-
     coverage_match = re.search(r"coverage[:\s]+(\d+)%?", output_lower)
     if coverage_match:
         coverage = int(coverage_match.group(1))

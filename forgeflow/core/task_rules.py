@@ -1,48 +1,22 @@
-import importlib.util
+from __future__ import annotations
+
 import json
 import logging
 import os
-import sys
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
+from ._shared_utils import (
+    _find_build_function,
+    _find_rule_file,
+    _get_config_directory,
+    _get_examples_tasks_dir,
+    _get_user_custom_rules_tasks_dir,
+    _load_module_from_file,
+)
 from .rules import Rule
 
 logger = logging.getLogger("forgeflow")
-
-
-# ---------- Task Configuration ----------
-def _get_config_directory(dir_type: str) -> str | None:
-    """Get configuration directory path for the specified type.
-
-    Args:
-        dir_type: Type of directory to get ('user_custom_rules', 'default_rules', or 'examples')
-
-    Returns:
-        Path to the directory, or None if not found
-    """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent
-
-        if dir_type == "user_custom_rules":
-            user_custom_rules_dir = (repo_root / "user_custom_rules" / "tasks").resolve()
-            return str(user_custom_rules_dir)
-        elif dir_type == "default_rules":
-            default_rules_dir = (pkg_dir / "tasks" / "configs").resolve()
-            return str(default_rules_dir)
-        elif dir_type == "examples":
-            examples_dir = (repo_root / "examples" / "tasks").resolve()
-            return str(examples_dir)
-    except Exception:
-        # Best effort; if not available, return None
-        return None
-
-    # If we get here, the dir_type was not recognized
-    return None
 
 
 def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
@@ -61,167 +35,23 @@ def load_task_config(task_name: str, workdir: str) -> dict[str, Any]:
     Returns:
         Dictionary containing task configuration
     """
-    config_file = os.path.join(workdir, f"{task_name}_config.json")
+    candidates = [os.path.join(workdir, f"{task_name}_config.json")]
 
-    # If not found in workdir, try user custom rules tasks directory
-    if not os.path.exists(config_file):
-        user_custom_rules_dir = _get_config_directory("user_custom_rules")
-        if user_custom_rules_dir:
-            config_file = os.path.join(user_custom_rules_dir, f"{task_name}_config.json")
+    for dir_type in ("user_custom_rules", "default_rules", "examples"):
+        dir_path = _get_config_directory(dir_type)
+        if dir_path:
+            candidates.append(os.path.join(dir_path, f"{task_name}_config.json"))
 
-    # If not found in user custom rules tasks directory, try default rules directory
-    if not os.path.exists(config_file):
-        default_rules_dir = _get_config_directory("default_rules")
-        if default_rules_dir:
-            config_file = os.path.join(default_rules_dir, f"{task_name}_config.json")
+    for path in candidates:
+        try:
+            with open(path) as f:
+                return json.load(f)
+        except FileNotFoundError:
+            continue
+        except Exception:
+            return {}
 
-    # If not found in default rules directory, try examples tasks directory (for backward compatibility)
-    if not os.path.exists(config_file):
-        examples_dir = _get_config_directory("examples")
-        if examples_dir:
-            config_file = os.path.join(examples_dir, f"{task_name}_config.json")
-
-    if not os.path.exists(config_file):
-        return {}  # type: ignore
-
-    try:
-        with open(config_file) as f:
-            return json.load(f)
-    except Exception:
-        # If there's an error reading the config file, return empty dict
-        return {}  # type: ignore
-
-
-# ---------- Dynamic Task Rule Loading ----------
-def _find_rule_file(file_names: list[str], directories: list[str]) -> str | None:
-    """Find a rule file in the given directories.
-
-    Args:
-        file_names: List of possible file names to look for
-        directories: List of directories to search in
-
-    Returns:
-        Path to the found file, or None if not found
-    """
-    for directory in directories:
-        for filename in file_names:
-            path = os.path.abspath(os.path.join(directory, filename))
-            if os.path.isfile(path):
-                return path
-    return None
-
-
-def _get_examples_dir() -> str | None:
-    """Get the examples directory path robustly.
-
-    Returns:
-        Path to examples directory, or None if not found
-    """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        examples_dir = (repo_root / "examples").resolve()
-        return str(examples_dir)
-    except Exception:
-        # Best effort; if not available (e.g., installed package without examples), skip
-        return None
-
-
-def _get_examples_tasks_dir() -> str | None:
-    """Get the examples tasks directory path robustly.
-
-    Returns:
-        Path to examples tasks directory, or None if not found
-    """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        examples_tasks_dir = (repo_root / "examples" / "tasks").resolve()
-        return str(examples_tasks_dir)
-    except Exception:
-        # Best effort; if not available (e.g., installed package without examples), skip
-        return None
-
-
-def _get_user_custom_rules_dir() -> str | None:
-    """Get the user custom rules directory path robustly.
-
-    Returns:
-        Path to user custom rules directory, or None if not found
-    """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        user_custom_rules_dir = (repo_root / "user_custom_rules").resolve()
-        return str(user_custom_rules_dir)
-    except Exception:
-        # Best effort; if not available, skip
-        return None
-
-
-def _get_user_custom_rules_tasks_dir() -> str | None:
-    """Get the user custom rules tasks directory path robustly.
-
-    Returns:
-        Path to user custom rules tasks directory, or None if not found
-    """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        user_custom_rules_tasks_dir = (repo_root / "user_custom_rules" / "tasks").resolve()
-        return str(user_custom_rules_tasks_dir)
-    except Exception:
-        # Best effort; if not available, skip
-        return None
-
-
-def _load_module_from_file(file_path: str, module_name: str) -> object | None:
-    """Load a Python module from a file path.
-
-    Args:
-        file_path: Path to the Python file
-        module_name: Name to give the module
-
-    Returns:
-        Loaded module, or None if failed
-    """
-    try:
-        spec = importlib.util.spec_from_file_location(module_name, file_path)
-        if spec is None or spec.loader is None:
-            logger.error(f"Failed to load spec for {file_path}")
-            return None
-
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-        spec.loader.exec_module(module)
-        return module
-    except Exception as e:
-        logger.error(f"Error loading module from {file_path}: {e}")
-        return None
-
-
-def _find_build_function(module: object, possible_names: list[str]) -> Callable | None:
-    """Find a build function in a module.
-
-    Args:
-        module: Module to search in
-        possible_names: List of possible function names to look for
-
-    Returns:
-        Found function, or None if not found
-    """
-    for func_name in possible_names:
-        if hasattr(module, func_name):
-            return getattr(module, func_name)
-    return None
+    return {}
 
 
 def load_custom_task_rules(
@@ -245,46 +75,31 @@ def load_custom_task_rules(
     Returns:
         Function that builds rules if found, None otherwise
     """
-    # Possible file names to look for
     possible_files = [f"{task_name}_task.py", f"{task_name}.py"]
-
-    # Possible directories to look in
     possible_dirs = [workdir]
 
-    # Add user custom rules tasks directory if available
-    user_custom_rules_tasks_dir = _get_user_custom_rules_tasks_dir()
-    if user_custom_rules_tasks_dir:
-        possible_dirs.append(user_custom_rules_tasks_dir)
+    if ucr_tasks := _get_user_custom_rules_tasks_dir():
+        possible_dirs.append(ucr_tasks)
+    if examples_tasks := _get_examples_tasks_dir():
+        possible_dirs.append(examples_tasks)
 
-    # Add repo examples tasks directory if available (for backward compatibility)
-    examples_tasks_dir = _get_examples_tasks_dir()
-    if examples_tasks_dir:
-        possible_dirs.append(examples_tasks_dir)
-
-    # Try to find the rule file
     rule_file_path = _find_rule_file(possible_files, possible_dirs)
-
-    # Check if the file exists
     if not rule_file_path:
         logger.warning(f"Task rule file not found for task: {task_name}")
         return None
 
     logger.info(f"Loading custom task rules from: {rule_file_path}")
 
-    # Load the module dynamically
     module = _load_module_from_file(rule_file_path, f"{task_name}_task")
     if module is None:
         return None
 
-    # Look for a function that builds rules
-    # Try function names in order of preference
-    # Prioritize build_rules as the standard function name
     possible_names = [
-        "build_rules",  # Standard function name for all tasks
-        f"build_{task_name}_rules",  # e.g., build_my_task_rules
-        f"build_{task_name}",  # e.g., build_my_task
+        "build_rules",
+        f"build_{task_name}_rules",
+        f"build_{task_name}",
         "build_custom_rules",
-        f"{task_name}_rules",  # e.g., my_task_rules
+        f"{task_name}_rules",
         "rules",
     ]
 
@@ -297,48 +112,21 @@ def load_custom_task_rules(
 
 
 def get_task_rules_builder(task_name: str) -> Callable[[dict[str, Any]], list[Rule]] | None:
-    """Get task rules builder function for a specific task type.
+    """Get task rules builder function for a specific task type."""
+    if task_name not in ("fix_tests", "improve_coverage", "task_planner"):
+        return None
 
-    This function first looks for custom task rules, then falls back to built-in rules.
+    try:
+        from ._shared_utils import _get_pkg_dir
 
-    Args:
-        task_name: Name of the task type
+        pkg_dir = _get_pkg_dir()
+        if pkg_dir is None:
+            return None
+        task_file_path = str(pkg_dir / "tasks" / f"{task_name}_task.py")
+    except Exception:
+        return None
 
-    Returns:
-        Function that builds rules if found, None otherwise
-    """
-    # List of built-in task names
-    BUILT_IN_TASKS = ["fix_tests", "improve_coverage", "task_planner"]
-
-    # First, try to load custom task rules
-    # We'll implement this in the rule loader where we have access to workdir
-    # For now, just return built-in rules if available
-    if task_name in BUILT_IN_TASKS:
-        # Try to load the built-in task rules dynamically
-        try:
-            import forgeflow as _forgeflow
-
-            pkg_dir = Path(_forgeflow.__file__).resolve().parent
-            # Update path to reflect new directory structure
-            # Tasks are now in forgeflow/tasks, not forgeflow/core/tasks
-            task_file_path = os.path.join(pkg_dir, "tasks", f"{task_name}_task.py")
-
-            if os.path.exists(task_file_path):
-                # Load the module dynamically
-                spec = importlib.util.spec_from_file_location(f"{task_name}_task", task_file_path)
-                if spec is None or spec.loader is None:
-                    logger.error(f"Failed to load spec for {task_file_path}")
-                    return None
-
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-
-                if hasattr(module, "build_rules"):
-                    return module.build_rules
-        except Exception as e:
-            logger.error(f"Error loading module from {task_file_path}: {e}")
-            pass
-
-    # If no built-in rules, return None
-    # The rule loader will try to load custom rules
+    module = _load_module_from_file(task_file_path, f"{task_name}_task")
+    if module is not None and hasattr(module, "build_rules"):
+        return module.build_rules
     return None

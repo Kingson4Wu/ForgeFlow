@@ -2,13 +2,13 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from forgeflow.core.rule_loader import (
+from forgeflow.core._shared_utils import (
     _find_rule_file,
     _get_examples_dir,
     _get_user_custom_rules_dir,
     _load_module_from_file,
-    load_custom_rules,
 )
+from forgeflow.core.rule_loader import load_custom_rules
 
 
 def test_find_rule_file() -> None:
@@ -94,8 +94,8 @@ def mock_get_cli_types_rules_dir() -> str:
 
 
 @patch("forgeflow.core.rule_loader._get_user_custom_rules_dir", mock_get_user_custom_rules_dir)
-@patch("forgeflow.core.rule_loader._get_default_rules_dir", mock_get_default_rules_dir)
-@patch("forgeflow.core.rule_loader._get_examples_dir", mock_get_examples_dir)
+@patch("forgeflow.core._shared_utils._get_default_rules_dir", mock_get_default_rules_dir)
+@patch("forgeflow.core._shared_utils._get_examples_dir", mock_get_examples_dir)
 def test_load_custom_rules_not_found() -> None:
     """Test load_custom_rules when no rule file is found."""
     result = load_custom_rules("nonexistent_project", "/tmp")

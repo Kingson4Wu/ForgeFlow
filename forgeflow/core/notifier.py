@@ -45,13 +45,3 @@ def send_notification(title: str, message: str) -> None:
             logger.warning(f"Notifications not supported for system: {system}")
     except Exception as e:
         logger.error(f"Failed to send notification: {e}")
-
-
-def is_macos() -> bool:
-    """
-    Check if the current system is macOS.
-
-    Returns:
-        True if the system is macOS, False otherwise
-    """
-    return platform.system() == "Darwin"

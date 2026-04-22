@@ -1,169 +1,20 @@
 from __future__ import annotations
 
-import importlib.util
 import logging
 import os
-import sys
-from collections.abc import Callable
-from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 
+from ._shared_utils import (
+    _find_build_function,
+    _find_rule_file,
+    _get_examples_dir,
+    _get_user_custom_rules_dir,
+    _load_module_from_file,
+)
 from .rules import Rule, build_default_rules
 from .task_rules import get_task_rules_builder, load_custom_task_rules
 
 logger = logging.getLogger("forgeflow")
-
-T = TypeVar("T")
-
-
-def _find_rule_file(file_names: list[str], directories: list[str]) -> str | None:
-    """Find a rule file in the given directories.
-
-    Args:
-        file_names: List of possible file names to look for
-        directories: List of directories to search in
-
-    Returns:
-        Path to the found file, or None if not found
-    """
-    for directory in directories:
-        for filename in file_names:
-            path = os.path.abspath(os.path.join(directory, filename))
-            if os.path.isfile(path):
-                return path
-    return None
-
-
-def _get_examples_dir() -> str | None:
-    """Get the examples directory path robustly.
-
-    Returns:
-        Path to examples directory, or None if not found
-    """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        examples_dir = (repo_root / "examples").resolve()
-        return str(examples_dir)
-    except Exception:
-        # Best effort; if not available (e.g., installed package without examples), skip
-        return None
-
-
-def _get_default_rules_dir() -> str | None:
-    """Get the default rules directory path robustly.
-
-    Returns:
-        Path to default rules directory, or None if not found
-    """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        default_rules_dir = (repo_root / "default_rules").resolve()
-        return str(default_rules_dir)
-    except Exception:
-        # Best effort; if not available, skip
-        return None
-
-
-def _get_cli_types_rules_dir() -> str | None:
-    """Get the CLI types rules directory path robustly.
-
-    Returns:
-        Path to CLI types rules directory, or None if not found
-    """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        cli_types_rules_dir = (pkg_dir / "core" / "cli_types").resolve()
-        return str(cli_types_rules_dir)
-    except Exception:
-        # Best effort; if not available, skip
-        return None
-
-
-# These functions are no longer needed as we've reorganized the directory structure
-# Keeping them for backward compatibility but they will return None
-def _get_tasks_rules_dir() -> str | None:
-    """Get the tasks rules directory path robustly.
-
-    Returns:
-        Path to tasks rules directory, or None if not found
-    """
-    return None
-
-
-def _get_projects_rules_dir() -> str | None:
-    """Get the projects rules directory path robustly.
-
-    Returns:
-        Path to projects rules directory, or None if not found
-    """
-    return None
-
-
-def _get_user_custom_rules_dir() -> str | None:
-    """Get the user custom rules directory path robustly.
-
-    Returns:
-        Path to user custom rules directory, or None if not found
-    """
-    try:
-        import forgeflow as _forgeflow
-
-        pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        repo_root = pkg_dir.parent  # root that contains 'forgeflow' dir
-        user_custom_rules_dir = (repo_root / "user_custom_rules").resolve()
-        return str(user_custom_rules_dir)
-    except Exception:
-        # Best effort; if not available, skip
-        return None
-
-
-def _load_module_from_file(file_path: str, module_name: str) -> object | None:
-    """Load a Python module from a file path.
-
-    Args:
-        file_path: Path to the Python file
-        module_name: Name to give the module
-
-    Returns:
-        Loaded module, or None if failed
-    """
-    try:
-        spec = importlib.util.spec_from_file_location(module_name, file_path)
-        if spec is None or spec.loader is None:
-            logger.error(f"Failed to load spec for {file_path}")
-            return None
-
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-        spec.loader.exec_module(module)
-        return module
-    except Exception as e:
-        logger.error(f"Error loading module from {file_path}: {e}")
-        return None
-
-
-def _find_build_function(module: object, possible_names: list[str]) -> Callable[..., Any] | None:
-    """Find a build function in a module.
-
-    Args:
-        module: Module to search in
-        possible_names: List of possible function names to look for
-
-    Returns:
-        Found function, or None if not found
-    """
-    for func_name in possible_names:
-        if hasattr(module, func_name):
-            return getattr(module, func_name)  # type: ignore
-    return None
 
 
 def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
