@@ -8,7 +8,7 @@ description: Comprehensive guide to ForgeFlow - an engineering-grade automation 
 
 ForgeFlow automates interactive AI CLIs (e.g., Qwen, Gemini, Claude) inside a tmux session using a clean "adapter + rules" architecture. It detects prompts and processing states, sends the right commands, and keeps going until tasks converge — with logs, extensibility, and sensible recovery behavior.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## This guide covers:
 
