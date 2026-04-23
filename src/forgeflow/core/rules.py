@@ -102,19 +102,14 @@ If all conditions are satisfied, return:
 
 
 def build_default_rules(cli_type: str = "gemini") -> list[Rule]:
-    # CLI type specific rules
-    cli_specific_rules = []
-    if cli_type == "gemini":
-        cli_specific_rules = _build_gemini_rules()
-    elif cli_type == "codex":
-        cli_specific_rules = _build_codex_rules()
-    elif cli_type == "claude_code":
-        cli_specific_rules = _build_claude_code_rules()
-
-    # Add the default task prompt as the last rule
-    # all_rules.append(Rule(check=lambda out: True, command=final_verification_prompt()))
-
-    return cli_specific_rules
+    key = cli_type.strip().lower()
+    if key == "gemini":
+        return _build_gemini_rules()
+    elif key == "codex":
+        return _build_codex_rules()
+    elif key == "claude_code":
+        return _build_claude_code_rules()
+    return []
 
 
 def _build_gemini_rules() -> list[Rule]:
@@ -153,21 +148,27 @@ def _build_claude_code_rules() -> list[Rule]:
         return []
 
 
-def get_command_post_processor(cli_type: str = "gemini") -> CommandPostProcessor | None:
-    """Get the command post-processor for the specified CLI type.
+_POST_PROCESSORS = {}
 
-    Args:
-        cli_type: The CLI type to get the post-processor for
 
-    Returns:
-        The command post-processor for the CLI type, or None if none exists
-    """
-    if cli_type == "codex":
+def _init_post_processors() -> dict[str, CommandPostProcessor | None]:
+    try:
+        from .cli_types.claude_code_rules import ClaudeCodeCommandPostProcessor
         from .cli_types.codex_rules import CodexCommandPostProcessor
 
-        return CodexCommandPostProcessor()
-    # Add other CLI types here as needed
-    return None
+        return {
+            "codex": CodexCommandPostProcessor(),
+            "claude_code": ClaudeCodeCommandPostProcessor(),
+        }
+    except ImportError:
+        return {}
+
+
+def get_command_post_processor(cli_type: str = "gemini") -> CommandPostProcessor | None:
+    """Get the command post-processor for the specified CLI type."""
+    if not _POST_PROCESSORS:
+        _POST_PROCESSORS.update(_init_post_processors())
+    return _POST_PROCESSORS.get(cli_type.strip().lower())
 
 
 def next_command(

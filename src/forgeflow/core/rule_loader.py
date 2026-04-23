@@ -70,14 +70,7 @@ def load_custom_rules(project_name: str, workdir: str) -> list[Rule] | None:
     # Look for a function that builds rules
     # Try function names in order of preference
     # Prioritize build_rules as the standard function name
-    possible_names = [
-        "build_rules",  # Standard function name for all projects
-        f"build_{project_name}_rules",  # e.g., build_web_project_rules
-        f"build_{project_name}",  # e.g., build_web_project
-        "build_custom_rules",
-        f"{project_name}_rules",  # e.g., web_project_rules
-        "rules",
-    ]
+    possible_names = build_function_names(project_name)
 
     build_func = _find_build_function(module, possible_names)
     if build_func is None:

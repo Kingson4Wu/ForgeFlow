@@ -10,72 +10,89 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from .defaults import DIR_CONFIGS, DIR_DEFAULT_RULES, DIR_EXAMPLES, DIR_TASKS, DIR_USER_CUSTOM_RULES
+
 logger = logging.getLogger("forgeflow")
 
 
 # ---------- Path helpers ----------
 
+_repo_root: Path | None = None
+_pkg_dir: Path | None = None
+
 
 def _get_repo_root() -> Path | None:
     """Get the repo root (parent of the forgeflow package directory)."""
-    try:
-        import forgeflow as _forgeflow
+    global _repo_root
+    if _repo_root is None:
+        try:
+            import forgeflow as _forgeflow
 
-        return Path(_forgeflow.__file__).resolve().parent.parent
-    except Exception:
-        return None
+            _repo_root = Path(_forgeflow.__file__).resolve().parent.parent
+        except Exception:
+            return None
+    return _repo_root
 
 
 def _get_pkg_dir() -> Path | None:
     """Get the forgeflow package directory."""
-    try:
-        import forgeflow as _forgeflow
+    global _pkg_dir
+    if _pkg_dir is None:
+        try:
+            import forgeflow as _forgeflow
 
-        return Path(_forgeflow.__file__).resolve().parent
-    except Exception:
+            _pkg_dir = Path(_forgeflow.__file__).resolve().parent
+        except Exception:
+            return None
+    return _pkg_dir
+
+
+def _get_subdir(base: Path | None, *segments: str) -> str | None:
+    """Resolve a subdirectory path, returning None if base is None."""
+    if base is None:
         return None
+    return str((base.joinpath(*segments)).resolve())
 
 
 def _get_examples_dir() -> str | None:
     root = _get_repo_root()
-    if root is None:
-        return None
-    return str((root / "examples").resolve())
+    return _get_subdir(root, DIR_EXAMPLES)
 
 
 def _get_user_custom_rules_dir() -> str | None:
     root = _get_repo_root()
-    if root is None:
-        return None
-    return str((root / "user_custom_rules").resolve())
+    return _get_subdir(root, DIR_USER_CUSTOM_RULES)
 
 
 def _get_examples_tasks_dir() -> str | None:
-    examples = _get_examples_dir()
-    if examples is None:
-        return None
-    return str((Path(examples) / "tasks").resolve())
+    return _get_subdir(Path(_get_examples_dir()), "tasks") if _get_examples_dir() else None
 
 
 def _get_user_custom_rules_tasks_dir() -> str | None:
-    ucr = _get_user_custom_rules_dir()
-    if ucr is None:
-        return None
-    return str((Path(ucr) / "tasks").resolve())
+    return (
+        _get_subdir(Path(_get_user_custom_rules_dir()), "tasks")
+        if _get_user_custom_rules_dir()
+        else None
+    )
 
 
 def _get_default_rules_dir() -> str | None:
     root = _get_repo_root()
-    if root is None:
-        return None
-    return str((root / "default_rules").resolve())
+    return _get_subdir(root, DIR_DEFAULT_RULES)
 
 
 def _get_cli_types_rules_dir() -> str | None:
     pkg = _get_pkg_dir()
-    if pkg is None:
-        return None
-    return str((pkg / "core" / "cli_types").resolve())
+    return _get_subdir(pkg, "core", "cli_types") if pkg else None
+
+
+_DIR_MAP = {
+    DIR_USER_CUSTOM_RULES: lambda root, pkg: str(
+        (root / DIR_USER_CUSTOM_RULES / DIR_TASKS).resolve()
+    ),
+    DIR_DEFAULT_RULES: lambda root, pkg: str((pkg / DIR_TASKS / DIR_CONFIGS).resolve()),
+    DIR_EXAMPLES: lambda root, pkg: str((root / DIR_EXAMPLES / DIR_TASKS).resolve()),
+}
 
 
 def _get_config_directory(dir_type: str) -> str | None:
@@ -84,14 +101,8 @@ def _get_config_directory(dir_type: str) -> str | None:
     root = _get_repo_root()
     if pkg is None or root is None:
         return None
-
-    if dir_type == "user_custom_rules":
-        return str((root / "user_custom_rules" / "tasks").resolve())
-    elif dir_type == "default_rules":
-        return str((pkg / "tasks" / "configs").resolve())
-    elif dir_type == "examples":
-        return str((root / "examples" / "tasks").resolve())
-    return None
+    mapper = _DIR_MAP.get(dir_type)
+    return mapper(root, pkg) if mapper else None
 
 
 # ---------- File finding ----------
@@ -133,3 +144,15 @@ def _find_build_function(module: object, possible_names: list[str]) -> Callable[
         if hasattr(module, func_name):
             return getattr(module, func_name)  # type: ignore[no-any-return]
     return None
+
+
+def build_function_names(base_name: str) -> list[str]:
+    """Build the standard list of possible build function names."""
+    return [
+        "build_rules",
+        f"build_{base_name}_rules",
+        f"build_{base_name}",
+        "build_custom_rules",
+        f"{base_name}_rules",
+        "rules",
+    ]

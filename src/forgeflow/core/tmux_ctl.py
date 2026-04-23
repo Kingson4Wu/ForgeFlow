@@ -5,6 +5,12 @@ import subprocess
 import time
 from dataclasses import dataclass
 
+from .defaults import (
+    CODEX_MIN_HEIGHT,
+    CODEX_MIN_WIDTH,
+    SEND_KEY_DELAY,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,7 +60,9 @@ class TmuxCtl:
                 logger.debug(f"Should set codex width: {should_set_width}")
                 if should_set_width:
                     resize_needed = True
-                    logger.info("Will resize window to 120x40 after creation")
+                    logger.info(
+                        f"Will resize window to {CODEX_MIN_WIDTH}x{CODEX_MIN_HEIGHT} after creation"
+                    )
                 else:
                     logger.info("Not resizing window")
 
@@ -71,18 +79,30 @@ class TmuxCtl:
 
                 # If we need to resize for codex, do it now
                 if resize_needed:
-                    logger.info("Resizing window to 120x40 for codex CLI")
-                    resize_result = self._resize_window_width(120)
+                    logger.info(
+                        f"Resizing window to {CODEX_MIN_WIDTH}x{CODEX_MIN_HEIGHT} for codex CLI"
+                    )
+                    resize_result = self._resize_window_width(CODEX_MIN_WIDTH)
                     if resize_result:
-                        # Also resize height to 40
                         try:
                             subprocess.run(
-                                ["tmux", "resize-window", "-t", self.cfg.session, "-y", "40"],
+                                [
+                                    "tmux",
+                                    "resize-window",
+                                    "-t",
+                                    self.cfg.session,
+                                    "-y",
+                                    str(CODEX_MIN_HEIGHT),
+                                ],
                                 check=False,
                             )
-                            logger.info("Successfully resized window to 120x40 for codex CLI")
+                            logger.info(
+                                f"Successfully resized window to {CODEX_MIN_WIDTH}x{CODEX_MIN_HEIGHT} for codex CLI"
+                            )
                         except Exception as e:
-                            logger.warning(f"Failed to set window height to 40: {e}")
+                            logger.warning(
+                                f"Failed to set window height to {CODEX_MIN_HEIGHT}: {e}"
+                            )
                     else:
                         logger.warning("Failed to resize window width for codex CLI")
             time.sleep(2)
@@ -96,12 +116,12 @@ class TmuxCtl:
                 logger.debug(f"CLI type is {cli_type}, not adjusting window width")
 
     def _should_set_codex_width(self) -> bool:
-        """Check if we should set the window width to 120 for codex.
+        """Check if we should set the window width to CODEX_MIN_WIDTH for codex.
 
         Returns:
-            bool: True if terminal width is less than 120 or can't be determined.
+            bool: True if terminal width is less than CODEX_MIN_WIDTH or can't be determined.
         """
-        logger.debug("Checking if codex window width should be set to 120")
+        logger.debug(f"Checking if codex window width should be set to {CODEX_MIN_WIDTH}")
         try:
             # nosec B603
             result = subprocess.run(["tput", "cols"], capture_output=True, text=True, check=False)
@@ -111,10 +131,9 @@ class TmuxCtl:
             if result.returncode == 0:
                 current_width = int(result.stdout.strip())
                 logger.debug(f"Current terminal width: {current_width}")
-                # If current width is less than 120, we should set width to 120
-                should_set = current_width < 120
+                should_set = current_width < CODEX_MIN_WIDTH
                 logger.debug(
-                    f"Should set width to 120: {should_set} (current: {current_width} < 120)"
+                    f"Should set width to {CODEX_MIN_WIDTH}: {should_set} (current: {current_width} < {CODEX_MIN_WIDTH})"
                 )
                 return should_set
             else:
@@ -125,9 +144,8 @@ class TmuxCtl:
             logger.warning(f"Failed to determine terminal width: {e}")
             logger.debug("Exception details", exc_info=True)
 
-        # If we can't determine terminal width, default to setting it to 120
         logger.debug(
-            "Defaulting to set width to 120 because terminal width could not be determined"
+            f"Defaulting to set width to {CODEX_MIN_WIDTH} because terminal width could not be determined"
         )
         return True
 
@@ -205,44 +223,43 @@ class TmuxCtl:
             return False
 
     def _ensure_codex_window_width(self) -> None:
-        """Ensure window width is at least 120 for codex sessions."""
+        """Ensure window width is at least CODEX_MIN_WIDTH for codex sessions."""
         logger.debug(f"Ensuring codex window width for session: {self.cfg.session}")
         current_width = self._get_window_width()
         logger.debug(f"Current window width: {current_width}")
-        # If we can't determine the current width, try to resize anyway
-        # If current width is valid and less than 120, resize window to 120
-        if current_width < 0 or (0 <= current_width < 120):
-            logger.info(f"Window width {current_width} is less than 120, resizing to 120")
-            success = self._resize_window_width(120)
-            if not success:
-                logger.warning("Failed to resize window width to 120 for codex session")
+        if current_width < CODEX_MIN_WIDTH:
+            logger.info(
+                f"Window width {current_width} is less than {CODEX_MIN_WIDTH}, resizing to {CODEX_MIN_WIDTH}"
+            )
+            success = self._resize_window_width(CODEX_MIN_WIDTH)
+            if success:
+                logger.info(
+                    f"Successfully resized window width to {CODEX_MIN_WIDTH} for codex session"
+                )
             else:
-                logger.info("Successfully resized window width to 120 for codex session")
+                logger.warning(
+                    f"Failed to resize window width to {CODEX_MIN_WIDTH} for codex session"
+                )
         else:
-            logger.debug(f"Window width {current_width} is already >= 120, no resize needed")
+            logger.debug(
+                f"Window width {current_width} is already >= {CODEX_MIN_WIDTH}, no resize needed"
+            )
 
     def send_text_then_enter(self, text: str) -> None:
-        # Send text and enter separately to avoid race conditions
-        # nosec B603
         subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, text], check=False)
-        time.sleep(0.1)
+        time.sleep(SEND_KEY_DELAY)
         # nosec B603
         subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, "C-m"], check=False)  # Enter
 
     def send_enter(self) -> None:
-        # nosec B603
-        subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, "C-m"], check=False)  # Enter
+        subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, "C-m"], check=False)
 
     def send_escape(self) -> None:
-        # nosec B603
-        subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, "Escape"], check=False)  # ESC
+        subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, "Escape"], check=False)
 
     def send_backspace(self, count: int = 10) -> None:
         for _ in range(count):
-            # nosec B603
-            subprocess.run(
-                ["tmux", "send-keys", "-t", self.cfg.session, "C-h"], check=False
-            )  # Backspace
+            subprocess.run(["tmux", "send-keys", "-t", self.cfg.session, "C-h"], check=False)
 
     def capture_output(self, include_ansi: bool = False) -> str:
         # -p to print to stdout; -e to include escape sequences (ANSI)

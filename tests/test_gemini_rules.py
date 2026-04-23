@@ -13,7 +13,7 @@ sys.path.insert(0, str(project_root))
 def test_gemini_rules_file() -> None:
     """Test that the gemini rules file can be loaded and has a build_rules function."""
     gemini_rules_path = os.path.join(
-        project_root, "forgeflow", "core", "cli_types", "gemini_rules.py"
+        project_root, "src", "forgeflow", "core", "cli_types", "gemini_rules.py"
     )
     assert os.path.exists(gemini_rules_path)
 

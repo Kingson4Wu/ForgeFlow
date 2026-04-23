@@ -8,24 +8,27 @@ from dataclasses import dataclass
 
 from .cli_adapters.base import CLIAdapter
 from .cli_adapters.factory import get_cli_adapter
+from .defaults import (
+    BACKSPACE_INCREMENT,
+    CLI_START_DELAY,
+    COMMAND_EXECUTION_DELAY,
+    DEFAULT_INPUT_PROMPT_TIMEOUT,
+    DEFAULT_LOG_FILE,
+    DEFAULT_LOG_LEVEL,
+    DEFAULT_POLL_INTERVAL,
+    INITIAL_BACKSPACE_COUNT,
+    LOG_COMMAND_TRUNCATE_LENGTH,
+    MAX_BACKSPACE_COUNT,
+    MAX_RECOVERY_ATTEMPTS,
+    NO_PROCESSING_THRESHOLD,
+    RECOVERY_STEP_DELAY,
+    SESSION_CREATE_DELAY,
+    UNCHANGED_OUTPUT_THRESHOLD,
+)
 from .notifier import send_notification
 from .rule_loader import get_rules
 from .rules import next_command
 from .tmux_ctl import TmuxConfig, TmuxCtl
-
-# Constants for timing and behavior
-SESSION_CREATE_DELAY = 1.0
-CLI_START_DELAY = 5.0
-COMMAND_EXECUTION_DELAY = 2.0
-RECOVERY_STEP_DELAY = 0.5
-MAX_RECOVERY_ATTEMPTS = 20
-INITIAL_BACKSPACE_COUNT = 10
-MAX_BACKSPACE_COUNT = 200
-BACKSPACE_INCREMENT = 10
-LOG_COMMAND_TRUNCATE_LENGTH = 120
-
-# Constants for tracking unchanged outputs
-UNCHANGED_OUTPUT_THRESHOLD = 5
 
 # Module-level variables for tracking consecutive unchanged outputs
 _previous_output = ""
@@ -37,14 +40,14 @@ class Config:
     session: str
     workdir: str
     ai_cmd: str
-    poll_interval: int = 10
-    input_prompt_timeout: int = 1000  # seconds
-    log_file: str = "forgeflow.log"
+    poll_interval: int = DEFAULT_POLL_INTERVAL
+    input_prompt_timeout: int = DEFAULT_INPUT_PROMPT_TIMEOUT
+    log_file: str = DEFAULT_LOG_FILE
     log_to_console: bool = True
     project: str | None = None
     task: str | None = None
-    cli_type: str = "gemini"  # Default to gemini
-    log_level: str = "INFO"
+    cli_type: str = "gemini"
+    log_level: str = DEFAULT_LOG_LEVEL
 
 
 def setup_logger(path: str, to_console: bool = True, level: str = "INFO") -> logging.Logger:
@@ -97,10 +100,7 @@ def run_monitor_mode(cfg: Config) -> int:
 
     # Track task processing state for notifications
     was_processing = False
-    # Track consecutive checks with no task processing
     no_processing_count = 0
-    # Require 3 consecutive checks with no processing before sending notification
-    NO_PROCESSING_THRESHOLD = 3
 
     try:
         while True:

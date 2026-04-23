@@ -93,7 +93,7 @@ This task can be configured with a target coverage percentage and other paramete
 
 ## Creating Custom Tasks
 
-While the built-in tasks cover common use cases, you can also create custom tasks by defining new task classes in the `forgeflow/tasks/` directory or by using the project-specific rule system.
+While the built-in tasks cover common use cases, you can also create custom tasks by defining new task classes in the `src/forgeflow/tasks/` directory or by using the project-specific rule system.
 
 ### Custom Task Structure
 
@@ -106,7 +106,7 @@ Custom tasks typically include:
 
 ## Using Task Configurations
 
-Task configurations are stored in the `forgeflow/tasks/configs/` directory with the following structure:
+Task configurations are stored in the `src/forgeflow/tasks/configs/` directory with the following structure:
 
 - `task_planner_config.json` - Configuration for the task planner
 - `fix_tests_config.json` - Configuration for the test fixing task

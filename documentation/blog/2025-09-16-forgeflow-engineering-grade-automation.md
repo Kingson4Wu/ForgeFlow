@@ -123,16 +123,16 @@ def build_rules() -> list[Rule]:
 
 ## Architecture Overview
 
-- Core loop (`forgeflow/core/automation.py`)
+- Core loop (`src/forgeflow/core/automation.py`)
   - Creates/attaches tmux session
   - Determines adapter by `--cli-type`
   - Captures tmux output, checks "prompt vs. processing", evaluates rules
   - Timeout recovery: ESC → progressive Backspace until prompt → send continue
   - Logging level configurable; file and console outputs supported
-- tmux I/O (`forgeflow/core/tmux_ctl.py`)
+- tmux I/O (`src/forgeflow/core/tmux_ctl.py`)
   - Encapsulates tmux operations: session creation, send keys, capture pane
   - `capture_output(include_ansi=False)` supports capturing raw ANSI when needed
-- Adapters (`forgeflow/core/cli_adapters/*`)
+- Adapters (`src/forgeflow/core/cli_adapters/*`)
   - Interface `CLIAdapter`:
     - `is_input_prompt(output)` -> `bool`
     - `is_input_prompt_with_text(output)` -> `bool`
@@ -141,10 +141,10 @@ def build_rules() -> list[Rule]:
     - `wants_ansi()` -> `bool` — ask automation to capture pane with ANSI codes
   - Implementations: `qwen.py`, `gemini.py` (claude_code placeholder present)
   - Adapter resolution via `get_cli_adapter(cli_type)`
-- Rules (`forgeflow/core/rules.py`)
+- Rules (`src/forgeflow/core/rules.py`)
   - `Rule(check: Callable[[str], bool], command: str | None)`
   - Default rules and `next_command(output, rules)`
-- Rule loader (`forgeflow/core/rule_loader.py`)
+- Rule loader (`src/forgeflow/core/rule_loader.py`)
   - Dynamically loads `{project}_rules.py` or `{project}.py` from workdir or examples/
 
 ## ANSI Utilities For Smarter Detection
@@ -158,7 +158,7 @@ def wants_ansi(self) -> bool:
     return True
 ```
 
-- Utilities (`forgeflow/core/ansi.py`):
+- Utilities (`src/forgeflow/core/ansi.py`):
   - `strip_ansi(text)` -> `str` — removes all ANSI escape sequences
   - `parse_ansi_segments(text)` -> `list[Segment]`
     - Splits text into styled segments (tracks SGR attributes)

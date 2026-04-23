@@ -12,7 +12,7 @@ CLI Adapters are a core component of ForgeFlow that enable support for different
 
 The CLI adapter system uses the classic adapter pattern with a base class and specific implementations:
 
-- **Base Interface**: `CLIAdapter` (defined in `forgeflow/core/cli_adapters/base.py`)
+- **Base Interface**: `CLIAdapter` (defined in `src/forgeflow/core/cli_adapters/base.py`)
 - **Concrete Implementations**: Specific adapters for different AI tools
 - **Factory**: Creates appropriate adapters based on CLI type
 
@@ -53,7 +53,7 @@ class CLIAdapter(ABC):
 
 The default adapter for Google's Gemini CLI tool:
 
-- Located in `forgeflow/core/cli_adapters/gemini.py`
+- Located in `src/forgeflow/core/cli_adapters/gemini.py`
 - Implements prompt detection for Gemini's interface
 - Handles Gemini-specific input and processing patterns
 - Default adapter if no `--cli-type` is specified
@@ -62,7 +62,7 @@ The default adapter for Google's Gemini CLI tool:
 
 Adapter for Alibaba Cloud's Qwen CLI tool:
 
-- Located in `forgeflow/core/cli_adapters/qwen.py`
+- Located in `src/forgeflow/core/cli_adapters/qwen.py`
 - Implements prompt detection for Qwen's interface
 - Handles Qwen-specific response patterns
 - Used when working with Qwen as the AI CLI tool
@@ -71,7 +71,7 @@ Adapter for Alibaba Cloud's Qwen CLI tool:
 
 Placeholder implementation for Anthropic's Claude Code:
 
-- Located in `forgeflow/core/cli_adapters/claude_code.py`
+- Located in `src/forgeflow/core/cli_adapters/claude_code.py`
 - Currently a placeholder that needs implementation
 - Intended to support Claude Code's specific behaviors
 - Can be extended for full Claude support
@@ -194,6 +194,6 @@ class StatefulAdapter(CLIAdapter):
 
 ## Default Rules for CLI Types
 
-ForgeFlow includes default rules specific to each CLI type in the `forgeflow/core/cli_types/` directory. These rules provide optimal interaction patterns for each AI CLI tool.
+ForgeFlow includes default rules specific to each CLI type in the `src/forgeflow/core/cli_types/` directory. These rules provide optimal interaction patterns for each AI CLI tool.
 
 The adapter system makes ForgeFlow flexible and extensible, allowing support for multiple AI CLI tools while maintaining consistent automation behavior.

@@ -216,9 +216,12 @@ def test_send_continue_and_return_timestamp() -> None:
 
 # Mock classes for testing new functions
 class MockConfig:
-    def __init__(self, ai_cmd: str = "test_cmd", cli_type: str = "gemini") -> None:
+    def __init__(
+        self, ai_cmd: str = "test_cmd", cli_type: str = "gemini", session: str = "test_session"
+    ) -> None:
         self.ai_cmd = ai_cmd
         self.cli_type = cli_type
+        self.session = session
 
 
 def test_initialize_session() -> None:

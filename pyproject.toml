@@ -30,7 +30,7 @@ dev = [
 forgeflow = "forgeflow.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["forgeflow"]
+packages = ["src/forgeflow"]
 
 [tool.black]
 line-length = 100

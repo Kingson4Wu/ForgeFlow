@@ -94,14 +94,7 @@ def load_custom_task_rules(
     if module is None:
         return None
 
-    possible_names = [
-        "build_rules",
-        f"build_{task_name}_rules",
-        f"build_{task_name}",
-        "build_custom_rules",
-        f"{task_name}_rules",
-        "rules",
-    ]
+    possible_names = build_function_names(task_name)
 
     build_func = _find_build_function(module, possible_names)
     if build_func is None:
