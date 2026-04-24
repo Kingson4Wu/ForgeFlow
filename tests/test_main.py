@@ -39,6 +39,6 @@ def test_main() -> None:
         log_to_console=True,
         project="telegram-bridge",
         cli_type="claude_code",
-        task="task_planner",
+        task="improve_coverage",
     )
     run_automation(cfg)

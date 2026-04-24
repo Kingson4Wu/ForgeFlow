@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Activate venv so all tools use the correct Python version
+if [ -f ".venv/bin/activate" ]; then
+    . .venv/bin/activate
+fi
+
 echo "Running Ruff check..."
 ruff check .
 ruff_status=$?
