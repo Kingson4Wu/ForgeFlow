@@ -3,10 +3,10 @@ slug: forgeflow-engineering-grade-automation
 title: 'FORGEFLOW: Engineering-Grade Automation for AI CLIs Inside Tmux'
 authors: [kingsonwu]
 tags: [ai, automation, tmux, cli, forgeflow, development]
-description: Comprehensive guide to ForgeFlow - an engineering-grade automation tool that drives AI CLI tools (Qwen, Gemini, Claude) inside tmux sessions with configurable rules.
+description: Comprehensive guide to ForgeFlow - an engineering-grade automation tool that drives AI CLI tools (Gemini, Claude Code, Codex) inside tmux sessions with configurable rules.
 ---
 
-ForgeFlow automates interactive AI CLIs (e.g., Qwen, Gemini, Claude) inside a tmux session using a clean "adapter + rules" architecture. It detects prompts and processing states, sends the right commands, and keeps going until tasks converge — with logs, extensibility, and sensible recovery behavior.
+ForgeFlow automates AI CLIs (Gemini, Claude Code, Codex) inside a tmux session using a clean "adapter + rules" architecture. It detects prompts and processing states, sends the right commands, and keeps going until tasks converge — with logs, extensibility, and sensible recovery behavior.
 
 {/* truncate */}
 
@@ -43,10 +43,10 @@ ForgeFlow automates interactive AI CLIs (e.g., Qwen, Gemini, Claude) inside a tm
 
 ```bash
 forgeflow \
---session qwen_session \
+--session my_session \
 --workdir "/abs/path/to/your/project" \
---ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
---cli-type qwen \
+--ai-cmd "claude --dangerously-skip-permissions" \
+--cli-type claude_code \
 --poll 10 \
 --timeout 2000 \
 --log-level INFO \
@@ -54,18 +54,18 @@ forgeflow \
 ```
 
 - Switch adapters:
-  - `--cli-type qwen` or `--cli-type gemini` (claude_code is a placeholder)
+  - `--cli-type gemini` or `--cli-type claude_code` or `--cli-type codex`
 - Use project-specific rules:
-  - Add `{project}_rules.py` or `{project}.py` in your project root or in examples/
+  - Place `{project}_rules.py` in `~/.forgeflow/user_custom_rules/projects/`
   - Run with `--project myproject`
 
 ```bash
 forgeflow \
---session qwen_session \
+--session my_session \
 --workdir "/abs/path/to/your/project" \
---ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
+--ai-cmd "claude" \
 --project myproject \
---cli-type qwen
+--cli-type claude_code
 ```
 
 - Logging:
@@ -129,23 +129,23 @@ def build_rules() -> list[Rule]:
   - Captures tmux output, checks "prompt vs. processing", evaluates rules
   - Timeout recovery: ESC → progressive Backspace until prompt → send continue
   - Logging level configurable; file and console outputs supported
-- tmux I/O (`src/forgeflow/core/tmux_ctl.py`)
+- tmux I/O (`src/forgeflow/core/tmux/ctl.py`)
   - Encapsulates tmux operations: session creation, send keys, capture pane
   - `capture_output(include_ansi=False)` supports capturing raw ANSI when needed
 - Adapters (`src/forgeflow/core/cli_adapters/*`)
   - Interface `CLIAdapter`:
     - `is_input_prompt(output)` -> `bool`
     - `is_input_prompt_with_text(output)` -> `bool`
-    - `is_task_processing(output)` -> `bool`
+    - `is_task_processing(history)` -> `bool`
     - `is_ai_cli_exist(output)` -> `bool`
     - `wants_ansi()` -> `bool` — ask automation to capture pane with ANSI codes
-  - Implementations: `qwen.py`, `gemini.py` (claude_code placeholder present)
+  - Implementations: `gemini.py`, `claude_code.py`, `codex.py`
   - Adapter resolution via `get_cli_adapter(cli_type)`
-- Rules (`src/forgeflow/core/rules.py`)
+- Rules (`src/forgeflow/core/rules/base.py`)
   - `Rule(check: Callable[[str], bool], command: str | None)`
   - Default rules and `next_command(output, rules)`
-- Rule loader (`src/forgeflow/core/rule_loader.py`)
-  - Dynamically loads `{project}_rules.py` or `{project}.py` from workdir or examples/
+- Rule loader (`src/forgeflow/core/rules/loader.py`)
+  - Dynamically loads `{project}_rules.py` from `~/.forgeflow/user_custom_rules/projects/`
 
 ## ANSI Utilities For Smarter Detection
 

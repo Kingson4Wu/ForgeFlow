@@ -17,8 +17,13 @@ class CLIAdapter(ABC):
         pass
 
     @abstractmethod
-    def is_task_processing(self, output: str) -> bool:
-        """Check if a task is currently being processed."""
+    def is_task_processing(self, history: list[str]) -> bool:
+        """Check if a task is currently being processed.
+
+        Args:
+            history: List of recent output frames (oldest first, most recent last).
+                     Allows adapters to detect changes across frames.
+        """
         pass
 
     @abstractmethod

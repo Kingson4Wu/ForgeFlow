@@ -70,7 +70,7 @@ forgeflow --session my_session --workdir "/path/to/project" --ai-cmd "claude --d
 
 ### Custom Rules
 
-Place `{project_name}_rules.py` or `{project_name}.py` in your project directory or `user_custom_rules/`:
+Place `{project_name}_rules.py` in `~/.forgeflow/user_custom_rules/projects/`:
 
 ```bash
 uv run forgeflow --project myproject ...
@@ -101,35 +101,43 @@ uv run forgeflow --session my_session --monitor-only --cli-type claude_code --po
 
 ```
 ForgeFlow/
-├── src/forgeflow/       # Main Python package
-│   ├── cli.py           # CLI entry point
-│   └── core/
-│       ├── automation.py     # Core automation loop
-│       ├── tmux_ctl.py       # tmux session management
-│       ├── rules.py          # Rule system
-│       ├── rule_loader.py    # Custom rule loading
-│       ├── task_rules.py     # Task-specific rules
-│       ├── defaults.py       # Default configuration values
-│       ├── notifier.py       # Desktop notifications
-│       ├── cli_adapters/     # CLI adapter implementations
-│       │   ├── base.py       # CLIAdapter base class
-│       │   ├── claude_code.py
-│       │   ├── gemini.py
-│       │   └── codex.py
-│       └── cli_types/        # CLI-specific rules
-│           ├── claude_code_rules.py
-│           ├── gemini_rules.py
-│           └── codex_rules.py
-├── tests/               # Test suite
-├── documentation/       # Docusaurus docs site
-├── docs/                # Additional documentation
-└── scripts/            # Utility scripts
+├── src/forgeflow/           # Main Python package
+│   ├── cli.py               # CLI entry point
+│   ├── core/
+│   │   ├── automation/      # Core automation loop
+│   │   │   ├── loop.py      # Main automation & monitor loops
+│   │   │   └── defaults.py  # Default config values
+│   │   ├── tmux/            # tmux session management
+│   │   │   ├── ctl.py       # TmuxCtl class
+│   │   │   └── notifier.py  # Desktop notifications
+│   │   ├── rules/           # Rule system
+│   │   │   ├── base.py      # Rule dataclass
+│   │   │   └── loader.py    # Custom rule loading
+│   │   ├── cli_adapters/    # CLI adapter implementations
+│   │   │   ├── base.py      # CLIAdapter base class
+│   │   │   ├── claude_code.py
+│   │   │   ├── gemini.py
+│   │   │   └── codex.py
+│   │   ├── cli_types/       # CLI-specific rules
+│   │   │   ├── claude_code_rules.py
+│   │   │   ├── gemini_rules.py
+│   │   │   └── codex_rules.py
+│   │   ├── task_rules.py    # Task-specific rules
+│   │   └── utils.py         # Path utilities
+│   └── tasks/               # Built-in task implementations
+│       ├── task_planner_task.py
+│       ├── fix_tests_task.py
+│       └── improve_coverage_task.py
+├── tests/                   # Test suite (mirrors src/ structure)
+├── documentation/           # Docusaurus docs site
+├── specifications/          # Detailed specifications
+└── scripts/                 # Utility scripts
 ```
 
 ## Documentation
 
-- **[Docusaurus Site](documentation/)** — Run with `cd documentation && npm run start`
-- **[docs/](docs/)** — Quick start, task mode config, tech stack
+- **[specifications/](specifications/)** — Quick start, CLI reference, task modes, rule system
+- **[documentation/](documentation/)** — Docusaurus site (`npm run start` to preview)
 
 ## License
 

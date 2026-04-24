@@ -25,8 +25,9 @@ class GeminiCLIAdapter(CLIAdapter):
             return False
         return bool(self.PROMPT_WITH_TEXT_RE.search(output))
 
-    def is_task_processing(self, output: str) -> bool:
-        for line in output.splitlines():
+    def is_task_processing(self, history: list[str]) -> bool:
+        current = history[-1] if history else ""
+        for line in current.splitlines():
             if self.PROMPT_TASK_PROCESSING.search(line.strip()):
                 return True
         return False

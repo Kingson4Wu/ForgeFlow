@@ -96,7 +96,7 @@ const config = {
         {name: 'og:locale', content: 'en_US'},
         {name: 'og:site_name', content: 'ForgeFlow'},
         {name: 'og:title', content: 'ForgeFlow - Engineering-Grade Automation for AI CLIs Inside Tmux'},
-        {name: 'og:description', content: 'ForgeFlow automates interactive AI CLI tools (Qwen, Gemini, Claude) inside tmux sessions for continuous programming task execution with configurable rules.'},
+        {name: 'og:description', content: 'ForgeFlow automates AI CLI tools (Gemini, Claude Code, Codex) inside tmux sessions for continuous programming task execution with configurable rules.'},
         {name: 'og:image', content: 'https://kingson4wu.github.io/ForgeFlow/img/docusaurus-social-card.jpg'},
         {name: 'og:url', content: 'https://kingson4wu.github.io/ForgeFlow/'},
         {name: 'twitter:card', content: 'summary_large_image'},

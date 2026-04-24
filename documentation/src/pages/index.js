@@ -33,7 +33,7 @@ export default function Home() {
   return (
     <Layout
       title={`ForgeFlow - AI CLI Automation for Tmux Sessions | Engineering-Grade Tool`}
-      description="ForgeFlow automates interactive AI CLI tools (Qwen, Gemini, Claude) inside tmux sessions for continuous programming task execution with configurable rules. Streamline your development workflow with reliable AI automation.">
+      description="ForgeFlow automates AI CLI tools (Gemini, Claude Code, Codex) inside tmux sessions for continuous programming task execution with configurable rules. Streamline your development workflow with reliable AI automation.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

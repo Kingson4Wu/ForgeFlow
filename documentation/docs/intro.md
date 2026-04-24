@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: ForgeFlow Introduction - AI CLI Automation Tool
-description: Learn how ForgeFlow automates AI CLI tools in tmux sessions for continuous programming task execution. Robust session management and configurable rules for Qwen, Gemini, Claude.
+description: Learn how ForgeFlow automates AI CLI tools in tmux sessions for continuous programming task execution. Robust session management and configurable rules for Gemini, Claude Code, Codex.
 ---
 
 # ForgeFlow Introduction
@@ -10,7 +10,7 @@ ForgeFlow is an automation tool that automatically drives AI CLI tools to contin
 
 ## Overview
 
-ForgeFlow is designed to automate programming tasks by continuously interacting with AI CLI tools like Qwen, Gemini, Claude, and others within a tmux session. The system monitors the AI's output, detects when it's waiting for input or processing tasks, and sends appropriate commands based on configurable rules.
+ForgeFlow is designed to automate programming tasks by continuously interacting with AI CLI tools within a tmux session. The system monitors the AI's output, detects when it's waiting for input or processing tasks, and sends appropriate commands based on configurable rules.
 
 The project addresses common challenges in AI-assisted programming:
 
@@ -23,12 +23,13 @@ The project addresses common challenges in AI-assisted programming:
 ## Key Features
 
 - **Robust Session Management**: Automatically creates/reuses `tmux` sessions, separating text from enter when pasting commands
-- **Configurable Rule System**: Rules are evaluated in order, with priority matching taking effect, and custom rules are supported
-- **Multi-CLI Support**: Supports different AI CLI tools through an adapter pattern (currently supports Qwen, Gemini as defaults, with placeholders for Claude Code)
-- **Reliable Input Detection**: Regular expressions detect "input prompts" and "existing text in input box" specific to each CLI tool
-- **Timeout Recovery Strategy**: Long periods without input prompt → send `ESC` → backspace clear → `continue`
-- **Logging and Debugging**: Dual channel file + console logging with timestamps
-- **Task Monitoring**: Monitors task processing status and sends desktop notifications when tasks stop processing (macOS notifications supported)
+- **Configurable Rule System**: Rules are evaluated in order with priority matching; custom rules supported
+- **Multi-CLI Support**: Gemini, Claude Code, Codex — through adapter pattern
+- **Reliable Input Detection**: Regex-based detection of input prompts and existing text, per CLI type
+- **Timeout Recovery Strategy**: Long periods without input prompt → `ESC` → backspace clear → `continue`
+- **Logging**: Dual channel file + console with timestamps
+- **Task Monitoring**: Desktop notifications when task processing stalls (macOS supported)
+- **Monitor-Only Mode**: Watch existing sessions without sending commands
 
 ## Use Cases
 

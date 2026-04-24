@@ -1,1 +1,1 @@
-"""CLI adapters for different AI CLI tools."""
+"""CLI-type-specific rules for Gemini, Claude Code, and Codex."""

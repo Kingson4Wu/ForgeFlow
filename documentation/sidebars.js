@@ -17,36 +17,8 @@
 const sidebars = {
   tutorialSidebar: [
     'intro',
-    'getting-started',
-    'configuration',
-    'custom-nodes',
-    'deployment',
     'advanced-patterns',
-    {
-      type: 'category',
-      label: 'Customization',
-      items: [
-        'tutorial-basics/create-a-page',
-        'tutorial-basics/create-a-document',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Sharing & Documentation',
-      items: [
-        'tutorial-basics/create-a-blog-post',
-        'tutorial-basics/deploy-your-site',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Advanced Topics',
-      items: [
-        'tutorial-basics/congratulations',
-        'tutorial-extras/manage-docs-versions',
-        'tutorial-extras/translate-your-site',
-      ],
-    },
+    'deployment',
   ],
 };
 

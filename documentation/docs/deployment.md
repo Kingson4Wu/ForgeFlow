@@ -1,153 +1,72 @@
 ---
-sidebar_position: 5
-title: ForgeFlow Task Types - Automation Workflows
-description: Explore built-in task types in ForgeFlow for AI CLI automation. Task Planner, test fixing, coverage improvement, and custom automation workflows.
+sidebar_position: 3
+title: Deployment
+description: Deployment and configuration reference for ForgeFlow.
 ---
 
-# Task Types
+# Deployment
 
-ForgeFlow includes several built-in task types that provide specialized automation for common programming activities. These tasks come with predefined configurations and rules to optimize the AI CLI interaction for specific use cases.
+## Environment
 
-## Task Planner
-
-The Task Planner task follows a TODO list to complete tasks in order. It's the most basic task type that provides a sequential approach to completing programming tasks.
-
-### Configuration
-
-The task planner can be configured with a JSON configuration file that defines the sequence of tasks to complete. By default, it looks for `task_planner_config.json`.
-
-### Usage
+ForgeFlow requires Python >= 3.13 and tmux.
 
 ```bash
-forgeflow \\
-  --session my_session \\
-  --workdir \"/path/to/your/project\" \\
-  --ai-cmd \"qwen --proxy http://localhost:7890 --yolo\" \\
-  --task task_planner \\
-  --poll 10 \\
-  --timeout 2000 \\
-  --log-file forgeflow.log
+# Clone
+git clone https://github.com/Kingson4Wu/ForgeFlow
+cd ForgeFlow
+
+# Install
+uv sync          # or: pip install -e .
 ```
 
-### Features
+## tmux
 
-- Sequential task execution based on a predefined list
-- Configurable through JSON configuration files
-- Can be customized with project-specific rules
-
-## Fix Tests Task
-
-The Fix Tests task automatically fixes failing test cases by monitoring test output and generating appropriate fix commands. This task is particularly useful for maintaining code quality and resolving test failures efficiently.
-
-### Usage
+Ensure tmux is installed and on PATH:
 
 ```bash
-forgeflow \\
-  --session my_session \\
-  --workdir \"/path/to/your/project\" \\
-  --ai-cmd \"qwen --proxy http://localhost:7890 --yolo\" \\
-  --task fix_tests \\
-  --poll 10 \\
-  --timeout 2000 \\
-  --log-file forgeflow.log
+brew install tmux  # macOS
+# or
+apt install tmux   # Linux
 ```
 
-### Features
+## AI CLI Tools
 
-- Automatically detects failing tests in output
-- Analyzes error messages to understand the cause of failures
-- Generates targeted fixes for specific test issues
-- Monitors the test execution process continuously
+Install at least one supported AI CLI:
 
-### Configuration
+| CLI | Install |
+|-----|---------|
+| Claude Code | `npm install -g @anthropic/claude-code` |
+| Gemini | `pip install google-gemini` |
+| Codex | `pip install openai-codex` |
 
-The fix tests task can be configured to work with different testing frameworks and has default configurations for common test runners.
+## Long-Running Tasks
 
-## Improve Coverage Task
-
-The Improve Coverage task works to increase test coverage to a target percentage by monitoring coverage reports and generating additional test cases.
-
-### Usage
+To prevent Mac from sleeping during long tasks:
 
 ```bash
-forgeflow \\
-  --session my_session \\
-  --workdir \"/path/to/your/project\" \\
-  --ai-cmd \"qwen --proxy http://localhost:7890 --yolo\" \\
-  --task improve_coverage \\
-  --poll 10 \\
-  --timeout 2000 \\
-  --log-file forgeflow.log
+caffeinate forgeflow --session my_session --workdir "/path/to/project" --ai-cmd "claude"
 ```
 
-### Features
-
-- Monitors code coverage reports
-- Identifies under-tested code sections
-- Generates test cases to improve overall coverage
-- Works towards a configurable coverage target
-
-### Configuration
-
-This task can be configured with a target coverage percentage and other parameters to customize its behavior for different projects.
-
-## Creating Custom Tasks
-
-While the built-in tasks cover common use cases, you can also create custom tasks by defining new task classes in the `src/forgeflow/tasks/` directory or by using the project-specific rule system.
-
-### Custom Task Structure
-
-Custom tasks typically include:
-
-1. A task class that inherits from the base task class
-2. Task-specific rule configurations
-3. Custom logic for monitoring and responding to specific conditions
-4. Configuration file support for customization
-
-## Using Task Configurations
-
-Task configurations are stored in the `src/forgeflow/tasks/configs/` directory with the following structure:
-
-- `task_planner_config.json` - Configuration for the task planner
-- `fix_tests_config.json` - Configuration for the test fixing task
-- `improve_coverage_config.json` - Configuration for the coverage improvement task
-
-### Configuration Options
-
-Each task configuration file can include:
-
-- Task-specific parameters
-- Rule configurations
-- Timeout settings
-- Output processing rules
-- Project-specific settings
-
-## Combining Tasks with Projects
-
-Tasks can be combined with project-specific rules for maximum customization:
+## Running
 
 ```bash
-forgeflow \\
-  --session my_session \\
-  --workdir \"/path/to/your/project\" \\
-  --ai-cmd \"qwen --proxy http://localhost:7890 --yolo\" \\
-  --task fix_tests \\
-  --project myproject \\
-  --poll 10 \\
-  --timeout 2000 \\
-  --log-file forgeflow.log
+forgeflow --session my_session --workdir "/path/to/project" --ai-cmd "claude --dangerously-skip-permissions" --cli-type claude_code
 ```
 
-This combination allows you to use a specialized task type with project-specific rules and configurations.
+Or with `uv run`:
 
-## Task Monitoring
+```bash
+uv run forgeflow --session my_session --workdir "/path/to/project" --ai-cmd "claude"
+```
 
-All tasks provide detailed monitoring capabilities:
+## Documentation Site
 
-- Real-time status updates
-- Progress tracking
-- Error detection and recovery
-- Performance metrics
-- Notification when tasks complete or stall
+```bash
+cd documentation
+npm install
+npm run start     # development
+npm run build     # production build
+npm run serve     # serve production build
+```
 
-The task system in ForgeFlow provides a powerful way to automate complex programming activities with minimal manual intervention.
+For full CLI reference, see [specifications/cli_reference.md](../specifications/cli_reference.md).
