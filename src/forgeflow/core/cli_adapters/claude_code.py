@@ -18,7 +18,7 @@ class ClaudeCodeCLIAdapter(CLIAdapter):
 
     # Stability detection constants
     STABILITY_WINDOW_LINES = 100
-    STABILITY_THRESHOLD = 5
+    STABILITY_THRESHOLD = 3
     PROCESSING_MARKERS = ("⏺", "✻")
 
     def __init__(self) -> None:
@@ -28,8 +28,8 @@ class ClaudeCodeCLIAdapter(CLIAdapter):
         self._last_100_lines: str = ""
 
     def _find_prompt_line(self, lines: list[str]) -> int | None:
-        for i, line in enumerate(lines):
-            if line.startswith(PROMPT_LINE_CHAR):
+        for i in range(len(lines) - 1, -1, -1):
+            if lines[i].startswith(PROMPT_LINE_CHAR):
                 return i
         return None
 
@@ -77,7 +77,11 @@ class ClaudeCodeCLIAdapter(CLIAdapter):
         return True
 
     def _extract_above_prompt(self, output: str) -> str:
-        return output.split(PROMPT_LINE_CHAR)[0] if PROMPT_LINE_CHAR in output else output
+        lines = output.splitlines()
+        idx = self._find_prompt_line(lines)
+        if idx is not None:
+            return "\n".join(lines[:idx])
+        return output
 
     def is_ai_cli_exist(self, output: str) -> bool:
         if not output:
