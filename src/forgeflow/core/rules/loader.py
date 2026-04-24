@@ -9,6 +9,7 @@ from ..utils import (
     _find_rule_file,
     _get_user_custom_rules_projects_dir,
     _load_module_from_file,
+    build_function_names,
 )
 from .base import Rule, build_default_rules
 
@@ -78,7 +79,7 @@ def get_task_rules(task_name: str) -> list[Rule] | None:
     custom_rules_builder = load_custom_task_rules(task_name)
     if custom_rules_builder:
         try:
-            from .task_rules import load_task_config
+            from ..task_rules import load_task_config
 
             config = load_task_config(task_name)
 
@@ -92,7 +93,7 @@ def get_task_rules(task_name: str) -> list[Rule] | None:
     rules_builder = get_task_rules_builder(task_name)
     if rules_builder:
         try:
-            from .task_rules import load_task_config
+            from ..task_rules import load_task_config
 
             config = load_task_config(task_name)
 

@@ -13,12 +13,12 @@ pytest -q
 pytest_status=$?
 
 echo "Running MyPy type check..."
-mypy --config-file mypy.ini forgeflow
+mypy --config-file mypy.ini src/forgeflow
 mypy_status=$?
 
 echo "Running Bandit security check..."
 if command -v bandit >/dev/null 2>&1; then
-    bandit --configfile .bandit -r forgeflow
+    bandit --configfile .bandit -r src/forgeflow
     bandit_status=$?
 else
     echo "bandit not installed, skipping"
@@ -27,7 +27,7 @@ fi
 
 echo "Running Radon complexity check..."
 if command -v radon >/dev/null 2>&1; then
-    radon cc forgeflow -a -s
+    radon cc src/forgeflow -a -s
     radon_status=$?
 else
     echo "radon not installed, skipping"
@@ -36,7 +36,7 @@ fi
 
 echo "Running Flake8 bug check..."
 if command -v flake8 >/dev/null 2>&1; then
-    flake8 forgeflow --select B --ignore B018,B019
+    flake8 src/forgeflow --select B --ignore B018,B019
     flake8_status=$?
 else
     echo "flake8 not installed, skipping"

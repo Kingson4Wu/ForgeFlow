@@ -148,7 +148,7 @@ def _build_claude_code_rules() -> list[Rule]:
         return []
 
 
-_POST_PROCESSORS = {}
+_POST_PROCESSORS: dict[str, CommandPostProcessor | None] = {}
 
 
 def _init_post_processors() -> dict[str, CommandPostProcessor | None]:

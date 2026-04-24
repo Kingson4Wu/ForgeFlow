@@ -13,6 +13,7 @@ from .utils import (
     _get_pkg_task_configs_dir,
     _get_user_custom_rules_tasks_dir,
     _load_module_from_file,
+    build_function_names,
 )
 
 logger = logging.getLogger("forgeflow")
