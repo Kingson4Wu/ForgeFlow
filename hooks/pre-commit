@@ -3,6 +3,11 @@
 
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 
+# Activate venv so tools use the project's Python version
+if [ -f ".venv/bin/activate" ]; then
+    . .venv/bin/activate
+fi
+
 black .
 ruff check . --fix
 
