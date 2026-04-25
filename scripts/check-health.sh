@@ -50,10 +50,10 @@ fi
 
 echo "Running Docusaurus build check..."
 if [ -f "documentation/package.json" ] && command -v npm >/dev/null 2>&1; then
-    (cd documentation && npm run build >/dev/null 2>&1)
+    (cd documentation && npm install >/dev/null && npm run build >/dev/null)
     docs_status=$?
     if [ $docs_status -ne 0 ]; then
-        echo "Docusaurus build failed — check for broken links!"
+        echo "Docusaurus build failed — check for broken links! Run 'cd documentation && npm install && npm run build' locally to see details."
     fi
 else
     echo "documentation/package.json or npm not found, skipping docs build"
