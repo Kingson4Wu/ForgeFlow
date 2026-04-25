@@ -69,4 +69,4 @@ npm run build     # production build
 npm run serve     # serve production build
 ```
 
-For full CLI reference, see [specifications/cli_reference.md](../specifications/cli_reference.md).
+Run `forgeflow --help` for the full CLI reference.

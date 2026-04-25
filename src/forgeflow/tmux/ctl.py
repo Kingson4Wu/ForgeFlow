@@ -31,7 +31,7 @@ class TmuxCtl:
         try:
             # nosec B603
             subprocess.run(["tmux", "-V"], capture_output=True, text=True, check=True)
-        except (subprocess.CalledProcessError, FileNotFoundError, OSError) as e:
+        except (subprocess.CalledProcessError, OSError) as e:
             raise RuntimeError(
                 "tmux is required but not found. Please install tmux and ensure it is on PATH."
             ) from e
