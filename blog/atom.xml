@@ -12,8 +12,8 @@
         <id>https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation</id>
         <link href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation"/>
         <updated>2025-09-16T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[Comprehensive guide to ForgeFlow - an engineering-grade automation tool that drives AI CLI tools (Qwen, Gemini, Claude) inside tmux sessions with configurable rules.]]></summary>
-        <content type="html"><![CDATA[<p>ForgeFlow automates interactive AI CLIs (e.g., Qwen, Gemini, Claude) inside a tmux session using a clean "adapter + rules" architecture. It detects prompts and processing states, sends the right commands, and keeps going until tasks converge — with logs, extensibility, and sensible recovery behavior.</p>
+        <summary type="html"><![CDATA[Comprehensive guide to ForgeFlow - an engineering-grade automation tool that drives AI CLI tools (Gemini, Claude Code, Codex) inside tmux sessions with configurable rules.]]></summary>
+        <content type="html"><![CDATA[<p>ForgeFlow automates AI CLIs (Gemini, Claude Code, Codex) inside a tmux session using a clean "adapter + rules" architecture. It detects prompts and processing states, sends the right commands, and keeps going until tasks converge — with logs, extensibility, and sensible recovery behavior.</p>
 <!-- -->
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="this-guide-covers">This guide covers:<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#this-guide-covers" class="hash-link" aria-label="Direct link to This guide covers:" title="Direct link to This guide covers:" translate="no">​</a></h2>
 <ul>
@@ -55,21 +55,21 @@
 </li>
 <li class="">Typical run:</li>
 </ul>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">forgeflow \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--session qwen_session \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--workdir "/abs/path/to/your/project" \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--ai-cmd "qwen --proxy http://localhost:7890 --yolo" \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--cli-type qwen \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--poll 10 \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--timeout 2000 \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--log-level INFO \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--log-file forgeflow.log</span><br></div></code></pre></div></div>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">forgeflow \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--session my_session \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--workdir "/abs/path/to/your/project" \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--ai-cmd "claude --dangerously-skip-permissions" \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--cli-type claude_code \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--poll 10 \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--timeout 2000 \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--log-level INFO \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--log-file forgeflow.log</span><br></div></code></pre></div></div>
 <ul>
 <li class="">Switch adapters:<!-- -->
 <ul>
-<li class=""><code>--cli-type qwen</code> or <code>--cli-type gemini</code> (claude_code is a placeholder)</li>
+<li class=""><code>--cli-type gemini</code> or <code>--cli-type claude_code</code> or <code>--cli-type codex</code></li>
 </ul>
 </li>
 <li class="">Use project-specific rules:<!-- -->
 <ul>
-<li class="">Add <code>{project}_rules.py</code> or <code>{project}.py</code> in your project root or in examples/</li>
+<li class="">Place <code>{project}_rules.py</code> in <code>~/.forgeflow/user_custom_rules/projects/</code></li>
 <li class="">Run with <code>--project myproject</code></li>
 </ul>
 </li>
 </ul>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">forgeflow \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--session qwen_session \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--workdir "/abs/path/to/your/project" \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--ai-cmd "qwen --proxy http://localhost:7890 --yolo" \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--project myproject \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--cli-type qwen</span><br></div></code></pre></div></div>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">forgeflow \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--session my_session \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--workdir "/abs/path/to/your/project" \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--ai-cmd "claude" \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--project myproject \</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">--cli-type claude_code</span><br></div></code></pre></div></div>
 <ul>
 <li class="">Logging:<!-- -->
 <ul>
@@ -106,7 +106,7 @@
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="architecture-overview">Architecture Overview<a href="https://kingson4wu.github.io/ForgeFlow/blog/forgeflow-engineering-grade-automation#architecture-overview" class="hash-link" aria-label="Direct link to Architecture Overview" title="Direct link to Architecture Overview" translate="no">​</a></h2>
 <ul>
-<li class="">Core loop (<code>forgeflow/core/automation.py</code>)<!-- -->
+<li class="">Core loop (<code>src/forgeflow/core/automation.py</code>)<!-- -->
 <ul>
 <li class="">Creates/attaches tmux session</li>
 <li class="">Determines adapter by <code>--cli-type</code></li>
@@ -115,36 +115,36 @@
 <li class="">Logging level configurable; file and console outputs supported</li>
 </ul>
 </li>
-<li class="">tmux I/O (<code>forgeflow/core/tmux_ctl.py</code>)<!-- -->
+<li class="">tmux I/O (<code>src/forgeflow/core/tmux/ctl.py</code>)<!-- -->
 <ul>
 <li class="">Encapsulates tmux operations: session creation, send keys, capture pane</li>
 <li class=""><code>capture_output(include_ansi=False)</code> supports capturing raw ANSI when needed</li>
 </ul>
 </li>
-<li class="">Adapters (<code>forgeflow/core/cli_adapters/*</code>)<!-- -->
+<li class="">Adapters (<code>src/forgeflow/core/cli_adapters/*</code>)<!-- -->
 <ul>
 <li class="">Interface <code>CLIAdapter</code>:<!-- -->
 <ul>
 <li class=""><code>is_input_prompt(output)</code> -&gt; <code>bool</code></li>
 <li class=""><code>is_input_prompt_with_text(output)</code> -&gt; <code>bool</code></li>
-<li class=""><code>is_task_processing(output)</code> -&gt; <code>bool</code></li>
+<li class=""><code>is_task_processing(history)</code> -&gt; <code>bool</code></li>
 <li class=""><code>is_ai_cli_exist(output)</code> -&gt; <code>bool</code></li>
 <li class=""><code>wants_ansi()</code> -&gt; <code>bool</code> — ask automation to capture pane with ANSI codes</li>
 </ul>
 </li>
-<li class="">Implementations: <code>qwen.py</code>, <code>gemini.py</code> (claude_code placeholder present)</li>
+<li class="">Implementations: <code>gemini.py</code>, <code>claude_code.py</code>, <code>codex.py</code></li>
 <li class="">Adapter resolution via <code>get_cli_adapter(cli_type)</code></li>
 </ul>
 </li>
-<li class="">Rules (<code>forgeflow/core/rules.py</code>)<!-- -->
+<li class="">Rules (<code>src/forgeflow/core/rules/base.py</code>)<!-- -->
 <ul>
 <li class=""><code>Rule(check: Callable[[str], bool], command: str | None)</code></li>
 <li class="">Default rules and <code>next_command(output, rules)</code></li>
 </ul>
 </li>
-<li class="">Rule loader (<code>forgeflow/core/rule_loader.py</code>)<!-- -->
+<li class="">Rule loader (<code>src/forgeflow/core/rules/loader.py</code>)<!-- -->
 <ul>
-<li class="">Dynamically loads <code>{project}_rules.py</code> or <code>{project}.py</code> from workdir or examples/</li>
+<li class="">Dynamically loads <code>{project}_rules.py</code> from <code>~/.forgeflow/user_custom_rules/projects/</code></li>
 </ul>
 </li>
 </ul>
@@ -155,7 +155,7 @@
 </ul>
 <div class="language-python codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-python codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token keyword" style="color:#00009f">def</span><span class="token plain"> </span><span class="token function" style="color:#d73a49">wants_ansi</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">self</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"> </span><span class="token operator" style="color:#393A34">-</span><span class="token operator" style="color:#393A34">&gt;</span><span class="token plain"> </span><span class="token builtin">bool</span><span class="token punctuation" style="color:#393A34">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token keyword" style="color:#00009f">return</span><span class="token plain"> </span><span class="token boolean" style="color:#36acaa">True</span><br></div></code></pre></div></div>
 <ul>
-<li class="">Utilities (<code>forgeflow/core/ansi.py</code>):<!-- -->
+<li class="">Utilities (<code>src/forgeflow/core/ansi.py</code>):<!-- -->
 <ul>
 <li class=""><code>strip_ansi(text)</code> -&gt; <code>str</code> — removes all ANSI escape sequences</li>
 <li class=""><code>parse_ansi_segments(text)</code> -&gt; <code>list[Segment]</code>
