@@ -3,231 +3,145 @@
 [![Build Status](https://github.com/Kingson4Wu/ForgeFlow/workflows/CI/badge.svg)](https://github.com/Kingson4Wu/ForgeFlow/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Automatically drives AI CLI to continuously complete programming tasks within a `tmux` session.
+Automatically drives AI CLI tools to continuously complete programming tasks within a `tmux` session.
 
 ## Features
 
-- **Robust Session Management**: Automatically creates/reuses `tmux` sessions, separating text from enter when pasting commands.
-- **Configurable Rule System**: Rules are evaluated in order, with priority matching taking effect, and custom rules are supported.
-- **Multi-CLI Support**: Supports different AI CLI tools through an adapter pattern (currently supports Gemini as the default, with a placeholder for Claude Code).
-- **Reliable Input Detection**: Regular expressions detect "input prompts" and "existing text in input box" specific to each CLI tool.
-- **Timeout Recovery Strategy**: Long periods without input prompt → send `ESC` → backspace clear → `continue`.
-- **Logging and Debugging**: Dual channel file + console logging with timestamps.
-- **Task Monitoring**: Monitors task processing status and sends desktop notifications when tasks stop processing (macOS notifications supported).
+- **Robust Session Management**: Automatically creates/reuses `tmux` sessions
+- **Multi-CLI Support**: Gemini, Claude Code, Codex — through adapter pattern
+- **Configurable Rule System**: Rules evaluated in order with priority matching; custom rules supported
+- **Timeout Recovery**: Input prompt timeout → `ESC` → backspace clear → `continue`
+- **Logging**: Dual channel file + console with timestamps
+- **Task Monitoring**: Desktop notifications when task processing stalls (macOS supported)
+- **Monitor-Only Mode**: Watch existing sessions without sending commands
 
-## Documentation
+## Prerequisites
 
-Detailed documentation is available in multiple formats:
+- Python >= 3.13
+- [tmux](https://github.com/tmux/tmux) installed and on PATH
+- An AI CLI tool: [claude](https://docs.anthropic.com/en/docs/claude-code/overview), [gemini-cli](https://ai.google.dev/gemini-api/docs/cli), or similar
 
-- **[Docusaurus Site](documentation/)** - Modern documentation website with blog, tutorials, and guides
-  - Run locally: `cd documentation && npm run start`
-- **[docs/](docs/)** - Additional documentation files:
-  - [Quick Start Guide for Mac Users](docs/quick_start_mac.md)
-  - [Task Mode Configuration](docs/task_mode.md)
-  - [Technology Stack](docs/tech.md)
-
-## Quick Start
-
-### Clone and Set Up the Project
-
-To clone and set up the project, follow these steps:
-
-1. Clone the repository locally:
-   ```bash
-   git clone https://github.com/Kingson4Wu/ForgeFlow
-   cd ForgeFlow
-   ```
-
-### Installation
-
-#### Install with pip
-
-You can quickly install the project dependencies using pip:
+## Installation
 
 ```bash
-pip install -e .
+git clone https://github.com/Kingson4Wu/ForgeFlow
+cd ForgeFlow
+uv sync
 ```
 
-#### Using Conda Environment
+## Running
 
-If you prefer to use a Conda environment, you can set it up with the following steps:
-
-1. Create a new Conda environment:
-   ```bash
-   conda create -n forgeflow python=3.13
-   ```
-
-2. Activate the Conda environment:
-   ```bash
-   conda activate forgeflow
-   ```
-
-3. Install project dependencies:
-   ```bash
-   pip install -e .
-   ```
-
-### Running
-
-After installation, you can run ForgeFlow with the following command:
+Execute with `uv run` from the project directory (no activation needed):
 
 ```bash
-forgeflow \
-  --session qwen_session \
-  --workdir "/absolute/path/to/your/project" \
-  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
-  --poll 10 \
-  --timeout 2000 \
-  --log-file forgeflow.log
+uv run forgeflow --session my_session --workdir "/path/to/project" --ai-cmd "claude --dangerously-skip-permissions" --cli-type claude_code
 ```
 
-Note: By default, ForgeFlow uses the Gemini CLI adapter. To use a different adapter, specify the `--cli-type` parameter.
-
-To use custom rules for a specific project, add the `--project` parameter:
+Or activate the environment first:
 
 ```bash
-forgeflow \
-  --session qwen_session \
-  --workdir "/absolute/path/to/your/project" \
-  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
-  --project myproject \
-  --poll 10 \
-  --timeout 2000 \
-  --log-file forgeflow.log
+source .venv/bin/activate
+forgeflow --session my_session --workdir "/path/to/project" --ai-cmd "claude --dangerously-skip-permissions" --cli-type claude_code
 ```
 
-To use predefined rules for a specific task type, add the `--task` parameter:
+### CLI Types
+
+| CLI Type | Example `--ai-cmd` |
+|---------|-------------------|
+| `claude_code` (default) | `claude --dangerously-skip-permissions` |
+| `gemini` | `gemini --yolo` |
+| `codex` | `codex --yolo` |
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--session` | (required) | tmux session name |
+| `--workdir` | (required in normal mode) | Working directory |
+| `--ai-cmd` | (required in normal mode) | AI CLI command to start |
+| `--cli-type` | `claude_code` | AI CLI adapter type |
+| `--poll` | `10` | Poll interval (seconds) |
+| `--timeout` | `1000` | Input prompt timeout (seconds) |
+| `--log-file` | `forgeflow.log` | Log file path |
+| `--log-level` | `INFO` | Logging level |
+| `--project` | — | Project name for custom rules |
+| `--task` | — | Task type (`fix_tests`, `task_planner`, `improve_coverage`) |
+| `--monitor-only` | — | Monitor mode (no commands sent) |
+
+### Custom Rules
+
+Place `{project_name}_rules.py` in `~/.forgeflow/user_custom_rules/projects/`:
 
 ```bash
-forgeflow \
-  --session qwen_session \
-  --workdir "/absolute/path/to/your/project" \
-  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
-  --task fix_tests \
-  --poll 10 \
-  --timeout 2000 \
-  --log-file forgeflow.log
+uv run forgeflow --project myproject ...
 ```
 
-To specify a different AI CLI tool, use the `--cli-type` parameter (default is "gemini"):
+### Task Modes
 
 ```bash
-forgeflow \
-  --session claude_session \
-  --workdir "/absolute/path/to/your/project" \
-  --ai-cmd "claude" \
-  --cli-type claude_code \
-  --poll 10 \
-  --timeout 2000 \
-  --log-file forgeflow.log
-```
-
-For example, to use the built-in web development rules:
-
-```bash
-forgeflow \
-  --session qwen_session \
-  --workdir "/absolute/path/to/your/project" \
-  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \
-  --project web_project \
-  --poll 10 \
-  --timeout 2000 \
-  --log-file forgeflow.log
+uv run forgeflow --task fix_tests ...
+uv run forgeflow --task task_planner ...
+uv run forgeflow --task improve_coverage ...
 ```
 
 ### Monitor-Only Mode
 
-ForgeFlow also supports a monitor-only mode that watches an existing tmux session and sends desktop notifications when tasks stop processing, without sending any commands to the AI CLI. This is useful for monitoring tasks while you work on other things.
-
-To run in monitor-only mode:
+Watch an existing session without sending commands:
 
 ```bash
-forgeflow \\
-  --session qwen_session \\
-  --monitor-only \\
-  --poll 10 \\
-  --log-file forgeflow.log
+uv run forgeflow --session my_session --monitor-only --cli-type claude_code --poll 10
 ```
 
-Note: In monitor-only mode, the `--ai-cmd` and `--workdir` parameters are not required since ForgeFlow will not be starting or controlling the AI CLI, only monitoring its status.
+## Exiting
 
-By default, ForgeFlow uses the Gemini CLI adapter to monitor task processing status. If you're monitoring a session that's using a different AI CLI tool, you should specify the appropriate `--cli-type` parameter:
-
-```bash
-forgeflow \\
-  --session claude_session \\
-  --monitor-only \\
-  --cli-type claude_code \\
-  --poll 10 \\
-  --log-file forgeflow.log
-```
-
-### Running the Script Directly (without installation)
-
-If you want to run the script directly without installing the package, you can use the following command:
-
-```bash
-python -m forgeflow.cli \\
-  --session qwen_session \\
-  --workdir "/absolute/path/to/your/project" \\
-  --ai-cmd "qwen --proxy http://localhost:7890 --yolo" \\
-  --poll 10 \\
-  --timeout 2000 \\
-  --log-file forgeflow.log
-```
-
-Note: When using this method, make sure you're running the command in the project's root directory.
-
-### Running in Monitor-Only Mode (Direct Script)
-
-To run the monitor-only mode directly without installation:
-
-```bash
-python -m forgeflow.cli 
-  --session qwen_session 
-  --monitor-only 
-  --poll 10 
-  --log-file forgeflow.log
-```
-
-Note: When using monitor-only mode, if you're monitoring a session that's using a different AI CLI tool than the default Gemini, you should specify the appropriate `--cli-type` parameter:
-
-```bash
-python -m forgeflow.cli 
-  --session claude_session 
-  --monitor-only 
-  --cli-type claude_code 
-  --poll 10 
-  --log-file forgeflow.log
-```
-
-### Exiting
-
-* Normal exit: Automatically exits when final verification is detected.
-* Force stop: `Ctrl-C` (the script will exit gracefully without closing your `tmux` session).
+- **Normal exit**: Automatically exits when final verification is detected
+- **Force stop**: `Ctrl-C` (exits gracefully, tmux session preserved)
 
 ## Project Structure
 
 ```
 ForgeFlow/
-├── forgeflow/           # Main Python package
-│   ├── cli.py           # Command-line interface
-│   ├── core/            # Core automation logic
-│   │   ├── automation.py
-│   │   ├── tmux_ctl.py
-│   │   ├── rules.py
-│   │   ├── rule_loader.py
-│   │   ├── task_rules.py
-│   │   ├── notifier.py
-│   │   └── cli_adapters/  # Adapter pattern for different AI CLIs
-│   └── tasks/           # Task mode implementations
-├── documentation/       # Docusaurus documentation site
-├── docs/               # Additional documentation
-├── user_custom_rules/  # Custom rule definitions
-├── examples/           # Example configurations
-├── tests/              # Test suite
-└── scripts/            # Utility scripts
+├── src/forgeflow/           # Main Python package
+│   ├── cli.py               # CLI entry point
+│   ├── config.py            # Unified configuration (Pydantic)
+│   ├── state.py             # UnchangedTracker — idle detection
+│   ├── ansi.py              # ANSI escape code parsing
+│   ├── notifier.py          # Desktop notifications
+│   ├── utils.py             # Path/module loading helpers
+│   ├── automation/          # Automation core
+│   │   ├── loop.py          # Main automation loop
+│   │   ├── monitor.py       # Monitor-only mode
+│   │   └── recovery.py      # Timeout recovery
+│   ├── adapters/            # CLI adapter implementations
+│   │   ├── base.py          # CLIAdapter base class
+│   │   ├── registry.py      # AdapterRegistry
+│   │   ├── claude_code.py
+│   │   ├── gemini.py
+│   │   └── codex.py
+│   ├── rules/               # Rule system
+│   │   ├── base.py          # Rule, Command, RuleEngine
+│   │   ├── loader.py        # Rule loading
+│   │   └── builtin/         # CLI-specific rule sets
+│   │       ├── claude_code_rules.py
+│   │       ├── gemini_rules.py
+│   │       └── codex_rules.py
+│   ├── tmux/                # tmux session management
+│   │   ├── ctl.py           # TmuxCtl class
+│   │   └── window.py        # WindowManager (Codex sizing)
+│   └── tasks/               # Built-in task implementations
+│       ├── task_planner_task.py
+│       ├── fix_tests_task.py
+│       └── improve_coverage_task.py
+├── tests/                   # Test suite (mirrors src/ structure)
+├── documentation/           # Docusaurus docs site
+├── specifications/          # Detailed specifications
+└── scripts/                 # Utility scripts
 ```
+
+## Documentation
+
+- **[specifications/](specifications/)** — Quick start, CLI reference, task modes, rule system
+- **[documentation/](documentation/)** — Docusaurus site (`npm run start` to preview)
 
 ## License
 

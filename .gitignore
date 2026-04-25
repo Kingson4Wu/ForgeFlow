@@ -13,3 +13,4 @@ __pycache__/
 .py-spy_cache/
 forgeflow.prof
 .coverage
+docs/superpowers/

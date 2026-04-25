@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo $ARGUMENTS | jq -r '.tool_input.command' | grep -qE '^git (commit|push|merge)' && (echo 'Running pre-commit health checks...' && ./scripts/check-health.sh > /tmp/health-check.log 2>&1 && echo 'Health checks passed' || (echo 'Health checks FAILED:'; tail -10 /tmp/health-check.log; exit 1)) || true",
+            "if": "Bash(git *)",
+            "timeout": 300,
+            "statusMessage": "Running health checks..."
+          }
+        ]
+      }
+    ]
+  }
+}

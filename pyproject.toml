@@ -30,7 +30,7 @@ dev = [
 forgeflow = "forgeflow.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["forgeflow"]
+packages = ["src/forgeflow"]
 
 [tool.black]
 line-length = 100
@@ -42,6 +42,10 @@ line-length = 100
 [tool.ruff.lint]
 ignore = ["E501", "F821"]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.pyright]
+pythonVersion = "3.13"
+extraPaths = ["src"]
 
 [tool.mypy]
 python_version = "3.13"

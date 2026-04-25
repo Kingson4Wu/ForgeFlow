@@ -8,7 +8,7 @@ const FeatureList = [
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        ForgeFlow automates interactive AI CLI tools (Qwen, Gemini, Claude) inside tmux sessions,
+        ForgeFlow automates AI CLI tools (Gemini, Claude Code, Codex) inside tmux sessions,
         continuously driving programming tasks without manual intervention.
       </>
     ),

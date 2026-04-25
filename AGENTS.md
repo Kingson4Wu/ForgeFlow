@@ -10,27 +10,27 @@ ForgeFlow is a Python application that automatically drives AI CLI tools to cont
 
 ### Core Components
 
-1. **TmuxCtl (`forgeflow/core/tmux_ctl.py`)**:
+1. **TmuxCtl (`src/forgeflow/core/tmux_ctl.py`)**:
    - Manages tmux sessions for interacting with AI CLI tools
    - Provides methods for sending text, enter, escape, and backspace commands
    - Handles session creation and output capture
 
-2. **Automation Engine (`forgeflow/core/automation.py`)**:
+2. **Automation Engine (`src/forgeflow/core/automation.py`)**:
    - Core automation loop that drives the interaction with AI CLI tools
    - Implements timeout recovery strategies
    - Manages task processing states
 
-3. **Rule System (`forgeflow/core/rules.py`, `forgeflow/core/task_rules.py`)**:
+3. **Rule System (`src/forgeflow/core/rules.py`, `src/forgeflow/core/task_rules.py`)**:
    - Configurable rule evaluation system
    - Supports both general rules and task-specific rules
    - Rules are evaluated in order with priority matching
 
-4. **Rule Loader (`forgeflow/core/rule_loader.py`)**:
+4. **Rule Loader (`src/forgeflow/core/rule_loader.py`)**:
    - Loads custom rules from various sources
    - Resolves rule files from different directories
    - Supports different types of rule definitions
 
-5. **CLI Adapters (`forgeflow/core/cli_adapters/`)**:
+5. **CLI Adapters (`src/forgeflow/core/cli_adapters/`)**:
    - Adapter pattern implementation for supporting different AI CLI tools
    - Includes implementations for Gemini, Codex, and Claude Code
    - Provides interface for detecting input prompts and task processing states
@@ -39,15 +39,15 @@ ForgeFlow is a Python application that automatically drives AI CLI tools to cont
 
 The project implements a task-based system with the following components:
 
-1. **Task Planner (`forgeflow/tasks/task_planner_task.py`)**:
+1. **Task Planner (`src/forgeflow/tasks/task_planner_task.py`)**:
    - Follows a TODO list to complete tasks in order
    - Configurable through JSON configuration files
 
-2. **Fix Tests Task (`forgeflow/tasks/fix_tests_task.py`)**:
+2. **Fix Tests Task (`src/forgeflow/tasks/fix_tests_task.py`)**:
    - Automatically fixes failing test cases
    - Monitors test output and generates fix commands
 
-3. **Improve Coverage Task (`forgeflow/tasks/improve_coverage_task.py`)**:
+3. **Improve Coverage Task (`src/forgeflow/tasks/improve_coverage_task.py`)**:
    - Improves test coverage to a target percentage
    - Monitors coverage reports and generates test cases
 
@@ -55,12 +55,12 @@ The project implements a task-based system with the following components:
 
 1. **Adapter Pattern**:
    - Used for supporting different AI CLI tools
-   - Defined in `forgeflow/core/cli_adapters/base.py`
-   - Implementations in `forgeflow/core/cli_adapters/`
+   - Defined in `src/forgeflow/core/cli_adapters/base.py`
+   - Implementations in `src/forgeflow/core/cli_adapters/`
 
 2. **Factory Pattern**:
    - Used for creating CLI adapters
-   - Implemented in `forgeflow/core/cli_adapters/factory.py`
+   - Implemented in `src/forgeflow/core/cli_adapters/factory.py`
 
 3. **Rule-Based System**:
    - Configurable rules that are evaluated in order
@@ -70,7 +70,7 @@ The project implements a task-based system with the following components:
 ## Code Structure
 
 ```
-forgeflow/
+src/forgeflow/
 ├── cli.py                 # Command-line interface
 ├── core/
 │   ├── tmux_ctl.py        # Tmux session management
@@ -132,7 +132,7 @@ The system searches for rule files in the following order:
 
 ### Task Configuration
 
-Tasks can be configured through JSON files located in `forgeflow/tasks/configs/`:
+Tasks can be configured through JSON files located in `src/forgeflow/tasks/configs/`:
 - `task_planner_config.json`: Configuration for task planner
 - `improve_coverage_config.json`: Configuration for coverage improvement
 
@@ -200,7 +200,7 @@ Task configurations are JSON files with:
 
 ### ANSI Parsing
 
-The project includes ANSI escape code parsing in `forgeflow/core/ansi.py` for:
+The project includes ANSI escape code parsing in `src/forgeflow/core/ansi.py` for:
 - Stripping ANSI codes from output
 - Parsing ANSI segments for styling
 - Handling color and formatting information

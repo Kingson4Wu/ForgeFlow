@@ -1,7 +1,9 @@
-# Ensure the repository root is on sys.path for test imports
+# Ensure the repository root and src/ are on sys.path for test imports
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+SRC = ROOT / "src"
+for p in [str(ROOT), str(SRC)]:
+    if p not in sys.path:
+        sys.path.insert(0, p)

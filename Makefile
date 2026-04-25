@@ -10,20 +10,20 @@ test:
 	python -m pytest -q
 
 type-check:
-	mypy forgeflow tests
+	mypy src/forgeflow tests
 
 security-check:
-	bandit -r forgeflow
+	bandit -r src/forgeflow
 
 complexity-check:
-	radon cc forgeflow -a -s
+	radon cc src/forgeflow -a -s
 
 duplication-check:
-	flake8 forgeflow --select B --ignore B018,B019
+	flake8 src/forgeflow --select B --ignore B018,B019
 
 profile:
-	python -m cProfile -o forgeflow.prof -m forgeflow.cli --help
+	python -m cProfile -o forgeflow.prof -m src.forgeflow.cli --help
 
 run:
-	python -m forgeflow.cli
+	python -m src.forgeflow.cli
 	sh scripts/setup-hooks.sh
