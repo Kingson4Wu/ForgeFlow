@@ -48,8 +48,20 @@ else
     flake8_status=0
 fi
 
+echo "Running Docusaurus build check..."
+if [ -f "documentation/package.json" ] && command -v npm >/dev/null 2>&1; then
+    (cd documentation && npm run build >/dev/null 2>&1)
+    docs_status=$?
+    if [ $docs_status -ne 0 ]; then
+        echo "Docusaurus build failed — check for broken links!"
+    fi
+else
+    echo "documentation/package.json or npm not found, skipping docs build"
+    docs_status=0
+fi
+
 # Check if any check failed
-if [ $ruff_status -ne 0 ] || [ $black_status -ne 0 ] || [ $pytest_status -ne 0 ] || [ $mypy_status -ne 0 ] || [ $bandit_status -ne 0 ] || [ $radon_status -ne 0 ] || [ $flake8_status -ne 0 ]; then
+if [ $ruff_status -ne 0 ] || [ $black_status -ne 0 ] || [ $pytest_status -ne 0 ] || [ $mypy_status -ne 0 ] || [ $bandit_status -ne 0 ] || [ $radon_status -ne 0 ] || [ $flake8_status -ne 0 ] || [ $docs_status -ne 0 ]; then
     echo "Some health checks failed!"
     exit 1
 else

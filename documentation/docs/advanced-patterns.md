@@ -44,4 +44,4 @@ Each CLI type has corresponding rules in `core/cli_types/`:
 - `core/cli_types/claude_code_rules.py`
 - `core/cli_types/codex_rules.py`
 
-See [specifications/rule_system.md](../specifications/rule_system.md) for how rules are loaded.
+Rules are loaded via `forgeflow.rules.loader.get_rules()`, which combines CLI-type rules from `rules/builtin/` with task rules and custom user rules.
