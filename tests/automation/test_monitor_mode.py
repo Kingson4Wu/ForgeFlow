@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
-from forgeflow.core.automation.loop import Config, run_monitor_mode
+from forgeflow.automation.monitor import run_monitor_mode
+from forgeflow.config import Config
 
 
 class MockTmuxCtl:
@@ -52,7 +53,8 @@ def test_monitor_mode_no_initial_notification():
         session="test_session",
         workdir="",
         ai_cmd="",
-        poll_interval=0.1,  # Short poll interval for faster testing
+        poll_interval=1,  # Short poll interval for faster testing
+        cli_type="gemini",
     )
 
     # Mock tmux that indicates no processing
@@ -62,12 +64,10 @@ def test_monitor_mode_no_initial_notification():
     cli_adapter = MockCLIAdapter(processing_outputs=[])
 
     # Mock the send_notification function to track calls
-    with patch("forgeflow.core.tmux.notifier.send_notification"):
-        with patch("forgeflow.core.tmux.ctl.TmuxCtl") as mock_tmux_ctl:
-            with patch(
-                "forgeflow.core.cli_adapters.factory.get_cli_adapter"
-            ) as mock_get_cli_adapter:
-                with patch("forgeflow.core.automation.loop.setup_logger"):
+    with patch("forgeflow.notifier.send_notification"):
+        with patch("forgeflow.tmux.ctl.TmuxCtl") as mock_tmux_ctl:
+            with patch("forgeflow.automation.monitor.get_adapter") as mock_get_cli_adapter:
+                with patch("forgeflow.automation.monitor.logging.getLogger"):
                     mock_tmux_ctl.return_value = tmux
                     mock_get_cli_adapter.return_value = cli_adapter
 
@@ -97,7 +97,8 @@ def test_monitor_mode_notification_on_task_stop():
         session="test_session",
         workdir="",
         ai_cmd="",
-        poll_interval=0.1,  # Short poll interval for faster testing
+        poll_interval=1,  # Short poll interval for faster testing
+        cli_type="gemini",
     )
 
     # Mock tmux that will change from processing to not processing
@@ -107,27 +108,24 @@ def test_monitor_mode_notification_on_task_stop():
     cli_adapter = MockCLIAdapter(processing_outputs=["processing"])
 
     # Mock the send_notification function to track calls
-    with patch("forgeflow.core.tmux.notifier.send_notification"):
-        with patch("forgeflow.core.tmux.ctl.TmuxCtl") as mock_tmux_ctl:
-            with patch(
-                "forgeflow.core.cli_adapters.factory.get_cli_adapter"
-            ) as mock_get_cli_adapter:
-                with patch("forgeflow.core.automation.loop.setup_logger"):
+    with patch("forgeflow.notifier.send_notification"):
+        with patch("forgeflow.tmux.ctl.TmuxCtl") as mock_tmux_ctl:
+            with patch("forgeflow.automation.monitor.get_adapter") as mock_get_cli_adapter:
+                with patch("forgeflow.automation.monitor.logging.getLogger"):
                     mock_tmux_ctl.return_value = tmux
                     mock_get_cli_adapter.return_value = cli_adapter
 
                     # Mock time.sleep to control the flow
                     with patch("time.sleep") as mock_sleep:
-                        call_count = 0
+                        call_count = [0]
 
                         def sleep_side_effect(*args, **kwargs):
-                            nonlocal call_count
-                            call_count += 1
+                            call_count[0] += 1
 
                             # First, have task processing
-                            if call_count <= 3:  # First 3 iterations - task processing
+                            if call_count[0] <= 3:  # First 3 iterations - task processing
                                 tmux.set_output_sequence(["processing"])
-                            elif call_count <= 10:  # Next iterations - task stopped
+                            elif call_count[0] <= 10:  # Next iterations - task stopped
                                 # Change to non-processing after 3 iterations
                                 tmux.set_output_sequence(["not processing"])
                                 cli_adapter.processing_outputs = [
@@ -135,7 +133,7 @@ def test_monitor_mode_notification_on_task_stop():
                                 ]  # Still looking for "processing"
 
                                 # After 3 more iterations, raise KeyboardInterrupt
-                                if call_count >= 6:
+                                if call_count[0] >= 6:
                                     raise KeyboardInterrupt()
                             else:
                                 raise KeyboardInterrupt()
@@ -170,7 +168,8 @@ def test_monitor_mode_no_notification_when_never_running():
         session="test_session",
         workdir="",
         ai_cmd="",
-        poll_interval=0.1,  # Short poll interval for faster testing
+        poll_interval=1,  # Short poll interval for faster testing
+        cli_type="gemini",
     )
 
     # Mock tmux that indicates no processing from the start
@@ -180,24 +179,21 @@ def test_monitor_mode_no_notification_when_never_running():
     cli_adapter = MockCLIAdapter(processing_outputs=[])
 
     # Mock the send_notification function to track calls
-    with patch("forgeflow.core.tmux.notifier.send_notification"):
-        with patch("forgeflow.core.tmux.ctl.TmuxCtl") as mock_tmux_ctl:
-            with patch(
-                "forgeflow.core.cli_adapters.factory.get_cli_adapter"
-            ) as mock_get_cli_adapter:
-                with patch("forgeflow.core.automation.loop.setup_logger"):
+    with patch("forgeflow.notifier.send_notification"):
+        with patch("forgeflow.tmux.ctl.TmuxCtl") as mock_tmux_ctl:
+            with patch("forgeflow.automation.monitor.get_adapter") as mock_get_cli_adapter:
+                with patch("forgeflow.automation.monitor.logging.getLogger"):
                     mock_tmux_ctl.return_value = tmux
                     mock_get_cli_adapter.return_value = cli_adapter
 
                     # Mock time.sleep to control iterations
                     with patch("time.sleep") as mock_sleep:
-                        call_count = 0
+                        call_count = [0]
 
                         def sleep_side_effect(*args, **kwargs):
-                            nonlocal call_count
-                            call_count += 1
+                            call_count[0] += 1
                             # After enough iterations to exceed the threshold, raise KeyboardInterrupt
-                            if call_count >= 5:
+                            if call_count[0] >= 5:
                                 raise KeyboardInterrupt()
                             return None
 
@@ -217,7 +213,8 @@ def test_monitor_mode_threshold_check():
         session="test_session",
         workdir="",
         ai_cmd="",
-        poll_interval=0.1,  # Short poll interval for faster testing
+        poll_interval=1,  # Short poll interval for faster testing
+        cli_type="gemini",
     )
 
     # Mock tmux that will transition from processing to not processing
@@ -227,37 +224,34 @@ def test_monitor_mode_threshold_check():
     cli_adapter = MockCLIAdapter(processing_outputs=["processing"])
 
     # Mock the send_notification function to track calls
-    with patch("forgeflow.core.tmux.notifier.send_notification"):
-        with patch("forgeflow.core.tmux.ctl.TmuxCtl") as mock_tmux_ctl:
-            with patch(
-                "forgeflow.core.cli_adapters.factory.get_cli_adapter"
-            ) as mock_get_cli_adapter:
-                with patch("forgeflow.core.automation.loop.setup_logger"):
+    with patch("forgeflow.notifier.send_notification"):
+        with patch("forgeflow.tmux.ctl.TmuxCtl") as mock_tmux_ctl:
+            with patch("forgeflow.automation.monitor.get_adapter") as mock_get_cli_adapter:
+                with patch("forgeflow.automation.monitor.logging.getLogger"):
                     mock_tmux_ctl.return_value = tmux
                     mock_get_cli_adapter.return_value = cli_adapter
 
                     # Mock time.sleep to control the flow
                     with patch("time.sleep") as mock_sleep:
-                        call_count = 0
+                        call_count = [0]
 
                         def sleep_side_effect(*args, **kwargs):
-                            nonlocal call_count
-                            call_count += 1
+                            call_count[0] += 1
 
                             # First iterations - task processing
-                            if call_count <= 3:
+                            if call_count[0] <= 3:
                                 tmux.set_output_sequence(["processing"])
                             # Next 2 iterations - task not processing (not enough to trigger notification)
-                            elif call_count <= 5:
+                            elif call_count[0] <= 5:
                                 tmux.set_output_sequence(["not processing"])
                             # Then back to processing
-                            elif call_count <= 7:
+                            elif call_count[0] <= 7:
                                 tmux.set_output_sequence(["processing"])
                             # Then not processing again for enough iterations to trigger notification
-                            elif call_count <= 12:
+                            elif call_count[0] <= 12:
                                 tmux.set_output_sequence(["not processing"])
                                 # After enough iterations, raise KeyboardInterrupt
-                                if call_count >= 11:
+                                if call_count[0] >= 11:
                                     raise KeyboardInterrupt()
                             else:
                                 raise KeyboardInterrupt()

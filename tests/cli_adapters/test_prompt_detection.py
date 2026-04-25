@@ -1,7 +1,7 @@
-from forgeflow.core.cli_adapters.factory import get_cli_adapter
+from forgeflow.adapters.registry import get_adapter
 
 # Get the default gemini adapter for testing
-cli_adapter = get_cli_adapter("gemini")
+cli_adapter = get_adapter("gemini")
 
 
 def test_is_input_prompt_false_on_empty() -> None:

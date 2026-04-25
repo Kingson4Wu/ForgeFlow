@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from forgeflow.core.rules.base import build_default_rules
+from forgeflow.rules.base import build_default_rules
 
 # Add the project root to the path so we can import forgeflow
 project_root = Path(__file__).parents[2]
@@ -17,7 +17,7 @@ def test_tool_call_error_rule() -> None:
     tool_call_rule = None
     for rule in rules:
         # Check if this rule matches the tool call error and sends /clear
-        if rule.command == "/clear":
+        if rule.command.text == "/clear":
             # Test with the error message that mentions tool calls
             test_output = 'An assistant message with "tool_calls" must be followed by tool messages responding to each "tool_call_id"'
             if rule.check(test_output):
@@ -27,7 +27,7 @@ def test_tool_call_error_rule() -> None:
     # If we didn't find it with the specific text, try to find any rule that sends /clear
     if tool_call_rule is None:
         for rule in rules:
-            if rule.command == "/clear":
+            if rule.command.text == "/clear":
                 tool_call_rule = rule
                 break
 
@@ -42,7 +42,7 @@ def test_tool_call_error_rule() -> None:
 
     # The rule should match and return /clear
     assert tool_call_rule.check(test_output), "Rule should match the tool call error"
-    assert tool_call_rule.command == "/clear", "Rule should return '/clear' command"
+    assert tool_call_rule.command.text == "/clear", "Rule should return '/clear' command"
 
     # Test that it correctly identifies output containing tool_call with specific phrases
     test_output_with_tool_call = (

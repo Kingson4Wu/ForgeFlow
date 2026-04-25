@@ -1,6 +1,6 @@
 """Tests for ClaudeCodeCLIAdapter.is_task_processing."""
 
-from forgeflow.core.cli_adapters.claude_code import ClaudeCodeCLIAdapter
+from forgeflow.adapters.claude_code import ClaudeCodeCLIAdapter
 
 
 def _make_history(frames: list[str]) -> list[str]:
@@ -59,7 +59,7 @@ class TestClaudeCodeIsTaskProcessing:
             history.append(frames[i])
             result = self.adapter.is_task_processing(history)
             if i == 6:  # 7th call = 5 consecutive unchanged
-                assert result is False, f"Call {i+1} should be idle, got {result}"
+                assert result is False, f"Call {i + 1} should be idle, got {result}"
 
     def test_five_unchanged_zero_play_is_processing(self) -> None:
         """5 unchanged but 0 play lines → processing (True)."""
@@ -92,7 +92,7 @@ class TestClaudeCodeIsTaskProcessing:
             history.append(frames[i])
             result = self.adapter.is_task_processing(history)
             if i == 6:
-                assert result is False, f"Call {i+1} should be idle, got {result}"
+                assert result is False, f"Call {i + 1} should be idle, got {result}"
 
     def test_5_unchanged_but_play_lines_in_last_4(self) -> None:
         """5 unchanged but last 4 lines have more than 1 play → processing."""
@@ -124,7 +124,7 @@ class TestClaudeCodeIsTaskProcessing:
             history.append(frames[i])
             result = self.adapter.is_task_processing(history)
             if i == 6:
-                assert result is False, f"Call {i+1} should be idle, got {result}"
+                assert result is False, f"Call {i + 1} should be idle, got {result}"
 
     def test_5_unchanged_2_play_lines_in_last4(self) -> None:
         """Last 4 has 2 play lines, 5 unchanged → processing."""

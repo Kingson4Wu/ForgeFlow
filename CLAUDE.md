@@ -20,7 +20,7 @@ Python >= 3.13 required. Uses `uv` for dependency management.
 ### Core Flow
 
 ```
-forgeflow.cli → core/automation/loop.run_automation()
+forgeflow.cli → automation/loop.run_automation()
                            ↓
                     tmux/ctl.TmuxCtl (send/receive)
                            ↓
@@ -29,14 +29,14 @@ forgeflow.cli → core/automation/loop.run_automation()
                            ↓
               rules/loader.get_rules() → [Rule, ...]
                            ↓
-              next_command() → send command to tmux
+              RuleEngine.resolve() → send command to tmux
 ```
 
 ### Rule System
 
 `get_rules(config)` returns `[cli_type_rules] + [task_or_custom_rules]`:
 
-- `cli_type_rules` — from `core/cli_types/{gemini,codex,claude_code}_rules.py`
+- `cli_type_rules` — from `rules/builtin/{gemini,codex,claude_code}_rules.py`
 - `task_rules` — from `~/.forgeflow/user_custom_rules/tasks/{task}_task.py` or built-in `tasks/{task}_task.py`
 - `custom_rules` — from `~/.forgeflow/user_custom_rules/projects/{project}_rules.py`
 
@@ -44,7 +44,7 @@ User config lives in `~/.forgeflow/user_custom_rules/`, never in the user's proj
 
 ### CLI Adapter Pattern
 
-Each AI CLI has its own adapter in `core/cli_adapters/`:
+Each AI CLI has its own adapter in `adapters/`:
 
 | Method | Purpose |
 |--------|---------|
@@ -52,6 +52,12 @@ Each AI CLI has its own adapter in `core/cli_adapters/`:
 | `is_input_prompt_with_text(output)` | Detect prompt with pre-filled text |
 | `is_task_processing(history)` | Detect task running vs idle (frame comparison) |
 | `is_ai_cli_exist(output)` | Detect CLI startup completion |
+
+Adapters self-register via `adapters/registry.py`:
+```python
+from forgeflow.adapters.registry import register
+register("gemini", GeminiCLIAdapter)
+```
 
 ### Monitor Mode
 
@@ -62,34 +68,36 @@ Each AI CLI has its own adapter in `core/cli_adapters/`:
 ```
 src/forgeflow/
 ├── cli.py                      # CLI entry, argument parsing
-└── core/
-    ├── automation/
-    │   ├── loop.py             # run_automation(), run_monitor_mode()
-    │   └── defaults.py         # All magic numbers/constants
-    ├── cli_adapters/           # One per AI CLI type
-    │   ├── base.py             # CLIAdapter abstract base
-    │   ├── factory.py          # get_cli_adapter()
-    │   ├── gemini.py
-    │   ├── claude_code.py
-    │   └── codex.py
-    ├── cli_types/              # CLI-specific rule sets
-    │   ├── gemini_rules.py
-    │   ├── claude_code_rules.py
-    │   └── codex_rules.py
-    ├── rules/
-    │   ├── base.py             # Rule dataclass, build_default_rules(), next_command()
-    │   └── loader.py          # get_rules(), get_task_rules()
-    ├── tmux/
-    │   ├── ctl.py             # TmuxCtl — send keys, capture pane
-    │   └── notifier.py       # Desktop notification
-    ├── task_rules.py          # load_task_config(), get_task_rules_builder()
-    ├── utils.py              # Path helpers
-    └── ansi.py               # ANSI escape code parsing
-tasks/                         # Built-in task implementations
+├── config.py                   # Unified Config (Pydantic) + constants
+├── state.py                    # UnchangedTracker — idle detection
+├── ansi.py                     # ANSI escape code parsing
+├── notifier.py                 # Desktop notification
+├── utils.py                    # Path/module loading helpers
+├── automation/                 # Automation core
+│   ├── loop.py                 # run_automation(), RuleEngine integration
+│   ├── monitor.py              # run_monitor_mode()
+│   └── recovery.py             # Timeout recovery (ESC/backspace/continue)
+├── adapters/                   # One per AI CLI type
+│   ├── base.py                 # CLIAdapter abstract base
+│   ├── registry.py             # AdapterRegistry — register/get_adapter()
+│   ├── gemini.py
+│   ├── claude_code.py
+│   └── codex.py
+├── rules/                      # Rule system
+│   ├── base.py                 # Rule, Command, RuleEngine, build_default_rules()
+│   ├── loader.py               # get_rules(), load_custom_rules(), task loading
+│   └── builtin/                # CLI-specific rule sets
+│       ├── gemini_rules.py
+│       ├── claude_code_rules.py
+│       └── codex_rules.py
+├── tmux/                       # tmux session management
+│   ├── ctl.py                  # TmuxCtl — send keys, capture pane
+│   └── window.py               # WindowManager — Codex window sizing
+└── tasks/                      # Built-in task implementations
     ├── task_planner_task.py
     ├── fix_tests_task.py
     ├── improve_coverage_task.py
-    └── configs/              # Task JSON configs
+    └── configs/                # Task JSON configs
 ```
 
 ## Test Layout
@@ -98,8 +106,12 @@ Tests mirror `src/` structure:
 
 ```
 tests/
-├── automation/    # test_loop.py, test_monitor_mode.py
-├── cli_adapters/  # test_*.py
-├── rules/         # test_*.py
-└── tmux/          # test_ctl.py
+├── automation/    # test_loop.py, test_monitor_mode.py, test_recovery.py
+├── adapters/      # test_*.py for registry and adapters
+├── rules/         # test_*.py for base, loader, builtin rules
+├── tmux/          # test_ctl.py, test_window.py
+├── test_config.py
+├── test_state.py
+├── test_notifier.py
+└── ...
 ```

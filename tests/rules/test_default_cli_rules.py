@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 
-from forgeflow.core.rules.loader import _load_module_from_file
+from forgeflow.rules.loader import _load_module_from_file
 
 # Add the project root to the path so we can import forgeflow
 project_root = Path(__file__).parents[2]
@@ -12,7 +12,7 @@ sys.path.insert(0, str(project_root))
 def test_gemini_rules_file() -> None:
     """Test that the gemini rules file can be loaded and has a build_rules function."""
     gemini_rules_path = os.path.join(
-        project_root, "src", "forgeflow", "core", "cli_types", "gemini_rules.py"
+        project_root, "src", "forgeflow", "rules", "builtin", "gemini.py"
     )
     assert os.path.exists(gemini_rules_path)
 
@@ -28,7 +28,7 @@ def test_gemini_rules_file() -> None:
 def test_codex_rules_file() -> None:
     """Test that the codex rules file can be loaded and has a build_rules function."""
     codex_rules_path = os.path.join(
-        project_root, "src", "forgeflow", "core", "cli_types", "codex_rules.py"
+        project_root, "src", "forgeflow", "rules", "builtin", "codex.py"
     )
     assert os.path.exists(codex_rules_path)
 
@@ -44,7 +44,7 @@ def test_codex_rules_file() -> None:
 def test_claude_code_rules_file() -> None:
     """Test that the claude code rules file can be loaded and has a build_rules function."""
     claude_code_rules_path = os.path.join(
-        project_root, "src", "forgeflow", "core", "cli_types", "claude_code_rules.py"
+        project_root, "src", "forgeflow", "rules", "builtin", "claude_code.py"
     )
     assert os.path.exists(claude_code_rules_path)
 

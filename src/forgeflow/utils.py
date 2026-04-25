@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import functools
 import importlib.util
 import logging
 import os
 import sys
+import types
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -15,43 +17,33 @@ logger = logging.getLogger("forgeflow")
 
 # ---------- Path helpers ----------
 
-_repo_root: Path | None = None
-_pkg_dir: Path | None = None
-_home_cfg_dir: Path | None = None
 
-
+@functools.cache
 def _get_repo_root() -> Path | None:
     """Get the repo root (parent of the forgeflow package directory)."""
-    global _repo_root
-    if _repo_root is None:
-        try:
-            import forgeflow as _forgeflow
+    try:
+        import forgeflow as _forgeflow
 
-            _repo_root = Path(_forgeflow.__file__).resolve().parent.parent
-        except Exception:
-            return None
-    return _repo_root
+        return Path(_forgeflow.__file__).resolve().parent.parent
+    except (ImportError, OSError):
+        return None
 
 
+@functools.cache
 def _get_pkg_dir() -> Path | None:
     """Get the forgeflow package directory."""
-    global _pkg_dir
-    if _pkg_dir is None:
-        try:
-            import forgeflow as _forgeflow
+    try:
+        import forgeflow as _forgeflow
 
-            _pkg_dir = Path(_forgeflow.__file__).resolve().parent
-        except Exception:
-            return None
-    return _pkg_dir
+        return Path(_forgeflow.__file__).resolve().parent
+    except (ImportError, OSError):
+        return None
 
 
+@functools.cache
 def _get_home_config_dir() -> Path | None:
     """Get the ~/.forgeflow/ directory for user-level configuration."""
-    global _home_cfg_dir
-    if _home_cfg_dir is None:
-        _home_cfg_dir = Path.home() / ".forgeflow"
-    return _home_cfg_dir
+    return Path.home() / ".forgeflow"
 
 
 def _get_user_custom_rules_dir() -> str | None:
@@ -80,14 +72,6 @@ def _get_pkg_task_configs_dir() -> str | None:
     return str((pkg / "tasks" / "configs").resolve())
 
 
-def _get_cli_types_rules_dir() -> str | None:
-    """Get the package-built-in CLI types rules directory."""
-    pkg = _get_pkg_dir()
-    if pkg is None:
-        return None
-    return str((pkg / "core" / "cli_types").resolve())
-
-
 # ---------- File finding ----------
 
 
@@ -104,24 +88,26 @@ def _find_rule_file(file_names: list[str], directories: list[str]) -> str | None
 # ---------- Module loading ----------
 
 
-def _load_module_from_file(file_path: str, module_name: str) -> object | None:
+def _load_module_from_file(file_path: str, module_name: str) -> types.ModuleType | None:
     """Load a Python module from a file path."""
     try:
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         if spec is None or spec.loader is None:
-            logger.error(f"Failed to load spec for {file_path}")
+            logger.error("Failed to load spec for %s", file_path)
             return None
 
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
         return module
-    except Exception as e:
-        logger.error(f"Error loading module from {file_path}: {e}")
+    except (ImportError, OSError, ValueError, SyntaxError) as e:
+        logger.error("Error loading module from %s: %s", file_path, e)
         return None
 
 
-def _find_build_function(module: object, possible_names: list[str]) -> Callable[..., Any] | None:
+def _find_build_function(
+    module: types.ModuleType, possible_names: list[str]
+) -> Callable[..., Any] | None:
     """Find a build function in a module."""
     for func_name in possible_names:
         if hasattr(module, func_name):

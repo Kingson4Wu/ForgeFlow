@@ -1,4 +1,4 @@
-from forgeflow.core.cli_types.codex_rules import CodexCommandPostProcessor
+from forgeflow.rules.builtin.codex import CodexCommandPostProcessor
 
 
 def test_codex_compact_counter_integration():

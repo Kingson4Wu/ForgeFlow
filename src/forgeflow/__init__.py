@@ -1,3 +1,4 @@
 __all__ = ["run_automation", "run_monitor_mode"]
 
-from .core.automation import run_automation, run_monitor_mode  # noqa: E402
+from .automation.loop import run_automation
+from .automation.monitor import run_monitor_mode

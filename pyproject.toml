@@ -43,6 +43,10 @@ line-length = 100
 ignore = ["E501", "F821"]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.pyright]
+pythonVersion = "3.13"
+extraPaths = ["src"]
+
 [tool.mypy]
 python_version = "3.13"
 warn_return_any = true

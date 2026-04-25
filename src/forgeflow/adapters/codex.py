@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 
-from .base import CLIAdapter
+from forgeflow.adapters.base import CLIAdapter
+from forgeflow.adapters.registry import register
 
 
 class CodexCLIAdapter(CLIAdapter):
@@ -11,7 +12,7 @@ class CodexCLIAdapter(CLIAdapter):
     # ---------- Input Prompt Detection ----------
     PROMPT_RE = re.compile(r"^▌.*", re.MULTILINE)
     # Match input lines enclosed in vertical bars (as loose as possible)
-    PROMPT_WITH_TEXT_RE = re.compile(r"\u2502 > .*? \u2502")
+    PROMPT_WITH_TEXT_RE = re.compile(r"│ > .*? │")
     PROMPT_TASK_PROCESSING = re.compile(r"• Esc to interrupt\)")
     PROMPT_AI_CLI_EXIST = re.compile(
         r"^\s*⏎ send\s+⌃J newline\s+⌃T transcript\s+⌃C quit", re.MULTILINE
@@ -39,3 +40,6 @@ class CodexCLIAdapter(CLIAdapter):
             if self.PROMPT_AI_CLI_EXIST.match(line.strip()):
                 return True
         return False
+
+
+register("codex", CodexCLIAdapter)

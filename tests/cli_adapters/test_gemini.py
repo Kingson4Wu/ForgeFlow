@@ -1,4 +1,4 @@
-from forgeflow.core.cli_adapters.gemini import GeminiCLIAdapter
+from forgeflow.adapters.gemini import GeminiCLIAdapter
 
 
 def test_is_ai_cli_exist_with_prompt():

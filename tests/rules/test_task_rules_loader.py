@@ -2,11 +2,11 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from forgeflow.core.task_rules import (
+from forgeflow.rules.loader import (
     load_custom_task_rules,
     load_task_config,
 )
-from forgeflow.core.utils import (
+from forgeflow.utils import (
     _find_build_function,
     _find_rule_file,
     _load_module_from_file,
@@ -92,7 +92,7 @@ def mock_get_user_custom_rules_tasks_dir() -> None:
 
 
 @patch(
-    "forgeflow.core.task_rules._get_user_custom_rules_tasks_dir",
+    "forgeflow.rules.loader._get_user_custom_rules_tasks_dir",
     mock_get_user_custom_rules_tasks_dir,
 )
 def test_load_custom_task_rules_not_found() -> None:

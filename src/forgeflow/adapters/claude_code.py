@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 
-from .base import CLIAdapter
+from forgeflow.adapters.base import CLIAdapter
+from forgeflow.adapters.registry import register
 
 PROMPT_LINE_CHAR = "❯"
 SEPARATOR_LINE_PREFIX = "──"
@@ -98,3 +99,6 @@ class ClaudeCodeCLIAdapter(CLIAdapter):
             re.match(r"^\(.*?\) ➜ .+ git:\([^)]+\)$", last_line.strip())
             or re.match(r"^.+@.+:[^$]+[$➜]", last_line.strip())
         )
+
+
+register("claude_code", ClaudeCodeCLIAdapter)

@@ -1,6 +1,6 @@
 import re
 
-from forgeflow.core.rules import CommandPostProcessor, Rule
+from forgeflow.rules.base import Command, CommandPostProcessor, Rule
 
 
 class CodexCommandPostProcessor(CommandPostProcessor):
@@ -54,7 +54,7 @@ def build_rules() -> list[Rule]:
                 )
             )
             and "Compact task completed" not in out,
-            command="/compact",
+            command=Command("/compact"),
             description="Context window exceeded - send /compact command",
         ),
         Rule(
@@ -63,12 +63,12 @@ def build_rules() -> list[Rule]:
                 "Your input exceeds the context window of this model" in out.replace("\n", " ")
                 and "Compact task completed" not in out
             ),
-            command="/compact",
+            command=Command("/compact"),
             description="Stream error due to context window exceeded - send /compact command",
         ),
         Rule(
             check=lambda out: ("You've hit your usage limit" in out),
-            command=None,
+            command=Command(None),
             description="Usage limit reached - stop automation",
         ),
     ]

@@ -2,8 +2,8 @@ import os
 import sys
 from pathlib import Path
 
-from forgeflow.core.rules.base import build_default_rules
-from forgeflow.core.rules.loader import _load_module_from_file
+from forgeflow.rules.base import build_default_rules
+from forgeflow.rules.loader import _load_module_from_file
 
 # Add the project root to the path so we can import forgeflow
 project_root = Path(__file__).parents[2]
@@ -13,7 +13,7 @@ sys.path.insert(0, str(project_root))
 def test_gemini_rules_file() -> None:
     """Test that the gemini rules file can be loaded and has a build_rules function."""
     gemini_rules_path = os.path.join(
-        project_root, "src", "forgeflow", "core", "cli_types", "gemini_rules.py"
+        project_root, "src", "forgeflow", "rules", "builtin", "gemini.py"
     )
     assert os.path.exists(gemini_rules_path)
 
@@ -36,7 +36,7 @@ def test_gemini_invalid_parameter_rule() -> None:
     invalid_param_rule = None
     for rule in rules:
         # Check if this rule matches the InvalidParameter error
-        if rule.command == "/clear":
+        if rule.command.text == "/clear":
             # Test with the exact error message
             test_output = '✕ [API Error: 400 <400> InternalError.Algo.InvalidParameter: An assistant message with "tool_calls" must be followed by tool messages responding to each "tool_call_id". The following tool_call_ids did not have response messages: message[650].role]'
             if rule.check(test_output):
@@ -51,7 +51,7 @@ def test_gemini_invalid_parameter_rule() -> None:
     assert invalid_param_rule.check(test_output), "Rule should match the InvalidParameter error"
 
     # Test that it returns the correct command
-    assert invalid_param_rule.command == "/clear", "Rule should return '/clear' command"
+    assert invalid_param_rule.command.text == "/clear", "Rule should return '/clear' command"
 
     # Test with a simpler matching pattern
     test_output_simple = (
@@ -71,7 +71,7 @@ def test_gemini_quota_exceeded_rule() -> None:
     quota_rule = None
     for rule in rules:
         # Check if this rule matches the quota exceeded error
-        if rule.command is None:  # This rule should stop execution
+        if rule.command.text is None:  # This rule should stop execution
             # Test with a quota exceeded error that matches the regex pattern
             test_output = "✕ [API Error: Qwen API quota exceeded: Your Qwen API quota has been exhausted. Please wait for your quota to reset.]"
             if rule.check(test_output):
@@ -86,7 +86,7 @@ def test_gemini_quota_exceeded_rule() -> None:
     assert quota_rule.check(test_output), "Rule should match the quota exceeded error"
 
     # Test that it returns None to stop execution
-    assert quota_rule.command is None, "Rule should return None to stop execution"
+    assert quota_rule.command.text is None, "Rule should return None to stop execution"
 
     # Test that it doesn't match similar but different patterns
     test_output_no_match = "[API Error: Qwen API quota exceeded: Your Qwen API quota has been exhausted. Please wait for your quota to reset.]"
@@ -102,7 +102,7 @@ def test_gemini_rules_precedence() -> None:
 
     # The first rules should be gemini-specific
     # Check that we have the /clear command for InvalidParameter errors
-    assert any(rule.command == "/clear" for rule in rules)
+    assert any(rule.command.text == "/clear" for rule in rules)
 
     # Check that we have a rule that stops execution (command=None) for quota errors
-    assert any(rule.command is None for rule in rules)
+    assert any(rule.command.text is None for rule in rules)

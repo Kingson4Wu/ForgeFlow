@@ -1,14 +1,17 @@
-from forgeflow.core.cli_types.codex_rules import CodexCommandPostProcessor, build_rules
-from forgeflow.core.rules.base import next_command
+from forgeflow.automation.loop import _build_post_processors
+from forgeflow.rules.base import RuleEngine
+from forgeflow.rules.builtin.codex import CodexCommandPostProcessor, build_rules
 
 
 def test_codex_rules_compact_context_window_error_1() -> None:
     """Test Codex rule for context window error pattern 1."""
     rules = build_rules()
-    output = """■ stream disconnected before completion: Your input exceeds the context window of this model. 
+    output = """■ stream disconnected before completion: Your input exceeds the context window of this model.
     Please reduce the length of the input or messages and try again."""
 
-    command = next_command(output, rules, "codex")
+    post_processors = _build_post_processors()
+    engine = RuleEngine(rules, post_processors)
+    command = engine.resolve(output, "codex")
     assert command == "/compact"
 
 
@@ -17,7 +20,9 @@ def test_codex_rules_compact_context_window_error_2() -> None:
     rules = build_rules()
     output = "stream error: stream disconnected before completion: Your input exceeds the context window of this model"
 
-    command = next_command(output, rules, "codex")
+    post_processors = _build_post_processors()
+    engine = RuleEngine(rules, post_processors)
+    command = engine.resolve(output, "codex")
     assert command == "/compact"
 
 
@@ -27,7 +32,9 @@ def test_codex_rules_compact_task_completed() -> None:
     output = """■ stream disconnected before completion: Your input exceeds the context window of this model.
     Compact task completed."""
 
-    command = next_command(output, rules, "codex")
+    post_processors = _build_post_processors()
+    engine = RuleEngine(rules, post_processors)
+    command = engine.resolve(output, "codex")
     # Should continue since compact task is already completed
     assert command == "continue"
 
@@ -37,7 +44,9 @@ def test_codex_rules_usage_limit() -> None:
     rules = build_rules()
     output = "You've hit your usage limit"
 
-    command = next_command(output, rules, "codex")
+    post_processors = _build_post_processors()
+    engine = RuleEngine(rules, post_processors)
+    command = engine.resolve(output, "codex")
     # The rule returns None to stop automation
     assert command is None
 

@@ -2,8 +2,8 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from forgeflow.core.rules.loader import load_custom_rules
-from forgeflow.core.utils import (
+from forgeflow.rules.loader import load_custom_rules
+from forgeflow.utils import (
     _find_rule_file,
     _load_module_from_file,
 )
@@ -57,7 +57,7 @@ def mock_get_user_custom_rules_projects_dir() -> None:
 
 
 @patch(
-    "forgeflow.core.rules.loader._get_user_custom_rules_projects_dir",
+    "forgeflow.rules.loader._get_user_custom_rules_projects_dir",
     mock_get_user_custom_rules_projects_dir,
 )
 def test_load_custom_rules_not_found() -> None:
@@ -68,8 +68,8 @@ def test_load_custom_rules_not_found() -> None:
 
 def test_get_rules_priority() -> None:
     """Test that CLI type rules take priority over project/task custom rules."""
-    from forgeflow.core.rules import get_rules
-    from forgeflow.core.rules.base import build_default_rules
+    from forgeflow.rules.base import build_default_rules
+    from forgeflow.rules.loader import get_rules
 
     class MockConfig:
         def __init__(self, cli_type="gemini", project=None, task=None):

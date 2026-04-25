@@ -1,18 +1,20 @@
 import logging
 
-from forgeflow.core.automation.loop import (
-    Config,
-    _handle_input_with_text,
+from forgeflow.adapters.registry import get_adapter
+from forgeflow.automation.loop import (
     _initialize_session,
-    _progressive_backspace_until_prompt,
-    _recover_from_timeout,
     _send_command,
+)
+from forgeflow.automation.monitor import _is_task_processing
+from forgeflow.automation.recovery import (
+    _progressive_backspace_until_prompt,
     _send_continue_and_return_timestamp,
     _send_escape_and_wait,
-    is_task_processing,
-    setup_logger,
+    recover_from_timeout,
 )
-from forgeflow.core.cli_adapters.factory import get_cli_adapter
+from forgeflow.config import Config
+from forgeflow.logging_config import setup_logger
+from forgeflow.state import UnchangedTracker
 
 
 def test_config_defaults() -> None:
@@ -27,7 +29,7 @@ def test_config_defaults() -> None:
     assert config.log_to_console is True
     assert config.project is None
     assert config.task is None
-    assert config.cli_type == "gemini"
+    assert config.cli_type == "claude_code"
     assert config.log_level == "INFO"
 
 
@@ -57,24 +59,23 @@ def test_config_custom_values() -> None:
 
 
 def test_is_task_processing() -> None:
-    """Test is_task_processing function."""
+    """Test _is_task_processing function."""
     # Get a CLI adapter for testing
-    cli_adapter = get_cli_adapter("gemini")
+    cli_adapter = get_adapter("gemini")
+    tracker = UnchangedTracker(5)
 
     # Test with empty output and empty history
-    assert is_task_processing("", cli_adapter, []) is False
+    assert _is_task_processing("", cli_adapter, [], tracker) is False
 
     # Test with output that doesn't indicate task processing
     output = "Some regular output"
-    assert is_task_processing(output, cli_adapter, [output]) is False
+    assert _is_task_processing(output, cli_adapter, [output], tracker) is False
 
 
 def test_is_task_processing_unchanged_output_tracking() -> None:
-    """Test is_task_processing function with unchanged output tracking."""
-    from forgeflow.core.automation import reset_unchanged_output_tracking
-
-    cli_adapter = get_cli_adapter("gemini")
-    reset_unchanged_output_tracking()
+    """Test _is_task_processing function with unchanged output tracking."""
+    cli_adapter = get_adapter("gemini")
+    tracker = UnchangedTracker(5)
 
     processing_output = "(esc to cancel...)"
 
@@ -86,7 +87,7 @@ def test_is_task_processing_unchanged_output_tracking() -> None:
     history: list[str] = []
     for _ in range(7):
         history.append(processing_output)
-        results.append(is_task_processing(processing_output, cli_adapter, history))
+        results.append(_is_task_processing(processing_output, cli_adapter, history, tracker))
 
     assert results[0] is True
     assert results[1] is True
@@ -97,12 +98,12 @@ def test_is_task_processing_unchanged_output_tracking() -> None:
     assert results[6] is False
 
     # After reset, should be True again
-    reset_unchanged_output_tracking()
+    tracker.reset()
     history = [processing_output]
-    result = is_task_processing(processing_output, cli_adapter, history)
+    result = _is_task_processing(processing_output, cli_adapter, history, tracker)
     assert result is True
 
-    reset_unchanged_output_tracking()
+    tracker.reset()
 
 
 def test_setup_logger() -> None:
@@ -155,12 +156,11 @@ class MockLogger:
 
 
 def test_recover_from_timeout() -> None:
-    """Test _recover_from_timeout function."""
+    """Test recover_from_timeout function."""
     tmux = MockTmuxCtl()
-    cli_adapter = get_cli_adapter("gemini")
-    logger = logging.getLogger("test")
+    cli_adapter = get_adapter("gemini")
 
-    result = _recover_from_timeout(tmux, cli_adapter, logger)  # type: ignore
+    result = recover_from_timeout(tmux, cli_adapter)
 
     # Check that the function returned a timestamp (float)
     assert isinstance(result, float)
@@ -174,7 +174,7 @@ def test_recover_from_timeout() -> None:
 def test_send_escape_and_wait() -> None:
     """Test _send_escape_and_wait function."""
     tmux = MockTmuxCtl()
-    _send_escape_and_wait(tmux)  # type: ignore
+    _send_escape_and_wait(tmux)
 
     # Check that send_escape was called
     assert "send_escape" in tmux.calls
@@ -183,9 +183,9 @@ def test_send_escape_and_wait() -> None:
 def test_progressive_backspace_until_prompt() -> None:
     """Test _progressive_backspace_until_prompt function."""
     tmux = MockTmuxCtl()
-    cli_adapter = get_cli_adapter("gemini")
+    cli_adapter = get_adapter("gemini")
 
-    _progressive_backspace_until_prompt(tmux, cli_adapter)  # type: ignore
+    _progressive_backspace_until_prompt(tmux, cli_adapter)
 
     # Check that send_backspace was called
     assert any("send_backspace" in call for call in tmux.calls)
@@ -206,20 +206,11 @@ def test_send_continue_and_return_timestamp() -> None:
 
 
 # Mock classes for testing new functions
-class MockConfig:
-    def __init__(
-        self, ai_cmd: str = "test_cmd", cli_type: str = "gemini", session: str = "test_session"
-    ) -> None:
-        self.ai_cmd = ai_cmd
-        self.cli_type = cli_type
-        self.session = session
-
-
 def test_initialize_session() -> None:
     """Test _initialize_session function."""
     tmux = MockTmuxCtl()
-    cli_adapter = get_cli_adapter("gemini")
-    config = MockConfig()
+    cli_adapter = get_adapter("gemini")
+    config = Config(session="test_session", workdir="/tmp", ai_cmd="test_cmd", cli_type="gemini")
     logger = logging.getLogger("test")
 
     _initialize_session(tmux, cli_adapter, config, logger)  # type: ignore
@@ -232,22 +223,8 @@ def test_send_command() -> None:
     """Test _send_command function."""
     tmux = MockTmuxCtl()
     logger = logging.getLogger("test")
+    config = Config(session="test", workdir="/tmp", ai_cmd="test")
 
     # Test with string command
-    _send_command(tmux, "test command", logger)  # type: ignore
+    _send_command(tmux, "test command", config, logger)  # type: ignore
     assert "send_text_then_enter(test command)" in tmux.calls
-
-    # Test with callable command
-    _send_command(tmux, lambda: "callable command", logger)  # type: ignore
-    assert "send_text_then_enter(callable command)" in tmux.calls
-
-
-def test_handle_input_with_text() -> None:
-    """Test _handle_input_with_text function."""
-    tmux = MockTmuxCtl()
-    logger = logging.getLogger("test")
-
-    _handle_input_with_text(tmux, logger)  # type: ignore
-
-    # Check that send_enter was called
-    assert "send_enter" in str(tmux.calls)

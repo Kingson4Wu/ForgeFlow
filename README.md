@@ -103,27 +103,31 @@ uv run forgeflow --session my_session --monitor-only --cli-type claude_code --po
 ForgeFlow/
 ├── src/forgeflow/           # Main Python package
 │   ├── cli.py               # CLI entry point
-│   ├── core/
-│   │   ├── automation/      # Core automation loop
-│   │   │   ├── loop.py      # Main automation & monitor loops
-│   │   │   └── defaults.py  # Default config values
-│   │   ├── tmux/            # tmux session management
-│   │   │   ├── ctl.py       # TmuxCtl class
-│   │   │   └── notifier.py  # Desktop notifications
-│   │   ├── rules/           # Rule system
-│   │   │   ├── base.py      # Rule dataclass
-│   │   │   └── loader.py    # Custom rule loading
-│   │   ├── cli_adapters/    # CLI adapter implementations
-│   │   │   ├── base.py      # CLIAdapter base class
-│   │   │   ├── claude_code.py
-│   │   │   ├── gemini.py
-│   │   │   └── codex.py
-│   │   ├── cli_types/       # CLI-specific rules
-│   │   │   ├── claude_code_rules.py
-│   │   │   ├── gemini_rules.py
-│   │   │   └── codex_rules.py
-│   │   ├── task_rules.py    # Task-specific rules
-│   │   └── utils.py         # Path utilities
+│   ├── config.py            # Unified configuration (Pydantic)
+│   ├── state.py             # UnchangedTracker — idle detection
+│   ├── ansi.py              # ANSI escape code parsing
+│   ├── notifier.py          # Desktop notifications
+│   ├── utils.py             # Path/module loading helpers
+│   ├── automation/          # Automation core
+│   │   ├── loop.py          # Main automation loop
+│   │   ├── monitor.py       # Monitor-only mode
+│   │   └── recovery.py      # Timeout recovery
+│   ├── adapters/            # CLI adapter implementations
+│   │   ├── base.py          # CLIAdapter base class
+│   │   ├── registry.py      # AdapterRegistry
+│   │   ├── claude_code.py
+│   │   ├── gemini.py
+│   │   └── codex.py
+│   ├── rules/               # Rule system
+│   │   ├── base.py          # Rule, Command, RuleEngine
+│   │   ├── loader.py        # Rule loading
+│   │   └── builtin/         # CLI-specific rule sets
+│   │       ├── claude_code_rules.py
+│   │       ├── gemini_rules.py
+│   │       └── codex_rules.py
+│   ├── tmux/                # tmux session management
+│   │   ├── ctl.py           # TmuxCtl class
+│   │   └── window.py        # WindowManager (Codex sizing)
 │   └── tasks/               # Built-in task implementations
 │       ├── task_planner_task.py
 │       ├── fix_tests_task.py

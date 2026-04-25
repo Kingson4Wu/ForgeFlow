@@ -3,14 +3,16 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .core.automation.defaults import (
+from .automation.loop import run_automation
+from .automation.monitor import run_monitor_mode
+from .config import (
     DEFAULT_CLI_TYPE,
     DEFAULT_INPUT_PROMPT_TIMEOUT,
     DEFAULT_LOG_FILE,
     DEFAULT_LOG_LEVEL,
     DEFAULT_POLL_INTERVAL,
+    Config,
 )
-from .core.automation.loop import Config, run_automation, run_monitor_mode
 
 
 def build_parser() -> argparse.ArgumentParser:

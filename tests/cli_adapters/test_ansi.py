@@ -1,4 +1,4 @@
-from forgeflow.core.ansi import Style, parse_ansi_segments, split_segments_lines, strip_ansi
+from forgeflow.ansi import Style, parse_ansi_segments, split_segments_lines, strip_ansi
 
 
 def test_strip_ansi_basic() -> None:

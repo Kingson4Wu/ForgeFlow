@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import datetime
 import logging
 import platform
 import subprocess
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("forgeflow")
 
 
 def send_notification(title: str, message: str) -> None:
@@ -18,9 +20,6 @@ def send_notification(title: str, message: str) -> None:
 
     try:
         if system == "Darwin":  # macOS
-            # Use osascript to send macOS notification
-            # script = f'display notification "{message}" with title "{title}"'
-            # subprocess.run(["osascript", "-e", script], check=True)
             timestamp = datetime.datetime.now().strftime("%H:%M:%S")
             subprocess.run(
                 [
@@ -43,5 +42,5 @@ def send_notification(title: str, message: str) -> None:
             logger.warning("Linux notifications not yet implemented")
         else:
             logger.warning(f"Notifications not supported for system: {system}")
-    except Exception as e:
-        logger.error(f"Failed to send notification: {e}")
+    except (subprocess.SubprocessError, OSError) as e:
+        logger.error("Failed to send notification: %s", e)

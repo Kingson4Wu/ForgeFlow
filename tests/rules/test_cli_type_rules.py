@@ -1,4 +1,4 @@
-from forgeflow.core.rules.base import build_default_rules
+from forgeflow.rules.base import build_default_rules
 
 
 def test_build_default_rules_gemini() -> None:
@@ -6,7 +6,7 @@ def test_build_default_rules_gemini() -> None:
     rules = build_default_rules("gemini")
     assert len(rules) > 0
     # Check that Gemini-specific rules are present (from cli_types/gemini_rules.py)
-    assert any(rule.command == "/clear" for rule in rules)
+    assert any(rule.command.text == "/clear" for rule in rules)
 
 
 def test_build_default_rules_codex() -> None:
@@ -14,7 +14,7 @@ def test_build_default_rules_codex() -> None:
     rules = build_default_rules("codex")
     assert len(rules) > 0
     # Check that Codex-specific rules are present (from cli_types/codex_rules.py)
-    assert any(rule.command == "/compact" for rule in rules)
+    assert any(rule.command.text == "/compact" for rule in rules)
 
 
 def test_build_default_rules_claude_code() -> None:
@@ -29,7 +29,7 @@ def test_build_default_rules_default() -> None:
     rules = build_default_rules()  # Should default to "gemini"
     assert len(rules) > 0
     # Check that Gemini-specific rules are present (from cli_types/gemini_rules.py)
-    assert any(rule.command == "/clear" for rule in rules)
+    assert any(rule.command.text == "/clear" for rule in rules)
 
 
 def test_cli_specific_rules() -> None:

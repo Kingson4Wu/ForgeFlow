@@ -4,15 +4,10 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
-from forgeflow.core.rules.base import Rule
-from forgeflow.core.task_rules import (
+from forgeflow.rules.base import Rule
+from forgeflow.rules.loader import (
     get_task_rules_builder,
     load_task_config,
-)
-from forgeflow.core.utils import (
-    _find_build_function,
-    _find_rule_file,
-    _load_module_from_file,
 )
 
 # Import the functions from the new separate files
@@ -27,6 +22,11 @@ from forgeflow.tasks.improve_coverage_task import (
 from forgeflow.tasks.task_planner_task import (
     check_all_tasks_done,
     check_task_completed,
+)
+from forgeflow.utils import (
+    _find_build_function,
+    _find_rule_file,
+    _load_module_from_file,
 )
 
 
@@ -143,7 +143,7 @@ def test_build_fix_tests_rules() -> None:
 
     # Check that first rule stops when tests pass
     assert rules[0].check("[TESTS_PASSED]")
-    assert rules[0].command is None
+    assert rules[0].command.text is None
 
 
 def test_build_improve_coverage_rules() -> None:
@@ -161,7 +161,7 @@ def test_build_improve_coverage_rules() -> None:
 
     # Check that first rule stops when target coverage is reached
     assert rules[0].check("coverage: 90%")
-    assert rules[0].command is None
+    assert rules[0].command.text is None
 
 
 def test_build_task_planner_rules() -> None:
@@ -179,7 +179,7 @@ def test_build_task_planner_rules() -> None:
 
     # Check that first rule stops when all tasks are done
     assert rules[0].check("Task finished. [ALL_TASKS_COMPLETED]")
-    assert rules[0].command is None
+    assert rules[0].command.text is None
 
     # Check that second rule handles task completion
     assert rules[1].check("Work completed. [TASK_COMPLETED]")
@@ -205,7 +205,7 @@ def test_task_rules_with_config() -> None:
             json.dump(config_data, f)
 
         # Test loading config
-        with patch("forgeflow.core.task_rules.load_task_config") as mock_load:
+        with patch("forgeflow.rules.loader.load_task_config") as mock_load:
             mock_load.return_value = config_data
             rules = build_improve_coverage_rules(config_data)
 

@@ -1,77 +1,33 @@
 import logging
 from typing import Any
 
-from forgeflow.core.rules import Rule
+from forgeflow.rules.base import Rule
+from forgeflow.tasks.common import build_standard_rules, instruction_phrases, is_instruction_text
 
 logger = logging.getLogger("forgeflow")
 
-# ---------- Constants ----------
 TASK_COMPLETED_INDICATOR = "[TASK_COMPLETED]"
 ALL_TASKS_COMPLETED_INDICATOR = "[ALL_TASKS_COMPLETED]"
-RESPOND_WITH_TASK_COMPLETED = f'respond with "{TASK_COMPLETED_INDICATOR}"'
-RESPOND_WITH_TASK_COMPLETED_SINGLE_QUOTE = f"respond with '{TASK_COMPLETED_INDICATOR}'"
-RESPOND_WITH_ALL_TASKS_COMPLETED = f'respond with "{ALL_TASKS_COMPLETED_INDICATOR}"'
-RESPOND_WITH_ALL_TASKS_COMPLETED_SINGLE_QUOTE = f"respond with '{ALL_TASKS_COMPLETED_INDICATOR}'"
 
-
-# ---------- Task Rules ----------
-def _is_instruction_text_in_task_output(output_lower: str) -> bool:
-    """Check if the output contains instruction text that should be ignored for task completion."""
-    return (
-        RESPOND_WITH_TASK_COMPLETED.lower() in output_lower
-        or RESPOND_WITH_TASK_COMPLETED_SINGLE_QUOTE.lower() in output_lower
-    )
+_TASK_INSTRUCTIONS = instruction_phrases(TASK_COMPLETED_INDICATOR)
+_ALL_TASKS_INSTRUCTIONS = instruction_phrases(ALL_TASKS_COMPLETED_INDICATOR)
 
 
 def check_task_completed(output: str, config: dict[str, Any]) -> bool:
-    """Check if a task has been completed based on the output and config."""
-    # Get task completion indicators from config, with defaults
-    completion_indicators = config.get(
-        "task_completion_indicators",
-        [TASK_COMPLETED_INDICATOR],
-    )
-
     output_lower = output.lower()
-
-    # Check if any completion indicator is present (case-insensitive)
-    has_completion_indicator = any(
-        indicator.lower() in output_lower for indicator in completion_indicators
-    )
-
-    # Prevent false positives by checking that this isn't just part of our own prompt
-    # If we're seeing our own instruction text, it's not a real completion
-    is_instruction_text = _is_instruction_text_in_task_output(output_lower)
-
-    return has_completion_indicator and not is_instruction_text
-
-
-def _is_instruction_text_in_output(output_lower: str) -> bool:
-    """Check if the output contains instruction text that should be ignored."""
-    return (
-        RESPOND_WITH_ALL_TASKS_COMPLETED.lower() in output_lower
-        or RESPOND_WITH_ALL_TASKS_COMPLETED_SINGLE_QUOTE.lower() in output_lower
-    )
+    indicators = config.get("task_completion_indicators", [TASK_COMPLETED_INDICATOR])
+    has_indicator = any(indicator.lower() in output_lower for indicator in indicators)
+    return has_indicator and not is_instruction_text(output_lower, _TASK_INSTRUCTIONS)
 
 
 def check_all_tasks_done(output: str) -> bool:
-    """Check if all tasks are done."""
-    target_text = ALL_TASKS_COMPLETED_INDICATOR
     output_lower = output.lower()
-
-    # Check if the target text is present (case-insensitive)
-    has_target_text = target_text.lower() in output_lower
-
-    # Prevent false positives by checking that this isn't just part of our own prompt
-    # If we're seeing our own instruction text, it's not a real completion
-    is_instruction_text = _is_instruction_text_in_output(output_lower)
-
-    return has_target_text and not is_instruction_text
+    has_indicator = ALL_TASKS_COMPLETED_INDICATOR.lower() in output_lower
+    return has_indicator and not is_instruction_text(output_lower, _ALL_TASKS_INSTRUCTIONS)
 
 
 def get_next_task_prompt(config: dict[str, Any]) -> str:
-    """Get the prompt for the next task."""
     todo_file = config.get("todo_file", "TODO.md")
-
     return f"""
 Task Planning Task:
 
@@ -101,33 +57,24 @@ Task Planning Task:
    * Repeat steps 1-5 until all tasks are done.
 
 Use the following indicators to determine if a task is complete:
-If you've completed the current task, {RESPOND_WITH_TASK_COMPLETED} as the last line of your output and then wait for further instructions.
-If you've completed ALL tasks in the TODO file, {RESPOND_WITH_ALL_TASKS_COMPLETED} as the last line of your output.
+If you've completed the current task, {_TASK_INSTRUCTIONS[0]} as the last line of your output and then wait for further instructions.
+If you've completed ALL tasks in the TODO file, {_ALL_TASKS_INSTRUCTIONS[0]} as the last line of your output.
 """
 
 
 def build_rules(config: dict[str, Any]) -> list[Rule]:
-    """Build rules for task planner task."""
-    return [
-        # Stop when all tasks are completed
-        Rule(
-            check=check_all_tasks_done,
-            command=None,
-            description="All tasks completed - stop automation",
-        ),
-        # Handle task completion
-        Rule(
-            check=lambda out: check_task_completed(out, config),
-            command=config.get(
-                "next_task_prompt",
-                "Please proceed with the next task in the TODO list only after ensuring the previous one fully meets your project's completion standards and best practices (for example, tests are written and pass, and code follows style and review guidelines).",
-            ),
-            description="Task completed - proceed to next task",
-        ),
-        # Default task prompt
-        Rule(
-            check=lambda out: True,
-            command=get_next_task_prompt(config),
-            description="Default task prompt - continue with current task",
-        ),
-    ]
+    default_prompt = get_next_task_prompt(config)
+    condition_prompt = config.get(
+        "next_task_prompt",
+        "Please proceed with the next task in the TODO list only after ensuring the previous one fully meets your project's completion standards and best practices (for example, tests are written and pass, and code follows style and review guidelines).",
+    )
+
+    return build_standard_rules(
+        stop_check=lambda out: check_all_tasks_done(out.lower()),
+        condition_check=lambda out: check_task_completed(out.lower(), config),
+        default_prompt=default_prompt,
+        condition_prompt=condition_prompt,
+        stop_desc="All tasks completed - stop automation",
+        condition_desc="Task completed - proceed to next task",
+        default_desc="Default task prompt - continue with current task",
+    )

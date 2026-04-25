@@ -1,6 +1,6 @@
 import re
 
-from forgeflow.core.rules import Rule
+from forgeflow.rules.base import Command, Rule
 
 
 def build_rules() -> list[Rule]:
@@ -14,13 +14,13 @@ def build_rules() -> list[Rule]:
                     re.DOTALL,
                 )
             ),
-            command="/clear",
+            command=Command("/clear"),
             description="Invalid parameter error - send /clear command",
         ),
         Rule(
             check=lambda out: "tool_call" in out
             and ("must be followed" in out or "did not have" in out),
-            command="/clear",
+            command=Command("/clear"),
             description="Tool call error - send /clear command",
         ),
         Rule(
@@ -29,7 +29,7 @@ def build_rules() -> list[Rule]:
                 out,
             )
             is not None,
-            command=None,
+            command=Command(None),
             description="API quota exceeded - stop automation",
         ),
         Rule(
@@ -38,17 +38,17 @@ def build_rules() -> list[Rule]:
                 " ".join(out.split()),
             )
             is not None,
-            command=None,
+            command=Command(None),
             description="API quota exceeded [new] - stop automation",
         ),
         Rule(
             check=lambda out: "✕ [API Error: terminated]" in out,
-            command="continue",
+            command=Command("continue"),
             description="API terminated error - continue execution",
         ),
         Rule(
             check=lambda out: "API Error" in out,
-            command="continue",
+            command=Command("continue"),
             description="General API error - continue execution",
         ),
     ]
